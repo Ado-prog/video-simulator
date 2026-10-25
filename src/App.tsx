@@ -49,8 +49,8 @@ const D_MAX = 30;
 const toSlider = (m: number) => Math.round((Math.log(m / D_MIN) / Math.log(D_MAX / D_MIN)) * 1000);
 const fromSlider = (v: number) => D_MIN * Math.pow(D_MAX / D_MIN, v / 1000);
 
-const DEFAULT_CAMERA = "pana-s1ii";
-const DEFAULT_LENS = "L:Sigma:24-70mm F2.8 DG DN II Art";
+const DEFAULT_CAMERA = "";
+const DEFAULT_LENS = "";
 
 type Theme = "system" | "light" | "dark";
 
