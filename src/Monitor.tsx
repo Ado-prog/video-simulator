@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { ScenePalette } from "./lighting";
+import type { ScenePalette, BackdropKind } from "./lighting";
 import { blurDisc } from "./optics";
 
 // Simulated camera monitor (16:9 for video, sensor aspect for photo).
@@ -85,6 +85,7 @@ type Props = {
   cocMM: number;
   subject: SubjectKind;
   palette: ScenePalette;
+  backdrop: BackdropKind;
   exposureDelta: number;
   cast: [number, number, number];
   grain: number;
@@ -447,7 +448,7 @@ export default function Monitor(p: Props) {
                 <rect width={W} height={H / 2} fill="url(#m-cpl)" opacity={p.cpl * 0.55} style={{ mixBlendMode: "multiply" }} />
               )}
 
-              {!P.indoor && (
+              {!P.indoor && p.backdrop !== "sea" && (
                 <g filter="url(#m-b-hills)">
                   <path
                     d={`M0 ${H / 2 + 1} L0 ${H / 2 - 12} Q70 ${H / 2 - 28} 140 ${H / 2 - 14} T260 ${H / 2 - 18} T320 ${H / 2 - 10} L320 ${H / 2 + 1} Z`}
@@ -457,9 +458,31 @@ export default function Monitor(p: Props) {
                 </g>
               )}
 
+              {p.backdrop === "sea" && (
+                <g filter="url(#m-b-hills)">
+                  <rect x={0} y={H / 2 - 1} width={W} height={H * 0.09} fill={P.hills} />
+                  <rect x={0} y={H / 2 - 1} width={W} height={2} fill="#ffffff" opacity={0.35} />
+                </g>
+              )}
               <g filter="url(#m-b-back)">
                 <g transform={layer(backD)}>
-                  {backItems.map((x, i) =>
+                  {p.backdrop === "buildings" ? (
+                    backItems.map((x, i) => {
+                      const h = 6 + ((i * 37) % 9);
+                      const w = 1.7;
+                      return (
+                        <g key={i}>
+                          <rect x={x} y={EYE - h} width={w} height={h} fill={P.trees[i % 3]} />
+                          {Array.from({ length: Math.floor(h / 1.1) }, (_, k) => (
+                            <g key={k}>
+                              <rect x={x + 0.25} y={EYE - h + 0.5 + k * 1.1} width={0.45} height={0.55} fill="#3d4a5a" opacity={0.75} />
+                              <rect x={x + 1.0} y={EYE - h + 0.5 + k * 1.1} width={0.45} height={0.55} fill="#3d4a5a" opacity={0.75} />
+                            </g>
+                          ))}
+                        </g>
+                      );
+                    })
+                  ) : p.backdrop === "sea" ? null : backItems.map((x, i) =>
                     P.indoor ? (
                       <rect key={i} x={x} y={EYE - 7} width={0.88} height={7} fill={P.trees[i % 3]} />
                     ) : (

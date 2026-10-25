@@ -34,6 +34,8 @@ import {
   isFlickerSafe,
   autoIso,
   ND_FILTERS,
+  BACKDROPS,
+  type BackdropKind,
   CPL_LOSS,
   pickNd,
   nearestIso,
@@ -159,6 +161,10 @@ export default function App() {
   const scene = SCENES.find((s) => s.id === sceneId) ?? SCENES[0];
   const [boost, setBoost] = useState(0);
   const [lightK, setLightK] = useState(scene.kelvin);
+  const [backdropId, setBackdropId] = useState("auto");
+  const bd = BACKDROPS[backdropId];
+  const viewPalette = bd ? { ...scene.palette, ...bd.palette } : scene.palette;
+  const backdropKind: BackdropKind = bd ? bd.kind : scene.palette.indoor ? "curtain" : "trees";
   const selectScene = (id: string) => {
     setSceneId(id);
     const s = SCENES.find((x) => x.id === id);
@@ -788,7 +794,8 @@ export default function App() {
             frameHeightMM={isVideo ? frameH : sensor.height}
             cocMM={coc}
             subject={subject}
-            palette={scene.palette}
+            palette={viewPalette}
+            backdrop={backdropKind}
             exposureDelta={exposureDelta}
             cast={cast}
             grain={grain}
@@ -806,7 +813,14 @@ export default function App() {
               wb: `${Math.round(camWbK / 100) * 100}K`,
             }}
           />
-          <p className="caption">{scene.palette.indoor ? t.monitorCaptionIndoor : t.monitorCaption}</p>
+          <div className="backdrop-row">
+            <label htmlFor="backdrop">{t.backdrop}</label>
+            <select id="backdrop" className="control" value={backdropId} onChange={(e) => setBackdropId(e.target.value)}>
+              {(["auto", "garden", "curtain", "forest", "city", "beach"] as const).map((k) => (
+                <option key={k} value={k}>{t.backdrops[k]}</option>
+              ))}
+            </select>
+          </div>
           <div className="card">
             {g_light}
             {g_photo}

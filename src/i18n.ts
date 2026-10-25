@@ -182,7 +182,16 @@ export const DICT = {
     "modeA": "A (Blendenpriorität)",
     "shake": "⚠ Verwacklungsgefahr ohne Stabilisator (kürzer als 1/{x} s)",
     "rowOk": "Reihe {x} scharf",
-    "rowSoft": "Reihe {x} unscharf"
+    "rowSoft": "Reihe {x} unscharf",
+    "backdrop": "Hintergrund",
+    "backdrops": {
+      "auto": "Passend zur Lichtsituation",
+      "garden": "Garten",
+      "curtain": "Saal mit Vorhang",
+      "forest": "Wald",
+      "city": "Stadt",
+      "beach": "Strand / Meer"
+    }
   },
   "bs": {
     "near": "Bliža granica",
@@ -313,7 +322,16 @@ export const DICT = {
     "modeA": "A (prioritet blende)",
     "shake": "⚠ Opasnost od trešnje bez stabilizacije (brže od 1/{x} s)",
     "rowOk": "Red {x} oštar",
-    "rowSoft": "Red {x} neoštar"
+    "rowSoft": "Red {x} neoštar",
+    "backdrop": "Pozadina",
+    "backdrops": {
+      "auto": "Prema svjetlosnoj situaciji",
+      "garden": "Bašta",
+      "curtain": "Sala sa zavjesom",
+      "forest": "Šuma",
+      "city": "Grad",
+      "beach": "Plaža / more"
+    }
   },
   "sr": {
     "near": "Bliža granica",
@@ -444,7 +462,16 @@ export const DICT = {
     "modeA": "A (prioritet blende)",
     "shake": "⚠ Opasnost od trešenja bez stabilizacije (brže od 1/{x} s)",
     "rowOk": "Red {x} oštar",
-    "rowSoft": "Red {x} neoštar"
+    "rowSoft": "Red {x} neoštar",
+    "backdrop": "Pozadina",
+    "backdrops": {
+      "auto": "Prema svetlosnoj situaciji",
+      "garden": "Bašta",
+      "curtain": "Sala sa zavesom",
+      "forest": "Šuma",
+      "city": "Grad",
+      "beach": "Plaža / more"
+    }
   },
   "sq": {
     "near": "Kufiri i afërt",
@@ -575,7 +602,16 @@ export const DICT = {
     "modeA": "A (përparësi diafragme)",
     "shake": "⚠ Rrezik dridhjeje pa stabilizim (më shpejt se 1/{x} s)",
     "rowOk": "Rreshti {x} i mprehtë",
-    "rowSoft": "Rreshti {x} jo i mprehtë"
+    "rowSoft": "Rreshti {x} jo i mprehtë",
+    "backdrop": "Sfondi",
+    "backdrops": {
+      "auto": "Sipas situatës së dritës",
+      "garden": "Kopsht",
+      "curtain": "Sallë me perde",
+      "forest": "Pyll",
+      "city": "Qytet",
+      "beach": "Plazh / det"
+    }
   },
   "en": {
     "near": "Near limit",
@@ -697,7 +733,16 @@ export const DICT = {
     "modeA": "A (aperture priority)",
     "shake": "⚠ Risk of camera shake without stabilisation (faster than 1/{x} s)",
     "rowOk": "Row {x} sharp",
-    "rowSoft": "Row {x} soft"
+    "rowSoft": "Row {x} soft",
+    "backdrop": "Background",
+    "backdrops": {
+      "auto": "Match the lighting",
+      "garden": "Garden",
+      "curtain": "Hall with curtain",
+      "forest": "Forest",
+      "city": "City",
+      "beach": "Beach / sea"
+    }
   },
   "tr": {
     "near": "Yakın sınır",
@@ -828,7 +873,16 @@ export const DICT = {
     "modeA": "A (diyafram önceliği)",
     "shake": "⚠ Sabitleme olmadan titreme riski (1/{x} sn'den hızlı çekin)",
     "rowOk": "{x}. sıra net",
-    "rowSoft": "{x}. sıra bulanık"
+    "rowSoft": "{x}. sıra bulanık",
+    "backdrop": "Arka plan",
+    "backdrops": {
+      "auto": "Işık durumuna göre",
+      "garden": "Bahçe",
+      "curtain": "Perdeli salon",
+      "forest": "Orman",
+      "city": "Şehir",
+      "beach": "Plaj / deniz"
+    }
   },
   "es": {
     "near": "Límite cercano",
@@ -959,7 +1013,16 @@ export const DICT = {
     "modeA": "A (prioridad a la apertura)",
     "shake": "⚠ Riesgo de trepidación sin estabilizador (más rápido que 1/{x} s)",
     "rowOk": "Fila {x} nítida",
-    "rowSoft": "Fila {x} desenfocada"
+    "rowSoft": "Fila {x} desenfocada",
+    "backdrop": "Fondo",
+    "backdrops": {
+      "auto": "Según la iluminación",
+      "garden": "Jardín",
+      "curtain": "Salón con cortina",
+      "forest": "Bosque",
+      "city": "Ciudad",
+      "beach": "Playa / mar"
+    }
   },
   "fr": {
     "near": "Limite proche",
@@ -1090,7 +1153,16 @@ export const DICT = {
     "modeA": "A (priorité ouverture)",
     "shake": "⚠ Risque de flou de bougé sans stabilisation (plus rapide que 1/{x} s)",
     "rowOk": "Rang {x} net",
-    "rowSoft": "Rang {x} flou"
+    "rowSoft": "Rang {x} flou",
+    "backdrop": "Arrière-plan",
+    "backdrops": {
+      "auto": "Selon l'éclairage",
+      "garden": "Jardin",
+      "curtain": "Salle avec rideau",
+      "forest": "Forêt",
+      "city": "Ville",
+      "beach": "Plage / mer"
+    }
   },
   "ru": {
     "near": "Ближняя граница",
@@ -1221,7 +1293,16 @@ export const DICT = {
     "modeA": "A (приоритет диафрагмы)",
     "shake": "⚠ Риск шевелёнки без стабилизатора (короче 1/{x} с)",
     "rowOk": "Ряд {x} резкий",
-    "rowSoft": "Ряд {x} нерезкий"
+    "rowSoft": "Ряд {x} нерезкий",
+    "backdrop": "Фон",
+    "backdrops": {
+      "auto": "По освещению",
+      "garden": "Сад",
+      "curtain": "Зал с занавесом",
+      "forest": "Лес",
+      "city": "Город",
+      "beach": "Пляж / море"
+    }
   },
   "ja": {
     "near": "前方限界",
@@ -1352,7 +1433,16 @@ export const DICT = {
     "modeA": "A（絞り優先）",
     "shake": "⚠ 手ブレ補正なしでは手ブレの恐れ（1/{x}秒より速く）",
     "rowOk": "{x}列目：ピント内",
-    "rowSoft": "{x}列目：ボケ"
+    "rowSoft": "{x}列目：ボケ",
+    "backdrop": "背景",
+    "backdrops": {
+      "auto": "光の状況に合わせる",
+      "garden": "庭園",
+      "curtain": "カーテンのある会場",
+      "forest": "森",
+      "city": "街",
+      "beach": "ビーチ / 海"
+    }
   },
   "zh": {
     "near": "近景深界限",
@@ -1483,7 +1573,16 @@ export const DICT = {
     "modeA": "A（光圈优先）",
     "shake": "⚠ 无防抖时可能手抖（快于 1/{x} 秒）",
     "rowOk": "第 {x} 排清晰",
-    "rowSoft": "第 {x} 排模糊"
+    "rowSoft": "第 {x} 排模糊",
+    "backdrop": "背景",
+    "backdrops": {
+      "auto": "随光线环境",
+      "garden": "花园",
+      "curtain": "带帘幕的大厅",
+      "forest": "森林",
+      "city": "城市",
+      "beach": "海滩 / 大海"
+    }
   },
   "ko": {
     "near": "근거리 한계",
@@ -1614,7 +1713,16 @@ export const DICT = {
     "modeA": "A (조리개 우선)",
     "shake": "⚠ 손떨림 보정 없이 흔들림 위험 (1/{x}초보다 빠르게)",
     "rowOk": "{x}열 선명",
-    "rowSoft": "{x}열 흐림"
+    "rowSoft": "{x}열 흐림",
+    "backdrop": "배경",
+    "backdrops": {
+      "auto": "조명 상황에 맞춤",
+      "garden": "정원",
+      "curtain": "커튼 있는 홀",
+      "forest": "숲",
+      "city": "도시",
+      "beach": "해변 / 바다"
+    }
   }
 };
 

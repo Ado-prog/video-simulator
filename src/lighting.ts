@@ -306,3 +306,43 @@ export function nearestIso(target: number, minIso = 100) {
     Math.abs(Math.log2(v / target)) < Math.abs(Math.log2(best / target)) ? v : best
   );
 }
+
+// ── Backgrounds that can be chosen independently of the light scene
+export type BackdropKind = "trees" | "curtain" | "buildings" | "sea";
+export const BACKDROPS: Record<string, { kind: BackdropKind; palette: Partial<ScenePalette> }> = {
+  garden: {
+    kind: "trees",
+    palette: {
+      indoor: false, skyTop: "#7fb2e5", skyBottom: "#e3f0f6", groundTop: "#86b45e", groundBottom: "#4f7a36",
+      hills: "#a3bfae", trees: ["#4c8a45", "#5e9b52", "#3f7a3a"], trunk: "#5b4632", leaves: ["#3c7034", "#4f8a44"],
+    },
+  },
+  curtain: {
+    kind: "curtain",
+    palette: {
+      indoor: true, skyTop: "#5e1824", skyBottom: "#86283a", groundTop: "#6a4a34", groundBottom: "#3e2a1e",
+      trees: ["#7a1f2b", "#8f2a36", "#6b1824"], leaves: ["#d9c9a8", "#efe3c8"],
+    },
+  },
+  forest: {
+    kind: "trees",
+    palette: {
+      indoor: false, skyTop: "#9cc0dc", skyBottom: "#e2ecef", groundTop: "#5f7f45", groundBottom: "#34482a",
+      hills: "#6e8a74", trees: ["#2f5a34", "#3b6b3f", "#24472a"], trunk: "#3f3022", leaves: ["#2f5a2a", "#3c7034"],
+    },
+  },
+  city: {
+    kind: "buildings",
+    palette: {
+      indoor: false, skyTop: "#8fb3d9", skyBottom: "#e9eef2", groundTop: "#9a9a94", groundBottom: "#6c6c68",
+      hills: "#b9c3cc", trees: ["#c7b8a3", "#9fa8b2", "#d9cbb5"], trunk: "#5b4632", leaves: ["#4f7a44", "#5e8a52"],
+    },
+  },
+  beach: {
+    kind: "sea",
+    palette: {
+      indoor: false, skyTop: "#6fb0e8", skyBottom: "#e6f3fb", groundTop: "#ecd9b0", groundBottom: "#d4bb88",
+      hills: "#2f86b5", trees: ["#2f86b5", "#4aa3c9", "#2a6f9a"], trunk: "#7a5a3a", leaves: ["#5f9a46", "#4f8a3a"],
+    },
+  },
+};
