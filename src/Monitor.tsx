@@ -1,19 +1,64 @@
+import { useEffect, useRef, useState } from "react";
 import type { ScenePalette } from "./lighting";
 import { blurDisc } from "./optics";
 
-// Simulated camera monitor in 16:9. World units are metres, measured from the camera.
+// Simulated camera monitor (16:9 for video, sensor aspect for photo).
+// World units are metres, measured from the camera.
 
 const W = 320;
-const H = 180;
 const EYE = 1.5; // camera height
 
-export type SubjectKind = "person" | "couple" | "group";
+export type SubjectKind = "person" | "couple" | "group1" | "group2" | "group3";
+
+/** Distance between rows in a group photo, metres. */
+export const ROW_GAP = 0.8;
+
+export function rowCount(kind: SubjectKind) {
+  return kind === "group3" ? 3 : kind === "group2" ? 2 : 1;
+}
+
+type Figure = { x: number; h: number; dress?: boolean; tone: string };
+type Row = { offset: number; figures: Figure[] };
+
+const TONES = ["#25242b", "#efeae2", "#3a4a5c", "#8a3b4c", "#4d5b3c", "#2c3340", "#6b4a7a"];
+
+function rows(kind: SubjectKind): Row[] {
+  if (kind === "person") return [{ offset: 0, figures: [{ x: 0, h: 1.78, tone: "#2c3340" }] }];
+  if (kind === "couple")
+    return [
+      {
+        offset: 0,
+        figures: [
+          { x: -0.28, h: 1.82, tone: "#25242b" },
+          { x: 0.26, h: 1.66, dress: true, tone: "#efeae2" },
+        ],
+      },
+    ];
+  const n = rowCount(kind);
+  return Array.from({ length: n }, (_, r) => {
+    const count = 5 + r;
+    const shift = r % 2 ? 0.27 : 0;
+    return {
+      offset: r * ROW_GAP,
+      figures: Array.from({ length: count }, (_, i) => {
+        const x = (i - (count - 1) / 2) * 0.55 + shift;
+        const dress = (i + r) % 2 === 1;
+        return { x, h: dress ? 1.64 + ((i * 7) % 5) * 0.02 : 1.76 + ((i * 3) % 4) * 0.02, dress, tone: TONES[(i * 3 + r * 2) % TONES.length] };
+      }),
+    };
+  });
+}
+
+export type MeterInput = { avg: number; peak: number; clip: boolean; limiting: boolean };
 
 type Props = {
+  mode: "photo" | "video";
+  aspect: number; // width / height of the frame
+  meter?: MeterInput;
   focal: number; // mm
   aperture: number;
-  focusM: number; // focus / subject distance in metres
-  frameHeightMM: number; // height of the 16:9 frame on the sensor
+  focusM: number; // focus distance (front row) in metres
+  frameHeightMM: number; // height of the frame on the sensor
   cocMM: number;
   subject: SubjectKind;
   palette: ScenePalette;
@@ -26,24 +71,6 @@ type Props = {
   hud: { fps: string; shutter: string; iso: string; focus: string; profile: string; filters: string; wb: string };
   label: string;
 };
-
-type Figure = { x: number; h: number; dress?: boolean; tone: string };
-
-function figures(kind: SubjectKind): Figure[] {
-  if (kind === "couple")
-    return [
-      { x: -0.28, h: 1.82, tone: "#25242b" },
-      { x: 0.26, h: 1.66, dress: true, tone: "#efeae2" },
-    ];
-  if (kind === "group")
-    return [
-      { x: -0.75, h: 1.7, tone: "#3a4a5c" },
-      { x: -0.25, h: 1.82, tone: "#25242b" },
-      { x: 0.25, h: 1.66, dress: true, tone: "#efeae2" },
-      { x: 0.75, h: 1.62, dress: true, tone: "#8a3b4c" },
-    ];
-  return [{ x: 0, h: 1.78, tone: "#2c3340" }];
-}
 
 /** A simple standing figure, feet at y = 0, drawn upward (negative y). */
 function FigureShape({ f }: { f: Figure }) {
@@ -80,8 +107,78 @@ function FigureShape({ f }: { f: Figure }) {
   );
 }
 
+/** Animated two-channel audio level meter, drawn in the left edge of the screen. */
+function AudioMeter({ m, H }: { m: MeterInput; H: number }) {
+  const [lv, setLv] = useState({ a: m.avg, b: m.avg, pa: m.avg, pb: m.avg });
+  const ref = useRef(m);
+  ref.current = m;
+  useEffect(() => {
+    let raf = 0;
+    let last = 0;
+    let state = { a: m.avg, b: m.avg, pa: m.avg, pb: m.avg, ta: 0, tb: 0 };
+    const reduce = typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const tick = (now: number) => {
+      raf = requestAnimationFrame(tick);
+      if (now - last < 60) return;
+      last = now;
+      const { avg, peak } = ref.current;
+      const swing = Math.max(peak - avg, 3);
+      const next = (v: number) => {
+        const target = reduce ? avg : avg - 6 + Math.random() * (swing + 6);
+        return v + (Math.min(target, peak) - v) * 0.5;
+      };
+      const a = next(state.a);
+      const b = next(state.b) - 0.5;
+      const hold = (p: number, v: number, t: number) => (v >= p ? [v, now] : now - t > 900 ? [p - 1.5, t] : [p, t]);
+      const [pa, ta] = hold(state.pa, a, state.ta);
+      const [pb, tb] = hold(state.pb, b, state.tb);
+      state = { a, b, pa, pb, ta, tb };
+      setLv({ a, b, pa, pb });
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  const top = 30;
+  const h = H - 62;
+  const y = (db: number) => top + (Math.min(0, Math.max(-48, db)) / -48) * h;
+  const bar = (x: number, v: number, p: number) => (
+    <g>
+      <rect x={x} y={top} width={5} height={h} fill="#000" opacity={0.45} />
+      <rect x={x} y={y(v)} width={5} height={top + h - y(v)} fill="url(#m-meter)" />
+      <rect x={x} y={y(p) - 0.6} width={5} height={1.2} fill="#fff" />
+    </g>
+  );
+  return (
+    <g className="hud" fontSize={5.5}>
+      <defs>
+        <linearGradient id="m-meter" x1="0" y1="1" x2="0" y2="0" gradientUnits="objectBoundingBox">
+          <stop offset="0%" stopColor="#36d17a" />
+          <stop offset="70%" stopColor="#36d17a" />
+          <stop offset="80%" stopColor="#ffd34d" />
+          <stop offset="92%" stopColor="#ff4d47" />
+        </linearGradient>
+      </defs>
+      {bar(6, lv.a, lv.pa)}
+      {bar(13, lv.b, lv.pb)}
+      {[0, -6, -12, -20, -40].map((d) => (
+        <g key={d}>
+          <line x1={19.5} y1={y(d)} x2={22} y2={y(d)} stroke="#fff" strokeWidth={0.5} />
+          <text x={23.5} y={y(d) + 2}>{d}</text>
+        </g>
+      ))}
+      <text x={6} y={top + h + 7}>1</text>
+      <text x={13} y={top + h + 7}>2</text>
+      {m.clip && <text x={6} y={top - 3} fill="#ff4d47">CLIP</text>}
+      {!m.clip && m.limiting && <text x={6} y={top - 3} fill="#ffd34d">LIM</text>}
+    </g>
+  );
+}
+
 export default function Monitor(p: Props) {
   const P = p.palette;
+  const H = Math.round(W / p.aspect);
+  const isVideo = p.mode === "video";
   const vfov = 2 * Math.atan(p.frameHeightMM / 2 / p.focal);
   const frameH = (d: number) => 2 * d * Math.tan(vfov / 2);
   const scale = (d: number) => H / frameH(d);
@@ -123,7 +220,8 @@ export default function Monitor(p: Props) {
   const lScale = scale(lightsD);
   const lBlur = blur(lightsD);
 
-  const figs = figures(p.subject);
+  const subjRows = rows(p.subject);
+  const figs = subjRows[0].figures;
   const tallest = Math.max(...figs.map((f) => f.h));
   const groupHalf = Math.max(...figs.map((f) => Math.abs(f.x))) + 0.3;
   const af = {
@@ -162,9 +260,9 @@ export default function Monitor(p: Props) {
             {([
               ["m-b-hills", sd(hillsD)],
               ["m-b-back", sd(backD)],
-              ["m-b-subj", sd(d)],
+              ...subjRows.map((row, i): [string, number] => [`m-b-row-${i}`, sd(d + row.offset)]),
               ["m-b-branch", sd(branchD)],
-            ] as const).map(([id, s]) => (
+            ] as [string, number][]).map(([id, s]) => (
               <filter key={id} id={id} filterUnits="userSpaceOnUse" x={-100} y={-100} width={W + 200} height={H + 200}>
                 <feGaussianBlur stdDeviation={s} />
               </filter>
@@ -246,15 +344,20 @@ export default function Monitor(p: Props) {
                 return <circle key={i} cx={cx} cy={cy} r={r} fill={`url(#m-bokeh-${i % P.lights.length})`} opacity={op} />;
               })}
 
-              <g filter="url(#m-b-subj)">
-                <g transform={layer(d)}>
-                  <g transform={`translate(0 ${EYE})`}>
-                    {figs.map((f, i) => (
-                      <FigureShape key={i} f={f} />
-                    ))}
+              {[...subjRows].reverse().map((row) => {
+                const i = subjRows.indexOf(row);
+                return (
+                  <g key={i} filter={`url(#m-b-row-${i})`}>
+                    <g transform={layer(d + row.offset)}>
+                      <g transform={`translate(0 ${EYE})`}>
+                        {row.figures.map((f, j) => (
+                          <FigureShape key={j} f={f} />
+                        ))}
+                      </g>
+                    </g>
                   </g>
-                </g>
-              </g>
+                );
+              })}
 
               <g filter="url(#m-b-branch)">
                 <g transform={layer(branchD)}>
@@ -293,10 +396,18 @@ export default function Monitor(p: Props) {
               </g>
             )}
 
+            {isVideo && p.meter && <AudioMeter m={p.meter} H={H} />}
+
             <g className="hud" fontSize={7}>
-              <circle cx={10} cy={10} r={3} fill="#ff3b3b" />
-              <text x={16} y={12.5}>REC</text>
-              <text x={38} y={12.5} opacity={0.85}>{p.hud.fps}</text>
+              {isVideo ? (
+                <>
+                  <circle cx={10} cy={10} r={3} fill="#ff3b3b" />
+                  <text x={16} y={12.5}>REC</text>
+                  <text x={38} y={12.5} opacity={0.85}>{p.hud.fps}</text>
+                </>
+              ) : (
+                <text x={6} y={12.5} opacity={0.85}>{p.hud.fps}</text>
+              )}
               {p.hud.profile && <text x={W - 6} y={12.5} textAnchor="end" fill="#ffcf6b">{p.hud.profile}</text>}
               {p.hud.filters && <text x={W - 6} y={22} textAnchor="end" fill="#9fd8ff">{p.hud.filters}</text>}
               <rect y={H - 15} width={W} height={15} fill="#000" opacity={0.55} />

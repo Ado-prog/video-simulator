@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import Monitor, { type SubjectKind } from "./Monitor";
+import Monitor, { type SubjectKind, ROW_GAP, rowCount } from "./Monitor";
+import { MICS, MIC_BRANDS, INTERNAL_MIC, SOURCES, type SourceId, audioLevels, autoGain } from "./audio";
 import SharpZone from "./SharpZone";
 import { DICT, LANGUAGES, fill, loadLang, saveLang, type Lang } from "./i18n";
 import { BRANDS, CAMERAS, lensesForCamera, maxApertureAt, logProfilesFor, type Lens } from "./gear";
@@ -16,6 +17,9 @@ import {
 import {
   SCENES,
   ISOS,
+  SHUTTER_SPEEDS,
+  correctShutter,
+  nearestShutter,
   WB_MODES,
   type WbMode,
   formatShutter,
@@ -83,6 +87,9 @@ export default function App() {
   const isDark =
     theme === "dark" ||
     (theme === "system" && typeof matchMedia !== "undefined" && matchMedia("(prefers-color-scheme: dark)").matches);
+
+  const [shootMode, setShootMode] = useState<"photo" | "video">("video");
+  const isVideo = shootMode === "video";
 
   // ── Camera & lens
   const [cameraId, setCameraId] = useState(DEFAULT_CAMERA);
@@ -193,25 +200,73 @@ export default function App() {
     setShutter(shutter180(sys, rate));
   };
 
+  // photo settings
+  const [expMode, setExpMode] = useState<"M" | "A">("M");
+  const [photoShutter, setPhotoShutter] = useState(1 / 250);
+  const [photoIso, setPhotoIso] = useState(800);
+
   const sceneEV = scene.ev + boost - filterStops;
-  const auto = autoIso(sceneEV, aperture, shutter, minIso);
-  const effIso = isoAuto ? auto.iso : Math.max(iso, minIso);
-  const exposureDelta = sceneEV - cameraEV(aperture, shutter, effIso);
+  const activeLog = isVideo ? logProfile : undefined;
+  const activeMinIso = isVideo ? minIso : 100;
+  const effShutter = isVideo
+    ? shutter
+    : expMode === "A"
+    ? clamp(correctShutter(sceneEV, aperture, photoIso), 1 / 8000, 30)
+    : photoShutter;
+  const auto = autoIso(sceneEV, aperture, effShutter, activeMinIso);
+  const useAuto = isVideo && isoAuto;
+  const effIso = isVideo ? (isoAuto ? auto.iso : Math.max(iso, minIso)) : photoIso;
+  const exposureDelta = sceneEV - cameraEV(aperture, effShutter, effIso);
+  const shakeLimit = Math.round(focal * crop);
+  const shakeRisk = !isVideo && effShutter > 1 / shakeLimit;
   const camWbK = whiteBalanceKelvin(wbMode, lightK, wbK);
   const cast = colorCast(lightK, camWbK);
   const grain = Math.min(0.45, Math.max(0, Math.log2(effIso / 100)) * 0.045 * Math.sqrt(crop));
   const mains = VIDEO_SYSTEMS[vSystem].mainsHz;
-  const flicker = scene.palette.indoor && !isFlickerSafe(shutter, mains);
+  const flicker = isVideo && scene.palette.indoor && !isFlickerSafe(shutter, mains);
   const ideal = shutter180(vSystem, fps);
   const on180 = Math.abs(Math.log2(shutter / ideal)) < 0.2;
 
   const exposeCorrectly = () => {
     const baseEV = scene.ev + boost - (cplOn ? CPL_LOSS : 0);
+    if (!isVideo) {
+      let ev = baseEV - ndStops;
+      let tt = correctShutter(ev, aperture, photoIso);
+      if (tt < 1 / 8000) {
+        const pickP = pickNd(Math.log2(1 / 8000 / tt) + ndStops);
+        setNdId(pickP.id);
+        ev = baseEV - pickP.stops;
+        tt = correctShutter(ev, aperture, photoIso);
+      }
+      setPhotoShutter(nearestShutter(tt));
+      return;
+    }
     const over = baseEV - cameraEV(aperture, shutter, minIso);
     const pick = pickNd(over);
     setNdId(pick.id);
     if (!isoAuto) setIso(nearestIso(minIso * Math.pow(2, pick.stops - over), minIso));
   };
+
+  // ── Audio
+  const [micId, setMicId] = useState("rode-wpro");
+  const [sourceId, setSourceId] = useState<SourceId>("speech");
+  const [gain, setGain] = useState(0);
+  const [autoLevel, setAutoLevel] = useState(false);
+  const [limiter, setLimiter] = useState(true);
+  const [lowCut, setLowCut] = useState(false);
+  const mic = MICS.find((x) => x.id === micId) ?? INTERNAL_MIC;
+  const audioBase = { mic, source: sourceId, sceneId, outdoor: !scene.palette.indoor, cameraDistanceM: focusM, lowCut };
+  const effGain = autoLevel ? autoGain(audioBase) : gain;
+  const audio = audioLevels({ ...audioBase, gain: effGain, limiter });
+  const quality = audio.snr === null ? null : audio.snr >= 15 ? "good" : audio.snr >= 6 ? "fair" : "poor";
+  const tooNoisy = audio.avg - audio.noiseFloor < 18;
+  const typeLabel = { lav: t.t_lav, oncam: t.t_oncam, boom: t.t_boom, internal: t.t_internal }[mic.type];
+
+  // ── Group rows: which rows are inside the sharp zone
+  const rowsSharp = Array.from({ length: rowCount(subject) }, (_, i) => {
+    const dist = (focusM + i * ROW_GAP) * 1000;
+    return dist >= dof.near - 1 && dist <= dof.far + 1;
+  });
 
   const sel = (id: string) => ({ id, className: "control" });
 
@@ -244,31 +299,50 @@ export default function App() {
         </div>
       </header>
 
-      <p className="tagline">{t.appTag}</p>
+      <p className="tagline">{isVideo ? t.appTag : t.appTagPhoto}</p>
+
+      <div className="modes" role="tablist" aria-label={`${t.photo} / ${t.video}`}>
+        {(["photo", "video"] as const).map((m) => (
+          <button
+            key={m}
+            type="button"
+            role="tab"
+            aria-selected={shootMode === m}
+            className={`mode-tab ${shootMode === m ? "is-active" : ""} mode-${m}`}
+            onClick={() => setShootMode(m)}
+          >
+            <span className="mode-dot" aria-hidden="true" />
+            {m === "photo" ? t.photo : t.video}
+          </button>
+        ))}
+      </div>
 
       <main className="layout">
         <section className="stage" aria-label={t.monitor}>
           <Monitor
+            mode={shootMode}
+            aspect={isVideo ? 16 / 9 : sensor.width / sensor.height}
+            meter={{ avg: audio.avg, peak: audio.peak, clip: audio.clip, limiting: audio.limiting }}
             focal={focal}
             aperture={aperture}
             focusM={focusM}
-            frameHeightMM={frameH}
+            frameHeightMM={isVideo ? frameH : sensor.height}
             cocMM={coc}
             subject={subject}
             palette={scene.palette}
             exposureDelta={exposureDelta}
             cast={cast}
             grain={grain}
-            logView={!!logProfile && !lut}
+            logView={!!activeLog && !lut}
             cpl={cplEffect}
             uv={uvOn}
             label={t.monitor}
             hud={{
-              fps: `${fps}p ${vSystem}`,
-              shutter: formatShutter(shutter),
-              iso: isoAuto ? `AUTO ${auto.display}` : String(Math.max(iso, minIso)),
+              fps: isVideo ? `${fps}p ${vSystem}` : expMode === "A" ? "A" : "M",
+              shutter: formatShutter(effShutter),
+              iso: useAuto ? `AUTO ${auto.display}` : String(effIso),
               focus: formatMeters(focusM * 1000),
-              profile: logProfile ? `${logProfile.name}${lut ? " + LUT" : ""}` : "",
+              profile: activeLog ? `${activeLog.name}${lut ? " + LUT" : ""}` : "",
               filters: filterTag,
               wb: `${Math.round(camWbK / 100) * 100}K`,
             }}
@@ -281,6 +355,16 @@ export default function App() {
             <div><dt>{t.total}</dt><dd>{formatMeters(totalMM)}</dd></div>
             <div><dt>{t.hyperfocal}</dt><dd>{formatMeters(dof.hyperfocal)}</dd></div>
           </dl>
+
+          {rowsSharp.length > 1 && (
+            <p className="chip-row">
+              {rowsSharp.map((ok, i) => (
+                <span key={i} className={`chip ${ok ? "chip-ok" : "chip-bad"}`}>
+                  {fill(ok ? t.rowOk : t.rowSoft, i + 1)}
+                </span>
+              ))}
+            </p>
+          )}
 
           <SharpZone focusM={focusM} nearMM={dof.near} farMM={dof.far} hyperfocalMM={dof.hyperfocal} label={t.sharpZone} />
           <button
@@ -386,7 +470,7 @@ export default function App() {
 
             <label htmlFor="subject">{t.subject}</label>
             <select {...sel("subject")} value={subject} onChange={(e) => setSubject(e.target.value as SubjectKind)}>
-              {(["person", "couple", "group"] as const).map((k) => (
+              {(["person", "couple", "group1", "group2", "group3"] as const).map((k) => (
                 <option key={k} value={k}>{t.subjects[k]}</option>
               ))}
             </select>
@@ -413,7 +497,61 @@ export default function App() {
             <input id="lightK" className="kelvin" type="range" min={2000} max={10000} step={100} value={lightK} onChange={(e) => setLightK(Number(e.target.value))} />
           </fieldset>
 
+          {/* Photo */}
+          {!isVideo && (
+          <fieldset className="group">
+            <legend>{t.photo}</legend>
+            <div className="seg" role="radiogroup" aria-label={t.mode}>
+              {(["M", "A"] as const).map((m) => (
+                <label key={m} className={`seg-item ${expMode === m ? "is-on" : ""}`}>
+                  <input type="radio" name="expmode" id={`exp-${m}`} checked={expMode === m} onChange={() => setExpMode(m)} />
+                  {m === "M" ? t.modeM : t.modeA}
+                </label>
+              ))}
+            </div>
+            <div className="grid2">
+              <div>
+                <label htmlFor="pshutter">{t.shutter}</label>
+                {expMode === "M" ? (
+                  <select {...sel("pshutter")} value={String(photoShutter)} onChange={(e) => setPhotoShutter(Number(e.target.value))}>
+                    {SHUTTER_SPEEDS.map((v) => (
+                      <option key={v} value={String(v)}>{formatShutter(v)}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <output id="pshutter" className="readout">{formatShutter(effShutter)}</output>
+                )}
+              </div>
+              <div>
+                <label htmlFor="piso">ISO</label>
+                <select {...sel("piso")} value={String(photoIso)} onChange={(e) => setPhotoIso(Number(e.target.value))}>
+                  {ISOS.map((v) => (
+                    <option key={v} value={String(v)}>{v}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <label htmlFor="pwb">{t.wb}</label>
+            <select {...sel("pwb")} value={wbMode} onChange={(e) => setWbMode(e.target.value as WbMode)}>
+              {WB_MODES.map((m) => (
+                <option key={m} value={m}>{(t.wbModes as Record<string, string>)[m]}</option>
+              ))}
+            </select>
+            {wbMode === "kelvin" && (
+              <>
+                <div className="row-label">
+                  <label htmlFor="pwbK">Kelvin</label>
+                  <output htmlFor="pwbK">{wbK} K</output>
+                </div>
+                <input id="pwbK" className="kelvin" type="range" min={2500} max={10000} step={100} value={wbK} onChange={(e) => setWbK(Number(e.target.value))} />
+              </>
+            )}
+            {shakeRisk && <p className="warn">{fill(t.shake, shakeLimit)}</p>}
+          </fieldset>
+          )}
+
           {/* Video */}
+          {isVideo && (
           <fieldset className="group">
             <legend>{t.video}</legend>
             <div className="grid2">
@@ -497,6 +635,81 @@ export default function App() {
             {flicker && <p className="warn">{fill(t.flicker, vSystem === "PAL" ? "1/50, 1/100" : "1/60, 1/120", mains)}</p>}
             {isoAuto && auto.atLimit && <p className="warn warn-strong">{fill(t.isoLimit, auto.display)}</p>}
           </fieldset>
+          )}
+
+          {/* Audio */}
+          {isVideo && (
+          <fieldset className="group">
+            <legend>{t.audio}</legend>
+            <label htmlFor="mic">{t.mic}</label>
+            <select {...sel("mic")} value={micId} onChange={(e) => setMicId(e.target.value)}>
+              <optgroup label={`★ ${t.myMics}`}>
+                {MICS.filter((x) => x.mine).map((x) => (
+                  <option key={x.id} value={x.id}>{x.brand} {x.name}</option>
+                ))}
+              </optgroup>
+              <option value="internal">{t.builtIn}{camera ? ` – ${camera.brand} ${camera.model}` : ""}</option>
+              {MIC_BRANDS.map((b) => (
+                <optgroup key={b} label={b}>
+                  {MICS.filter((x) => x.brand === b && !x.mine).map((x) => (
+                    <option key={x.id} value={x.id}>{x.brand} {x.name}</option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+            <p className="chip-row">
+              <span className="chip">{typeLabel}</span>
+              <span className="chip">{fill(t.micDistance, formatMeters(audio.distanceM * 1000))}</span>
+            </p>
+            {mic.float32 && <p className="note">{t.float32}</p>}
+
+            <label htmlFor="source">{t.source}</label>
+            <select {...sel("source")} value={sourceId} onChange={(e) => setSourceId(e.target.value as SourceId)}>
+              {(Object.keys(SOURCES) as SourceId[]).map((k) => (
+                <option key={k} value={k}>{t[`src_${k}` as const]}</option>
+              ))}
+            </select>
+
+            <div className="row-label">
+              <label htmlFor="gain">{t.gain}</label>
+              <output htmlFor="gain">{effGain > 0 ? "+" : ""}{effGain} dB</output>
+            </div>
+            <input id="gain" type="range" min={-12} max={30} step={1} value={effGain} disabled={autoLevel} onChange={(e) => setGain(Number(e.target.value))} />
+            <div className="checks">
+              <label className="check">
+                <input type="checkbox" id="autolevel" checked={autoLevel} onChange={(e) => setAutoLevel(e.target.checked)} />
+                {t.autoLevel}
+              </label>
+              <label className="check">
+                <input type="checkbox" id="limiter" checked={limiter} onChange={(e) => setLimiter(e.target.checked)} />
+                {t.limiter}
+              </label>
+              <label className="check">
+                <input type="checkbox" id="lowcut" checked={lowCut} onChange={(e) => setLowCut(e.target.checked)} />
+                {t.lowCut}
+              </label>
+            </div>
+
+            <p className="levels">{fill(t.levelLine, Math.round(audio.avg), Math.round(audio.peak))}</p>
+            {quality && (
+              <p className={quality === "good" ? "ok" : quality === "fair" ? "note" : "warn"}>
+                {t.intelligibility}: {t[`q_${quality}` as const]}
+              </p>
+            )}
+            {audio.clip ? (
+              <p className="warn warn-strong">{t.clip}</p>
+            ) : audio.overdriven ? (
+              <p className="warn warn-strong">{t.overdriven}</p>
+            ) : audio.avg < -36 ? (
+              <p className="warn">{t.tooQuiet}</p>
+            ) : tooNoisy ? (
+              <p className="warn">{t.noisy}</p>
+            ) : (
+              <p className="ok">{t.goodLevel}</p>
+            )}
+            {audio.limiting && !audio.overdriven && <p className="note">{t.limiting}</p>}
+          </fieldset>
+          )}
 
           {/* Filters */}
           <fieldset className="group">

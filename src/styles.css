@@ -214,3 +214,31 @@ input.kelvin { accent-color: var(--ink); }
 .footer a { color: var(--accent); }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* Photo / video switch */
+.modes {
+  display: inline-flex; gap: 4px; padding: 4px; margin: 0 0 16px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+}
+.mode-tab {
+  display: inline-flex; align-items: center; gap: 8px;
+  font: inherit; font-family: var(--font-display); font-weight: 600;
+  font-size: 17px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--muted); background: transparent;
+  border: 0; border-radius: 9px; padding: 8px 18px; cursor: pointer;
+}
+.mode-tab.is-active { background: var(--raised); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,0.18); }
+.mode-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); }
+.mode-video.is-active .mode-dot { background: var(--tally); }
+.mode-photo.is-active .mode-dot { background: var(--accent); }
+
+.seg { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 3px; border: 1px solid var(--line); border-radius: 8px; background: var(--raised); }
+.seg-item { display: flex; justify-content: center; align-items: center; gap: 6px; padding: 6px 4px; border-radius: 6px; cursor: pointer; color: var(--muted) !important; font-size: 13px !important; text-align: center; }
+.seg-item input { position: absolute; opacity: 0; pointer-events: none; }
+.seg-item.is-on { background: var(--accent); color: var(--accent-ink) !important; }
+.seg-item:focus-within { outline: 2px solid var(--accent); outline-offset: 1px; }
+.readout { display: block; font-family: var(--font-data); font-size: 16px; padding: 6px 0; }
+
+.levels { margin: 8px 0 0; font-family: var(--font-data); font-size: 13px; font-variant-numeric: tabular-nums; }
+.chip-ok { border-color: color-mix(in srgb, var(--ok) 55%, transparent); color: var(--ok); }
+.chip-bad { border-color: color-mix(in srgb, var(--tally) 55%, transparent); color: var(--tally); }
