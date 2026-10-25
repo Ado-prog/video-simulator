@@ -383,3 +383,16 @@ input[type="range"].kelvin-wb::-moz-range-track { background: linear-gradient(90
 .panel-lower { display: block; columns: 300px; column-gap: 12px; }
 .panel-lower > .group { break-inside: avoid; margin-bottom: 12px; width: 100%; }
 .panel-lower > .btn-primary { column-span: all; display: block; margin: 4px auto 0; min-width: 280px; }
+
+/* use the full window width */
+.app { max-width: 1880px; }
+.layout.is-photo .split,
+.layout.is-photo .stats,
+.layout.is-photo .stage > .chip-row { max-width: none; }
+.layout:not(.is-photo) { grid-template-columns: minmax(0, 1fr) 380px; }
+@media (max-width: 960px) { .layout:not(.is-photo) { grid-template-columns: minmax(0, 1fr); } }
+/* keep the pinned photo picture from filling the whole screen height */
+@media (min-width: 761px) {
+  .layout.is-photo .split { max-width: min(100%, calc((100vh - 190px) * 3)); }
+  .layout.is-photo .stats { max-width: min(100%, calc((100vh - 190px) * 3)); }
+}
