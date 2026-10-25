@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import Monitor, { type SubjectKind, ROW_GAP, rowCount } from "./Monitor";
 import { MICS, MIC_BRANDS, INTERNAL_MIC, SOURCES, type SourceId, audioLevels, autoGain } from "./audio";
 import PhotoDiagram from "./PhotoDiagram";
@@ -93,6 +93,45 @@ export default function App() {
 
   const [shootMode, setShootMode] = useState<"photo" | "video">("video");
   const isVideo = shootMode === "video";
+
+  // ── Resizable split between the side view and the monitor column
+  const studioRef = useRef<HTMLElement>(null);
+  const [sideFrac, setSideFrac] = useState(() => {
+    try {
+      const v = Number(localStorage.getItem("video-sim-side"));
+      if (v >= 0.2 && v <= 0.65) return v;
+    } catch {
+      /* storage unavailable */
+    }
+    return 1 / 3;
+  });
+  const saveSide = (f: number) => {
+    const v = clamp(f, 0.2, 0.65);
+    setSideFrac(v);
+    try {
+      localStorage.setItem("video-sim-side", String(v));
+    } catch {
+      /* storage unavailable */
+    }
+  };
+  const startDrag = (e: ReactPointerEvent<HTMLDivElement>) => {
+    const el = studioRef.current;
+    if (!el) return;
+    e.preventDefault();
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    const move = (ev: PointerEvent) => {
+      const rect = el.getBoundingClientRect();
+      saveSide((rect.right - ev.clientX) / rect.width);
+    };
+    const up = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      document.body.classList.remove("is-resizing");
+    };
+    document.body.classList.add("is-resizing");
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+  };
 
   // ── Camera & lens
   const [cameraId, setCameraId] = useState(DEFAULT_CAMERA);
@@ -737,7 +776,11 @@ export default function App() {
         ))}
       </div>
 
-      <main className={`studio ${isVideo ? "is-video" : "is-photo"}`}>
+      <main
+        ref={studioRef}
+        className={`studio ${isVideo ? "is-video" : "is-photo"}`}
+        style={{ "--side": sideFrac } as CSSProperties}
+      >
         {/* wide area: side view, numbers, camera & optics */}
         <div className="studio-main">
             <PhotoDiagram
@@ -779,6 +822,25 @@ export default function App() {
             {g_optics}
           </div>
           {isVideo && <div className="card card-wide card-audio">{g_audio}</div>}
+        </div>
+
+        <div
+          className="splitter"
+          role="separator"
+          aria-orientation="vertical"
+          aria-valuemin={20}
+          aria-valuemax={65}
+          aria-valuenow={Math.round(sideFrac * 100)}
+          tabIndex={0}
+          title="↔"
+          onPointerDown={startDrag}
+          onDoubleClick={() => saveSide(1 / 3)}
+          onKeyDown={(e) => {
+            if (e.key === "ArrowLeft") saveSide(sideFrac + 0.02);
+            if (e.key === "ArrowRight") saveSide(sideFrac - 0.02);
+          }}
+        >
+          <span aria-hidden="true" />
         </div>
 
         {/* narrow column: camera monitor and settings */}
