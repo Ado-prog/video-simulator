@@ -715,7 +715,23 @@ export default function App() {
 
       <p className="tagline">{isVideo ? t.appTag : t.appTagPhoto}</p>
 
-      <main className="simple">
+      <div className="modes" role="tablist" aria-label={`${t.photo} / ${t.video}`}>
+        {(["photo", "video"] as const).map((m) => (
+          <button
+            key={m}
+            type="button"
+            role="tab"
+            aria-selected={shootMode === m}
+            className={`mode-tab ${shootMode === m ? "is-active" : ""} mode-${m}`}
+            onClick={() => setShootMode(m)}
+          >
+            <span className="mode-dot" aria-hidden="true" />
+            {m === "photo" ? `📷 ${t.photo}` : `🎬 ${t.video}`}
+          </button>
+        ))}
+      </div>
+
+      <main className={`simple ${isVideo ? "is-video" : "is-photo"}`}>
         {/* left: side view, numbers, camera & optics */}
         <div className="col col-left">
             <PhotoDiagram
@@ -792,20 +808,6 @@ export default function App() {
           <p className="caption">{scene.palette.indoor ? t.monitorCaptionIndoor : t.monitorCaption}</p>
           <div className="card">
             {g_light}
-            <div className="mode-switch" role="tablist" aria-label={`${t.photo} / ${t.video}`}>
-              {(["photo", "video"] as const).map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  role="tab"
-                  aria-selected={shootMode === m}
-                  className={`mode-btn mode-btn-${m} ${shootMode === m ? "is-active" : ""}`}
-                  onClick={() => setShootMode(m)}
-                >
-                  {m === "photo" ? `📷 ${t.photo}` : `🎬 ${t.video}`}
-                </button>
-              ))}
-            </div>
             {g_photo}
             {g_video}
             {g_filters}
