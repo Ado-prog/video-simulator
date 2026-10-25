@@ -1,6 +1,12 @@
 # Photo & Video Simulator · Mustafi Studio
 
-**Live:** https://ado-prog.github.io/video-simulator/
+**▶ Try it live (free, no sign-up):** https://ado-prog.github.io/video-simulator/
+
+![Camera monitor preview: wedding couple in a garden with background blur, audio meter and exposure HUD](docs/monitor.jpg)
+
+| Side view: sharp zone | Group in a wedding hall |
+|---|---|
+| ![Side view with camera, angle of view and sharp zone](docs/side-view.jpg) | ![Group photo on the monitor in a wedding hall](docs/monitor-hall.jpg) |
 
 A depth-of-field, light, exposure and audio simulator for photographers and videographers, made by [Mustafi Studio](https://github.com/Ado-prog) (Zürich & Prizren).
 
@@ -32,3 +38,10 @@ npm run dev
 ## License
 
 MIT © 2026 Adis Mustafi (Mustafi Studio)
+
+## Share it
+
+If this helps you on set, a ⭐ on GitHub helps other photographers and videographers find it.
+
+**Keywords:** depth of field calculator, DOF simulator, bokeh preview, exposure simulator, ND filter calculator, 180 degree shutter rule, V-Log, S-Log3, wedding videography, Schärfentiefe-Rechner, Belichtung
+
