@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import Monitor, { type SubjectKind, ROW_GAP, rowCount } from "./Monitor";
 import { MICS, MIC_BRANDS, INTERNAL_MIC, SOURCES, type SourceId, audioLevels, autoGain } from "./audio";
 import SharpZone from "./SharpZone";
+import PhotoDiagram from "./PhotoDiagram";
+import { LensArt, IrisArt, CameraArt, cameraKind } from "./GearArt";
 import { DICT, LANGUAGES, fill, loadLang, saveLang, type Lang } from "./i18n";
 import { BRANDS, CAMERAS, lensesForCamera, maxApertureAt, logProfilesFor, type Lens } from "./gear";
 import {
@@ -317,8 +319,25 @@ export default function App() {
         ))}
       </div>
 
-      <main className="layout">
+      <main className={`layout ${isVideo ? "" : "is-photo"}`}>
         <section className="stage" aria-label={t.monitor}>
+          <div className={isVideo ? "" : "split"}>
+          {!isVideo && (
+            <PhotoDiagram
+              focal={focal}
+              aperture={aperture}
+              focusM={focusM}
+              nearMM={dof.near}
+              farMM={dof.far}
+              hyperfocalMM={dof.hyperfocal}
+              sensorHeightMM={sensor.height}
+              subject={subject}
+              aspect={sensor.width / sensor.height}
+              label={t.sharpZone}
+              nearLabel={t.near}
+              farLabel={t.far}
+            />
+          )}
           <Monitor
             mode={shootMode}
             aspect={isVideo ? 16 / 9 : sensor.width / sensor.height}
@@ -347,6 +366,7 @@ export default function App() {
               wb: `${Math.round(camWbK / 100) * 100}K`,
             }}
           />
+          </div>
           <p className="caption">{scene.palette.indoor ? t.monitorCaptionIndoor : t.monitorCaption}</p>
 
           <dl className="stats">
@@ -366,7 +386,9 @@ export default function App() {
             </p>
           )}
 
-          <SharpZone focusM={focusM} nearMM={dof.near} farMM={dof.far} hyperfocalMM={dof.hyperfocal} label={t.sharpZone} />
+          {isVideo && (
+            <SharpZone focusM={focusM} nearMM={dof.near} farMM={dof.far} hyperfocalMM={dof.hyperfocal} label={t.sharpZone} />
+          )}
           <button
             type="button"
             className="btn-ghost"
@@ -381,6 +403,9 @@ export default function App() {
           {/* Camera & lens */}
           <fieldset className="group">
             <legend>{t.camera}</legend>
+            <div className="art-wrap">
+              <CameraArt kind={cameraKind(camera?.id)} label={camera ? `${camera.brand} ${camera.model}` : t.manual} />
+            </div>
             <label htmlFor="camera">{t.camera}</label>
             <select {...sel("camera")} value={cameraId} onChange={(e) => selectCamera(e.target.value)}>
               <option value="">— {t.manual} —</option>
@@ -436,6 +461,9 @@ export default function App() {
             </div>
             <input id="focus" type="range" min={0} max={1000} value={toSlider(focusM)} onChange={(e) => setFocusM(fromSlider(Number(e.target.value)))} />
 
+            <div className="art-wrap art-wrap-lens">
+              <LensArt focal={focal} minF={lens ? lens.minFocal : Math.round(focal)} maxF={lens ? lens.maxFocal : Math.round(focal)} maxAperture={apMin} />
+            </div>
             <div className="row-label">
               <label htmlFor="focal">{t.focalLength}</label>
               <output htmlFor="focal">{Math.round(focal * 10) / 10} mm</output>
@@ -456,6 +484,8 @@ export default function App() {
               <label htmlFor="aperture">{t.aperture}</label>
               <output htmlFor="aperture">f/{aperture}</output>
             </div>
+            <div className="iris-row">
+            <IrisArt aperture={aperture} />
             <input
               id="aperture"
               type="range"
@@ -466,6 +496,7 @@ export default function App() {
               disabled={!!lens?.fixedAperture}
               onChange={(e) => setAperture(stops[Number(e.target.value)])}
             />
+            </div>
             {aperture > diffractionAt && <p className="warn">{fill(t.diffraction, diffractionAt.toFixed(1))}</p>}
 
             <label htmlFor="subject">{t.subject}</label>
