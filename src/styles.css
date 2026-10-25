@@ -368,3 +368,8 @@ input[type="range"].kelvin-wb::-moz-range-track { background: linear-gradient(90
   .layout.is-photo .stats dd { font-size: 13px; }
   .layout.is-photo .stats dt { font-size: 9px; letter-spacing: 0.06em; }
 }
+
+/* pack the photo settings tightly, no empty gaps between cards */
+.layout.is-photo .panel { display: block; columns: 270px; column-gap: 12px; }
+.layout.is-photo .panel > .group { break-inside: avoid; margin-bottom: 12px; display: flex; width: 100%; }
+.layout.is-photo .panel .btn-primary { column-span: all; display: block; margin: 4px auto 0; }
