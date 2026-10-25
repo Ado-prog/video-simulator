@@ -393,6 +393,6 @@ input[type="range"].kelvin-wb::-moz-range-track { background: linear-gradient(90
 @media (max-width: 960px) { .layout:not(.is-photo) { grid-template-columns: minmax(0, 1fr); } }
 /* keep the pinned photo picture from filling the whole screen height */
 @media (min-width: 761px) {
-  .layout.is-photo .split { max-width: min(100%, calc((100vh - 190px) * 3)); }
-  .layout.is-photo .stats { max-width: min(100%, calc((100vh - 190px) * 3)); }
+  .layout.is-photo .split { max-width: min(100%, calc((58vh - 40px) * 3)); }
+  .layout.is-photo .stats { max-width: min(100%, calc((58vh - 40px) * 3)); }
 }
