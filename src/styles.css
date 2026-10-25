@@ -373,3 +373,13 @@ input[type="range"].kelvin-wb::-moz-range-track { background: linear-gradient(90
 .layout.is-photo .panel { display: block; columns: 270px; column-gap: 12px; }
 .layout.is-photo .panel > .group { break-inside: avoid; margin-bottom: 12px; display: flex; width: 100%; }
 .layout.is-photo .panel .btn-primary { column-span: all; display: block; margin: 4px auto 0; }
+
+/* Video mode: camera + optics in the sidebar, everything else under the monitor */
+.leftcol { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.layout:not(.is-photo) .leftcol .stage { position: static; }
+@media (min-width: 961px) {
+  .layout:not(.is-photo) aside.panel { position: sticky; top: calc(12px + env(safe-area-inset-top, 0px)); }
+}
+.panel-lower { display: block; columns: 300px; column-gap: 12px; }
+.panel-lower > .group { break-inside: avoid; margin-bottom: 12px; width: 100%; }
+.panel-lower > .btn-primary { column-span: all; display: block; margin: 4px auto 0; min-width: 280px; }

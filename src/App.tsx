@@ -272,135 +272,9 @@ export default function App() {
 
   const sel = (id: string) => ({ id, className: "control" });
 
-  return (
-    <div className="app">
-      <header className="topbar">
-        <div className="brand">
-          <span className="brand-mark" aria-hidden="true" />
-          <div className="brand-text">
-            <span className="brand-name">Mustafi Studio</span>
-            <h1 className="brand-title">{t.appTitle}</h1>
-          </div>
-        </div>
-        <div className="topbar-tools">
-          <label className="sr-only" htmlFor="lang">{t.language}</label>
-          <select id="lang" className="control control-compact" value={lang} onChange={(e) => setLang(e.target.value as Lang)}>
-            {LANGUAGES.map((l) => (
-              <option key={l.code} value={l.code}>{l.label}</option>
-            ))}
-          </select>
-          <button
-            type="button"
-            className="icon-btn"
-            onClick={() => setTheme(isDark ? "light" : "dark")}
-            aria-label={isDark ? t.lightMode : t.darkMode}
-            title={isDark ? t.lightMode : t.darkMode}
-          >
-            {isDark ? "☀" : "☾"}
-          </button>
-        </div>
-      </header>
-
-      <p className="tagline">{isVideo ? t.appTag : t.appTagPhoto}</p>
-
-      <div className="modes" role="tablist" aria-label={`${t.photo} / ${t.video}`}>
-        {(["photo", "video"] as const).map((m) => (
-          <button
-            key={m}
-            type="button"
-            role="tab"
-            aria-selected={shootMode === m}
-            className={`mode-tab ${shootMode === m ? "is-active" : ""} mode-${m}`}
-            onClick={() => setShootMode(m)}
-          >
-            <span className="mode-dot" aria-hidden="true" />
-            {m === "photo" ? t.photo : t.video}
-          </button>
-        ))}
-      </div>
-
-      <main className={`layout ${isVideo ? "" : "is-photo"}`}>
-        <section className="stage" aria-label={t.monitor}>
-          <div className={isVideo ? "" : "split"}>
-          {!isVideo && (
-            <PhotoDiagram
-              focal={focal}
-              aperture={aperture}
-              focusM={focusM}
-              nearMM={dof.near}
-              farMM={dof.far}
-              hyperfocalMM={dof.hyperfocal}
-              sensorHeightMM={sensor.height}
-              subject={subject}
-              aspect={sensor.width / sensor.height}
-              label={t.sharpZone}
-              nearLabel={t.near}
-              farLabel={t.far}
-            />
-          )}
-          <Monitor
-            mode={shootMode}
-            aspect={isVideo ? 16 / 9 : sensor.width / sensor.height}
-            meter={{ avg: audio.avg, peak: audio.peak, clip: audio.clip, limiting: audio.limiting }}
-            focal={focal}
-            aperture={aperture}
-            focusM={focusM}
-            frameHeightMM={isVideo ? frameH : sensor.height}
-            cocMM={coc}
-            subject={subject}
-            palette={scene.palette}
-            exposureDelta={exposureDelta}
-            cast={cast}
-            grain={grain}
-            logView={!!activeLog && !lut}
-            cpl={cplEffect}
-            uv={uvOn}
-            label={t.monitor}
-            hud={{
-              fps: isVideo ? `${fps}p ${vSystem}` : expMode === "A" ? "A" : "M",
-              shutter: formatShutter(effShutter),
-              iso: useAuto ? `AUTO ${auto.display}` : String(effIso),
-              focus: formatMeters(focusM * 1000),
-              profile: activeLog ? `${activeLog.name}${lut ? " + LUT" : ""}` : "",
-              filters: filterTag,
-              wb: `${Math.round(camWbK / 100) * 100}K`,
-            }}
-          />
-          </div>
-          <p className="caption">{scene.palette.indoor ? t.monitorCaptionIndoor : t.monitorCaption}</p>
-
-          <dl className="stats">
-            <div><dt>{t.near}</dt><dd>{formatMeters(dof.near)}</dd></div>
-            <div><dt>{t.far}</dt><dd>{formatMeters(dof.far)}</dd></div>
-            <div><dt>{t.total}</dt><dd>{formatMeters(totalMM)}</dd></div>
-            <div><dt>{t.hyperfocal}</dt><dd>{formatMeters(dof.hyperfocal)}</dd></div>
-          </dl>
-
-          {rowsSharp.length > 1 && (
-            <p className="chip-row">
-              {rowsSharp.map((ok, i) => (
-                <span key={i} className={`chip ${ok ? "chip-ok" : "chip-bad"}`}>
-                  {fill(ok ? t.rowOk : t.rowSoft, i + 1)}
-                </span>
-              ))}
-            </p>
-          )}
-
-          {isVideo && (
-            <SharpZone focusM={focusM} nearMM={dof.near} farMM={dof.far} hyperfocalMM={dof.hyperfocal} label={t.sharpZone} />
-          )}
-          <button
-            type="button"
-            className="btn-ghost"
-            disabled={!canHyperfocal}
-            onClick={() => setFocusM(dof.hyperfocal / 1000)}
-          >
-            {t.setHyperfocal}
-          </button>
-        </section>
-
-        <aside className="panel">
-          {/* Camera & lens */}
+  const g_cam = (
+    <>
+{/* Camera & lens */}
           <fieldset className="group">
             <legend>{t.camera}</legend>
             <div className="art-wrap">
@@ -451,8 +325,11 @@ export default function App() {
               )}
             </p>
           </fieldset>
-
-          {/* Optics */}
+    </>
+  );
+  const g_optics = (
+    <>
+{/* Optics */}
           <fieldset className="group">
             <legend>{t.optics}</legend>
             <div className="row-label">
@@ -506,8 +383,11 @@ export default function App() {
               ))}
             </select>
           </fieldset>
-
-          {/* Light */}
+    </>
+  );
+  const g_light = (
+    <>
+{/* Light */}
           <fieldset className="group">
             <legend>{t.light}</legend>
             <label htmlFor="scene">{t.lightScene}</label>
@@ -527,8 +407,11 @@ export default function App() {
             </div>
             <input id="lightK" className="kelvin" type="range" min={2000} max={10000} step={100} value={lightK} onChange={(e) => setLightK(Number(e.target.value))} />
           </fieldset>
-
-          {/* Photo */}
+    </>
+  );
+  const g_photo = (
+    <>
+{/* Photo */}
           {!isVideo && (
           <fieldset className="group">
             <legend>{t.photo}</legend>
@@ -580,8 +463,11 @@ export default function App() {
             {shakeRisk && <p className="warn">{fill(t.shake, shakeLimit)}</p>}
           </fieldset>
           )}
-
-          {/* Video */}
+    </>
+  );
+  const g_video = (
+    <>
+{/* Video */}
           {isVideo && (
           <fieldset className="group">
             <legend>{t.video}</legend>
@@ -667,8 +553,11 @@ export default function App() {
             {isoAuto && auto.atLimit && <p className="warn warn-strong">{fill(t.isoLimit, auto.display)}</p>}
           </fieldset>
           )}
-
-          {/* Audio */}
+    </>
+  );
+  const g_audio = (
+    <>
+{/* Audio */}
           {isVideo && (
           <fieldset className="group">
             <legend>{t.audio}</legend>
@@ -741,8 +630,11 @@ export default function App() {
             {audio.limiting && !audio.overdriven && <p className="note">{t.limiting}</p>}
           </fieldset>
           )}
-
-          {/* Filters */}
+    </>
+  );
+  const g_filters = (
+    <>
+{/* Filters */}
           <fieldset className="group">
             <legend>{t.filters}</legend>
             <label htmlFor="nd">{t.nd}</label>
@@ -783,10 +675,165 @@ export default function App() {
             )}
             {filterStops > 0 && <p className="note">{fill(t.filterLoss, Math.round(filterStops * 10) / 10)}</p>}
           </fieldset>
-
-          <button type="button" className="btn-primary" onClick={exposeCorrectly}>
+    </>
+  );
+  const g_btn = (
+    <>
+<button type="button" className="btn-primary" onClick={exposeCorrectly}>
             {t.autoExpose}
           </button>
+    </>
+  );
+
+  return (
+    <div className="app">
+      <header className="topbar">
+        <div className="brand">
+          <span className="brand-mark" aria-hidden="true" />
+          <div className="brand-text">
+            <span className="brand-name">Mustafi Studio</span>
+            <h1 className="brand-title">{t.appTitle}</h1>
+          </div>
+        </div>
+        <div className="topbar-tools">
+          <label className="sr-only" htmlFor="lang">{t.language}</label>
+          <select id="lang" className="control control-compact" value={lang} onChange={(e) => setLang(e.target.value as Lang)}>
+            {LANGUAGES.map((l) => (
+              <option key={l.code} value={l.code}>{l.label}</option>
+            ))}
+          </select>
+          <button
+            type="button"
+            className="icon-btn"
+            onClick={() => setTheme(isDark ? "light" : "dark")}
+            aria-label={isDark ? t.lightMode : t.darkMode}
+            title={isDark ? t.lightMode : t.darkMode}
+          >
+            {isDark ? "☀" : "☾"}
+          </button>
+        </div>
+      </header>
+
+      <p className="tagline">{isVideo ? t.appTag : t.appTagPhoto}</p>
+
+      <div className="modes" role="tablist" aria-label={`${t.photo} / ${t.video}`}>
+        {(["photo", "video"] as const).map((m) => (
+          <button
+            key={m}
+            type="button"
+            role="tab"
+            aria-selected={shootMode === m}
+            className={`mode-tab ${shootMode === m ? "is-active" : ""} mode-${m}`}
+            onClick={() => setShootMode(m)}
+          >
+            <span className="mode-dot" aria-hidden="true" />
+            {m === "photo" ? t.photo : t.video}
+          </button>
+        ))}
+      </div>
+
+      <main className={`layout ${isVideo ? "" : "is-photo"}`}>
+        <div className="leftcol">
+        <section className="stage" aria-label={t.monitor}>
+          <div className={isVideo ? "" : "split"}>
+          {!isVideo && (
+            <PhotoDiagram
+              focal={focal}
+              aperture={aperture}
+              focusM={focusM}
+              nearMM={dof.near}
+              farMM={dof.far}
+              hyperfocalMM={dof.hyperfocal}
+              sensorHeightMM={sensor.height}
+              subject={subject}
+              aspect={sensor.width / sensor.height}
+              label={t.sharpZone}
+              nearLabel={t.near}
+              farLabel={t.far}
+            />
+          )}
+          <Monitor
+            mode={shootMode}
+            aspect={isVideo ? 16 / 9 : sensor.width / sensor.height}
+            meter={{ avg: audio.avg, peak: audio.peak, clip: audio.clip, limiting: audio.limiting }}
+            focal={focal}
+            aperture={aperture}
+            focusM={focusM}
+            frameHeightMM={isVideo ? frameH : sensor.height}
+            cocMM={coc}
+            subject={subject}
+            palette={scene.palette}
+            exposureDelta={exposureDelta}
+            cast={cast}
+            grain={grain}
+            logView={!!activeLog && !lut}
+            cpl={cplEffect}
+            uv={uvOn}
+            label={t.monitor}
+            hud={{
+              fps: isVideo ? `${fps}p ${vSystem}` : expMode === "A" ? "A" : "M",
+              shutter: formatShutter(effShutter),
+              iso: useAuto ? `AUTO ${auto.display}` : String(effIso),
+              focus: formatMeters(focusM * 1000),
+              profile: activeLog ? `${activeLog.name}${lut ? " + LUT" : ""}` : "",
+              filters: filterTag,
+              wb: `${Math.round(camWbK / 100) * 100}K`,
+            }}
+          />
+          </div>
+          <p className="caption">{scene.palette.indoor ? t.monitorCaptionIndoor : t.monitorCaption}</p>
+
+          <dl className="stats">
+            <div><dt>{t.near}</dt><dd>{formatMeters(dof.near)}</dd></div>
+            <div><dt>{t.far}</dt><dd>{formatMeters(dof.far)}</dd></div>
+            <div><dt>{t.total}</dt><dd>{formatMeters(totalMM)}</dd></div>
+            <div><dt>{t.hyperfocal}</dt><dd>{formatMeters(dof.hyperfocal)}</dd></div>
+          </dl>
+
+          {rowsSharp.length > 1 && (
+            <p className="chip-row">
+              {rowsSharp.map((ok, i) => (
+                <span key={i} className={`chip ${ok ? "chip-ok" : "chip-bad"}`}>
+                  {fill(ok ? t.rowOk : t.rowSoft, i + 1)}
+                </span>
+              ))}
+            </p>
+          )}
+
+          {isVideo && (
+            <SharpZone focusM={focusM} nearMM={dof.near} farMM={dof.far} hyperfocalMM={dof.hyperfocal} label={t.sharpZone} />
+          )}
+          <button
+            type="button"
+            className="btn-ghost"
+            disabled={!canHyperfocal}
+            onClick={() => setFocusM(dof.hyperfocal / 1000)}
+          >
+            {t.setHyperfocal}
+          </button>
+        </section>
+        {isVideo && (
+          <div className="panel panel-lower">
+            {g_light}
+            {g_video}
+            {g_audio}
+            {g_filters}
+            {g_btn}
+          </div>
+        )}
+        </div>
+
+        <aside className="panel">
+          {g_cam}
+          {g_optics}
+          {!isVideo && (
+            <>
+              {g_light}
+              {g_photo}
+              {g_filters}
+              {g_btn}
+            </>
+          )}
         </aside>
       </main>
 
