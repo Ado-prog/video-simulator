@@ -731,9 +731,9 @@ export default function App() {
         ))}
       </div>
 
-      <main className={`simple ${isVideo ? "is-video" : "is-photo"}`}>
-        {/* left: side view, numbers, camera & optics */}
-        <div className="col col-left">
+      <main className={`studio ${isVideo ? "is-video" : "is-photo"}`}>
+        {/* wide area: side view, numbers, camera & optics */}
+        <div className="studio-main">
             <PhotoDiagram
               focal={focal}
               aperture={aperture}
@@ -743,39 +743,40 @@ export default function App() {
               hyperfocalMM={dof.hyperfocal}
               sensorHeightMM={isVideo ? frameH : sensor.height}
               subject={subject}
-              aspect={isVideo ? 16 / 9 : sensor.width / sensor.height}
+              aspect={2.9}
               label={t.sharpZone}
               nearLabel={t.near}
               farLabel={t.far}
             />
-
           <dl className="stats">
             <div><dt>{t.near}</dt><dd>{formatMeters(dof.near)}</dd></div>
             <div><dt>{t.far}</dt><dd>{formatMeters(dof.far)}</dd></div>
             <div><dt>{t.total}</dt><dd>{formatMeters(totalMM)}</dd></div>
             <div><dt>{t.hyperfocal}</dt><dd>{formatMeters(dof.hyperfocal)}</dd></div>
           </dl>
-          {rowsSharp.length > 1 && (
-            <p className="chip-row">
-              {rowsSharp.map((ok, i) => (
-                <span key={i} className={`chip ${ok ? "chip-ok" : "chip-bad"}`}>
-                  {fill(ok ? t.rowOk : t.rowSoft, i + 1)}
-                </span>
-              ))}
-            </p>
-          )}
-          <div className="card">
-            {g_cam}
-            {g_optics}
+          <div className="row-tools">
+            {rowsSharp.length > 1 && (
+              <span className="chip-row">
+                {rowsSharp.map((ok, i) => (
+                  <span key={i} className={`chip ${ok ? "chip-ok" : "chip-bad"}`}>
+                    {fill(ok ? t.rowOk : t.rowSoft, i + 1)}
+                  </span>
+                ))}
+              </span>
+            )}
             <button type="button" className="btn-ghost" disabled={!canHyperfocal} onClick={() => setFocusM(dof.hyperfocal / 1000)}>
               {t.setHyperfocal}
             </button>
-            {isVideo && g_audio}
           </div>
+          <div className="card card-wide">
+            {g_cam}
+            {g_optics}
+          </div>
+          {isVideo && <div className="card card-wide card-audio">{g_audio}</div>}
         </div>
 
-        {/* right: what the camera monitor shows, light and camera settings */}
-        <div className="col col-right">
+        {/* narrow column: camera monitor and settings */}
+        <aside className="studio-side">
           <p className="eyebrow col-title">{t.monitor}</p>
           <Monitor
             mode={shootMode}
@@ -813,7 +814,7 @@ export default function App() {
             {g_filters}
             {g_btn}
           </div>
-        </div>
+        </aside>
       </main>
 
       <footer className="footer">
