@@ -29,6 +29,7 @@ import {
   colorCast,
   VIDEO_SYSTEMS,
   type VideoSystem,
+  DEFAULT_FPS,
   videoShutters,
   shutter180,
   isFlickerSafe,
@@ -90,6 +91,16 @@ export default function App() {
   const isDark =
     theme === "dark" ||
     (theme === "system" && typeof matchMedia !== "undefined" && matchMedia("(prefers-color-scheme: dark)").matches);
+
+  // Phones: taller side view so its labels stay readable
+  const [narrow, setNarrow] = useState(() => typeof matchMedia !== "undefined" && matchMedia("(max-width: 600px)").matches);
+  useEffect(() => {
+    if (typeof matchMedia === "undefined") return;
+    const mq = matchMedia("(max-width: 600px)");
+    const on = () => setNarrow(mq.matches);
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, []);
 
   const [shootMode, setShootMode] = useState<"photo" | "video">("video");
   const isVideo = shootMode === "video";
@@ -359,6 +370,7 @@ export default function App() {
                 </select>
               </>
             )}
+            {camera && (
             <p className="chip-row">
               <span className="chip">{(t.sensors as Record<string, string>)[sensorKey] ?? sensorKey}</span>
               {lens && (
@@ -368,6 +380,7 @@ export default function App() {
                 </span>
               )}
             </p>
+            )}
           </fieldset>
     </>
   );
@@ -520,7 +533,7 @@ export default function App() {
                 <label htmlFor="system">{t.videoSystem}</label>
                 <select {...sel("system")} value={vSystem} onChange={(e) => {
                   const s = e.target.value as VideoSystem;
-                  changeVideo(s, VIDEO_SYSTEMS[s].fps[0]);
+                  changeVideo(s, DEFAULT_FPS[s]);
                 }}>
                   <option value="PAL">PAL (50 Hz)</option>
                   <option value="NTSC">NTSC (60 Hz)</option>
@@ -530,7 +543,7 @@ export default function App() {
                 <label htmlFor="fps">{t.frameRate}</label>
                 <select {...sel("fps")} value={String(fps)} onChange={(e) => changeVideo(vSystem, Number(e.target.value))}>
                   {VIDEO_SYSTEMS[vSystem].fps.map((f) => (
-                    <option key={f} value={String(f)}>{f === 24 ? "24p (23.98)" : `${f}p`}</option>
+                    <option key={f} value={String(f)}>{f === 24 && vSystem === "NTSC" ? "24p (23.98)" : `${f}p`}</option>
                   ))}
                 </select>
               </div>
@@ -792,7 +805,7 @@ export default function App() {
               hyperfocalMM={dof.hyperfocal}
               sensorHeightMM={isVideo ? frameH : sensor.height}
               subject={subject}
-              aspect={2.9}
+              aspect={narrow ? 1.6 : 2.9}
               label={t.sharpZone}
               nearLabel={t.near}
               farLabel={t.far}
@@ -872,7 +885,7 @@ export default function App() {
               focus: formatMeters(focusM * 1000),
               profile: activeLog ? `${activeLog.name}${lut ? " + LUT" : ""}` : "",
               filters: filterTag,
-              wb: `${Math.round(camWbK / 100) * 100}K`,
+              wb: `${wbMode === "auto" ? "AWB " : ""}${Math.round(camWbK / 100) * 100}K`,
             }}
           />
           <div className="backdrop-row">

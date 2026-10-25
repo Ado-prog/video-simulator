@@ -133,7 +133,7 @@ export const DICT = {
       "Custom": "Benutzerdefiniert"
     },
     "appTitle": "Foto- & Video-Simulator",
-    "appTag": "Schärfentiefe, Licht und Belichtung für Videografen",
+    "appTag": "Schärfentiefe, Licht, Belichtung und Ton für Videografen",
     "sourceCode": "Quellcode",
     "sharpZone": "Schärfebereich",
     "optics": "Optik",
@@ -273,7 +273,7 @@ export const DICT = {
       "Custom": "Prilagođeno"
     },
     "appTitle": "Foto i video simulator",
-    "appTag": "Dubinska oštrina, svjetlo i ekspozicija za videografe",
+    "appTag": "Dubinska oštrina, svjetlo, ekspozicija i zvuk za videografe",
     "sourceCode": "Izvorni kod",
     "sharpZone": "Zona oštrine",
     "optics": "Optika",
@@ -413,7 +413,7 @@ export const DICT = {
       "Custom": "Prilagođeno"
     },
     "appTitle": "Foto i video simulator",
-    "appTag": "Dubinska oštrina, svetlo i ekspozicija za videografe",
+    "appTag": "Dubinska oštrina, svetlo, ekspozicija i zvuk za videografe",
     "sourceCode": "Izvorni kod",
     "sharpZone": "Zona oštrine",
     "optics": "Optika",
@@ -553,7 +553,7 @@ export const DICT = {
       "Custom": "E personalizuar"
     },
     "appTitle": "Simulator foto dhe video",
-    "appTag": "Thellësia e mprehtësisë, drita dhe ekspozimi për videografë",
+    "appTag": "Thellësia e mprehtësisë, drita, ekspozimi dhe zëri për videografë",
     "sourceCode": "Kodi burimor",
     "sharpZone": "Zona e mprehtë",
     "optics": "Optika",
@@ -684,7 +684,7 @@ export const DICT = {
     },
     "sensors": {},
     "appTitle": "Photo & Video Simulator",
-    "appTag": "Depth of field, light and exposure for videographers",
+    "appTag": "Depth of field, light, exposure and sound for videographers",
     "sourceCode": "Source code",
     "sharpZone": "Sharp zone",
     "optics": "Optics",
@@ -824,7 +824,7 @@ export const DICT = {
       "Custom": "Özel"
     },
     "appTitle": "Fotoğraf ve Video Simülatörü",
-    "appTag": "Videograflar için alan derinliği, ışık ve pozlama",
+    "appTag": "Videograflar için alan derinliği, ışık, pozlama ve ses",
     "sourceCode": "Kaynak kodu",
     "sharpZone": "Net alan",
     "optics": "Optik",
@@ -964,7 +964,7 @@ export const DICT = {
       "Custom": "Personalizado"
     },
     "appTitle": "Simulador de foto y vídeo",
-    "appTag": "Profundidad de campo, luz y exposición para videógrafos",
+    "appTag": "Profundidad de campo, luz, exposición y sonido para videógrafos",
     "sourceCode": "Código fuente",
     "sharpZone": "Zona nítida",
     "optics": "Óptica",
@@ -1104,7 +1104,7 @@ export const DICT = {
       "Custom": "Personnalisé"
     },
     "appTitle": "Simulateur photo et vidéo",
-    "appTag": "Profondeur de champ, lumière et exposition pour vidéastes",
+    "appTag": "Profondeur de champ, lumière, exposition et son pour vidéastes",
     "sourceCode": "Code source",
     "sharpZone": "Zone nette",
     "optics": "Optique",
@@ -1244,7 +1244,7 @@ export const DICT = {
       "Custom": "Свой"
     },
     "appTitle": "Фото- и видеосимулятор",
-    "appTag": "Глубина резкости, свет и экспозиция для видеографов",
+    "appTag": "Глубина резкости, свет, экспозиция и звук для видеографов",
     "sourceCode": "Исходный код",
     "sharpZone": "Зона резкости",
     "optics": "Оптика",
@@ -1384,7 +1384,7 @@ export const DICT = {
       "Custom": "カスタム"
     },
     "appTitle": "写真・動画シミュレーター",
-    "appTag": "映像制作者のための被写界深度・光・露出",
+    "appTag": "映像制作者のための被写界深度・光・露出・音声",
     "sourceCode": "ソースコード",
     "sharpZone": "ピントの合う範囲",
     "optics": "光学",
@@ -1524,7 +1524,7 @@ export const DICT = {
       "Custom": "自定义"
     },
     "appTitle": "照片与视频模拟器",
-    "appTag": "为摄像师打造的景深、光线与曝光工具",
+    "appTag": "为摄像师打造的景深、光线、曝光与声音工具",
     "sourceCode": "源代码",
     "sharpZone": "清晰范围",
     "optics": "光学",
@@ -1664,7 +1664,7 @@ export const DICT = {
       "Custom": "사용자 지정"
     },
     "appTitle": "사진·영상 시뮬레이터",
-    "appTag": "영상 촬영자를 위한 피사계 심도·빛·노출",
+    "appTag": "영상 촬영자를 위한 피사계 심도·빛·노출·사운드",
     "sourceCode": "소스 코드",
     "sharpZone": "선명한 범위",
     "optics": "광학",

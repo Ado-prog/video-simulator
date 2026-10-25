@@ -236,10 +236,12 @@ export function colorCast(sceneK: number, wbK: number): [number, number, number]
 
 // ── Video
 export const VIDEO_SYSTEMS = {
-  PAL: { mainsHz: 50, fps: [25, 50, 100], shutters: [1 / 25, 1 / 50, 1 / 100, 1 / 200, 1 / 400, 1 / 800, 1 / 1600, 1 / 3200, 1 / 6400] },
+  PAL: { mainsHz: 50, fps: [24, 25, 50, 100], shutters: [1 / 25, 1 / 50, 1 / 100, 1 / 200, 1 / 400, 1 / 800, 1 / 1600, 1 / 3200, 1 / 6400] },
   NTSC: { mainsHz: 60, fps: [24, 30, 60, 120], shutters: [1 / 24, 1 / 30, 1 / 48, 1 / 60, 1 / 120, 1 / 250, 1 / 500, 1 / 1000, 1 / 2000, 1 / 4000, 1 / 8000] },
 } as const;
 export type VideoSystem = keyof typeof VIDEO_SYSTEMS;
+/** Frame rate picked when switching to a system. */
+export const DEFAULT_FPS: Record<VideoSystem, number> = { PAL: 25, NTSC: 30 };
 
 export function videoShutters(sys: VideoSystem, fps: number) {
   return VIDEO_SYSTEMS[sys].shutters.filter((t) => t <= 1 / fps + 1e-9);

@@ -590,3 +590,17 @@ body.is-resizing { cursor: col-resize; user-select: none; }
   .studio { grid-template-columns: minmax(0, 1fr); }
   .splitter { display: none; }
 }
+
+/* ── Phones: monitor → depth of field → camera & optics → light/video → audio */
+@media (max-width: 980px) {
+  .studio { row-gap: 10px; }
+  .studio-main, .studio-side { display: contents; }
+  .studio-side > * { order: 1; }
+  .studio-main > * { order: 2; }
+  .studio-side > .card { order: 3; }
+  .studio-main > .card-audio { order: 4; }
+}
+@media (max-width: 520px) {
+  .studio .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .studio .stats dt { font-size: 10px; letter-spacing: 0.06em; }
+}
