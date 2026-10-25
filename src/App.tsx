@@ -147,7 +147,7 @@ export default function App() {
   const canHyperfocal = dof.hyperfocal / 1000 <= D_MAX;
 
   // ── Light
-  const [sceneId, setSceneId] = useState("golden");
+  const [sceneId, setSceneId] = useState("hall");
   const scene = SCENES.find((s) => s.id === sceneId) ?? SCENES[0];
   const [boost, setBoost] = useState(0);
   const [lightK, setLightK] = useState(scene.kelvin);
