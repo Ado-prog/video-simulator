@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Monitor, { type SubjectKind, ROW_GAP, rowCount } from "./Monitor";
 import { MICS, MIC_BRANDS, INTERNAL_MIC, SOURCES, type SourceId, audioLevels, autoGain } from "./audio";
-import SharpZone from "./SharpZone";
 import PhotoDiagram from "./PhotoDiagram";
 import { LensArt, IrisArt, CameraArt, cameraKind } from "./GearArt";
 import { DICT, LANGUAGES, fill, loadLang, saveLang, type Lang } from "./i18n";
@@ -716,27 +715,9 @@ export default function App() {
 
       <p className="tagline">{isVideo ? t.appTag : t.appTagPhoto}</p>
 
-      <div className="modes" role="tablist" aria-label={`${t.photo} / ${t.video}`}>
-        {(["photo", "video"] as const).map((m) => (
-          <button
-            key={m}
-            type="button"
-            role="tab"
-            aria-selected={shootMode === m}
-            className={`mode-tab ${shootMode === m ? "is-active" : ""} mode-${m}`}
-            onClick={() => setShootMode(m)}
-          >
-            <span className="mode-dot" aria-hidden="true" />
-            {m === "photo" ? t.photo : t.video}
-          </button>
-        ))}
-      </div>
-
-      <main className={`layout ${isVideo ? "" : "is-photo"}`}>
-        <div className="leftcol">
-        <section className="stage" aria-label={t.monitor}>
-          <div className={isVideo ? "" : "split"}>
-          {!isVideo && (
+      <main className="simple">
+        {/* left: side view, numbers, camera & optics */}
+        <div className="col col-left">
             <PhotoDiagram
               focal={focal}
               aperture={aperture}
@@ -744,14 +725,42 @@ export default function App() {
               nearMM={dof.near}
               farMM={dof.far}
               hyperfocalMM={dof.hyperfocal}
-              sensorHeightMM={sensor.height}
+              sensorHeightMM={isVideo ? frameH : sensor.height}
               subject={subject}
-              aspect={sensor.width / sensor.height}
+              aspect={isVideo ? 16 / 9 : sensor.width / sensor.height}
               label={t.sharpZone}
               nearLabel={t.near}
               farLabel={t.far}
             />
+
+          <dl className="stats">
+            <div><dt>{t.near}</dt><dd>{formatMeters(dof.near)}</dd></div>
+            <div><dt>{t.far}</dt><dd>{formatMeters(dof.far)}</dd></div>
+            <div><dt>{t.total}</dt><dd>{formatMeters(totalMM)}</dd></div>
+            <div><dt>{t.hyperfocal}</dt><dd>{formatMeters(dof.hyperfocal)}</dd></div>
+          </dl>
+          {rowsSharp.length > 1 && (
+            <p className="chip-row">
+              {rowsSharp.map((ok, i) => (
+                <span key={i} className={`chip ${ok ? "chip-ok" : "chip-bad"}`}>
+                  {fill(ok ? t.rowOk : t.rowSoft, i + 1)}
+                </span>
+              ))}
+            </p>
           )}
+          <div className="card">
+            {g_cam}
+            {g_optics}
+            <button type="button" className="btn-ghost" disabled={!canHyperfocal} onClick={() => setFocusM(dof.hyperfocal / 1000)}>
+              {t.setHyperfocal}
+            </button>
+            {isVideo && g_audio}
+          </div>
+        </div>
+
+        {/* right: what the camera monitor shows, light and camera settings */}
+        <div className="col col-right">
+          <p className="eyebrow col-title">{t.monitor}</p>
           <Monitor
             mode={shootMode}
             aspect={isVideo ? 16 / 9 : sensor.width / sensor.height}
@@ -780,61 +789,29 @@ export default function App() {
               wb: `${Math.round(camWbK / 100) * 100}K`,
             }}
           />
-          </div>
           <p className="caption">{scene.palette.indoor ? t.monitorCaptionIndoor : t.monitorCaption}</p>
-
-          <dl className="stats">
-            <div><dt>{t.near}</dt><dd>{formatMeters(dof.near)}</dd></div>
-            <div><dt>{t.far}</dt><dd>{formatMeters(dof.far)}</dd></div>
-            <div><dt>{t.total}</dt><dd>{formatMeters(totalMM)}</dd></div>
-            <div><dt>{t.hyperfocal}</dt><dd>{formatMeters(dof.hyperfocal)}</dd></div>
-          </dl>
-
-          {rowsSharp.length > 1 && (
-            <p className="chip-row">
-              {rowsSharp.map((ok, i) => (
-                <span key={i} className={`chip ${ok ? "chip-ok" : "chip-bad"}`}>
-                  {fill(ok ? t.rowOk : t.rowSoft, i + 1)}
-                </span>
-              ))}
-            </p>
-          )}
-
-          {isVideo && (
-            <SharpZone focusM={focusM} nearMM={dof.near} farMM={dof.far} hyperfocalMM={dof.hyperfocal} label={t.sharpZone} />
-          )}
-          <button
-            type="button"
-            className="btn-ghost"
-            disabled={!canHyperfocal}
-            onClick={() => setFocusM(dof.hyperfocal / 1000)}
-          >
-            {t.setHyperfocal}
-          </button>
-        </section>
-        {isVideo && (
-          <div className="panel panel-lower">
+          <div className="card">
             {g_light}
+            <div className="mode-switch" role="tablist" aria-label={`${t.photo} / ${t.video}`}>
+              {(["photo", "video"] as const).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  role="tab"
+                  aria-selected={shootMode === m}
+                  className={`mode-btn mode-btn-${m} ${shootMode === m ? "is-active" : ""}`}
+                  onClick={() => setShootMode(m)}
+                >
+                  {m === "photo" ? `📷 ${t.photo}` : `🎬 ${t.video}`}
+                </button>
+              ))}
+            </div>
+            {g_photo}
             {g_video}
-            {g_audio}
             {g_filters}
             {g_btn}
           </div>
-        )}
         </div>
-
-        <aside className="panel">
-          {g_cam}
-          {g_optics}
-          {!isVideo && (
-            <>
-              {g_light}
-              {g_photo}
-              {g_filters}
-              {g_btn}
-            </>
-          )}
-        </aside>
       </main>
 
       <footer className="footer">
