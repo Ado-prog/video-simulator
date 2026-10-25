@@ -327,3 +327,44 @@ input[type="range"].kelvin-wb::-moz-range-track { background: linear-gradient(90
 .iris-row { display: flex; align-items: center; gap: 12px; }
 .art-iris { width: 58px; flex: none; }
 .iris-row input { flex: 1; min-width: 0; }
+
+/* Photo mode, compact: picture stays pinned on top, settings in columns below */
+.layout.is-photo .stage {
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  z-index: 5;
+  gap: 8px;
+  padding-block: 8px 10px;
+  background: var(--bg);
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 60%, transparent);
+}
+.layout.is-photo .split { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; width: 100%; max-width: 1040px; margin: 0 auto; }
+.layout.is-photo .caption { display: none; }
+.layout.is-photo .monitor-bezel { padding: 8px; border-radius: 16px; }
+.layout.is-photo .stats { width: 100%; max-width: 1040px; margin: 0 auto; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.layout.is-photo .stats div { padding: 6px 10px; border-radius: 10px; }
+.layout.is-photo .stats dt { font-size: 11px; }
+.layout.is-photo .stats dd { font-size: 16px; }
+.layout.is-photo .stage > .chip-row,
+.layout.is-photo .stage > .btn-ghost { max-width: 1040px; width: 100%; margin: 0 auto; }
+.layout.is-photo .stage > .btn-ghost { width: auto; align-self: center; }
+
+.layout.is-photo .panel {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  align-items: start;
+  gap: 12px;
+  max-width: none;
+}
+.layout.is-photo .panel .btn-primary { grid-column: 1 / -1; justify-self: center; min-width: 280px; }
+.layout.is-photo .art-camera { width: 96px; }
+.layout.is-photo .art-lens { max-width: 220px; }
+
+@media (max-width: 560px) {
+  .layout.is-photo .split { gap: 6px; }
+  .layout.is-photo .monitor-bezel { padding: 4px; border-radius: 10px; }
+  .layout.is-photo .diagram-svg { border-radius: 10px; }
+  .layout.is-photo .stats div { padding: 4px 6px; }
+  .layout.is-photo .stats dd { font-size: 13px; }
+  .layout.is-photo .stats dt { font-size: 9px; letter-spacing: 0.06em; }
+}
