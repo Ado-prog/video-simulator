@@ -332,7 +332,10 @@ export function logProfilesFor(cam: Camera | undefined): LogProfile[] {
   if (!cam) return [lp("Log", 400)];
   switch (cam.brand) {
     case "Panasonic":
-      return [lp("V-Log", cam.sensor === MFT ? 500 : 640)];
+      // ARRI LogC3 is a paid firmware upgrade on these bodies
+      return ["pana-s1ii", "pana-s1rii", "pana-s5ii", "pana-s5iix", "pana-s9", "pana-gh7"].includes(cam.id)
+        ? [lp("V-Log", cam.sensor === MFT ? 500 : 640), lp("ARRI LogC3", cam.sensor === MFT ? 500 : 640)]
+        : [lp("V-Log", cam.sensor === MFT ? 500 : 640)];
     case "Sony": {
       const low = ["sony-fx3", "sony-a7siii", "sony-fx30", "sony-zve1"].includes(cam.id) ? 640 : 800;
       return [lp("S-Log3", low), lp("S-Log2", low)];

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { ScenePalette, BackdropKind } from "./lighting";
 import { blurDisc } from "./optics";
+import type { Look } from "./looks";
 
 // Simulated camera monitor (16:9 for video, sensor aspect for photo).
 // World units are metres, measured from the camera.
@@ -90,6 +91,7 @@ type Props = {
   cast: [number, number, number];
   grain: number;
   logView: boolean;
+  look: Look; // picture profile or monitoring LUT (Rec.709 view)
   cpl: number;
   uv: boolean;
   hud: { fps: string; shutter: string; iso: string; focus: string; profile: string; filters: string; wb: string };
@@ -327,6 +329,20 @@ export default function Monitor(p: Props) {
     return L <= 0 ? 0.03 : Math.min(1, Math.max(0.03, (Math.log2(L) + 6) / 9));
   }).join(" ");
 
+  // picture profile / LUT: contrast around mid grey, raised blacks, warm and teal-orange tint
+  const lookIntercept = 0.5 * (1 - p.look.contrast) + (p.look.lift ?? 0);
+  const w = p.look.warm ?? 0;
+  const tl = p.look.teal ?? 0;
+  const lookTint =
+    w || tl
+      ? [
+          1 + w + 0.06 * tl, 0, 0, 0, 0,
+          0, 1 - 0.02 * tl, 0.03 * tl, 0, 0,
+          -0.04 * tl, 0, 1 - w + 0.05 * tl, 0, 0,
+          0, 0, 0, 1, 0,
+        ].join(" ")
+      : "";
+
   // background elements across the frame
   const backHalf = halfW(backD) + 2;
   const backItems: number[] = [];
@@ -427,11 +443,20 @@ export default function Monitor(p: Props) {
                   <feColorMatrix type="saturate" values="0.6" />
                 </>
               ) : (
-                <feComponentTransfer>
-                  <feFuncR type="gamma" amplitude={1} exponent={1 / 2.2} offset={0} />
-                  <feFuncG type="gamma" amplitude={1} exponent={1 / 2.2} offset={0} />
-                  <feFuncB type="gamma" amplitude={1} exponent={1 / 2.2} offset={0} />
-                </feComponentTransfer>
+                <>
+                  <feComponentTransfer>
+                    <feFuncR type="gamma" amplitude={1} exponent={1 / 2.2} offset={0} />
+                    <feFuncG type="gamma" amplitude={1} exponent={1 / 2.2} offset={0} />
+                    <feFuncB type="gamma" amplitude={1} exponent={1 / 2.2} offset={0} />
+                  </feComponentTransfer>
+                  <feColorMatrix type="saturate" values={String(p.look.sat)} />
+                  <feComponentTransfer>
+                    <feFuncR type="linear" slope={p.look.contrast} intercept={lookIntercept} />
+                    <feFuncG type="linear" slope={p.look.contrast} intercept={lookIntercept} />
+                    <feFuncB type="linear" slope={p.look.contrast} intercept={lookIntercept} />
+                  </feComponentTransfer>
+                  {lookTint && <feColorMatrix type="matrix" values={lookTint} />}
+                </>
               )}
             </filter>
             <filter id="m-grain" filterUnits="userSpaceOnUse" x={0} y={0} width={W} height={H}>

@@ -19,9 +19,10 @@ See on a simulated camera monitor how focus distance, focal length, aperture, li
 - **Sharp zone** from the camera outwards: near and far limit, total depth of field, hyperfocal distance
 - **Cameras & lenses:** Panasonic, Sony, Canon, Nikon (plus Sigma and Tamron lenses), DJI (Osmo, action cams, drones) and Insta360
 - **Video settings:** PAL/NTSC, frame rates, 180° shutter rule, Auto ISO, white balance, flicker warning under artificial light
-- **Log profiles:** V-Log, S-Log2/3, C-Log2/3, N-Log, D-Log / D-Log M, I-Log, with LUT preview
+- **Log profiles:** V-Log, ARRI LogC3 (Lumix upgrade), S-Log2/3, C-Log2/3, N-Log, D-Log / D-Log M, I-Log, with a choice of monitoring LUT: none (flat Log), the manufacturer's Rec.709 LUTs (e.g. V-709, s709, LC-709, BT.709 Wide DR) or creative looks (warm film, teal & orange, cinema film, black & white)
+- **Picture styles (standard / photo):** each camera's own styles, e.g. Lumix Natural, Vivid, Cinelike D2/V2, L.ClassicNeo, Leica Monochrome; Sony Creative Looks and S-Cinetone; Canon Picture Styles; Nikon Picture Controls; DJI Normal/HLG
 - **Filters:** ND2–ND64000, variable ND, CPL, UV, plus a one-click "expose correctly" that picks the ND you need
-- **Audio (video mode):** microphones (RØDE Wireless PRO, Panasonic DMW-MS2, plus RØDE, DJI, Sennheiser, Deity, Hollyland, Sony, Canon, Nikon and the camera's built-in mic), sound sources, gain, auto level, limiter, low cut, live level meter on the monitor, clipping and noise warnings, speech clarity
+- **Audio (video mode):** microphones (RØDE Wireless PRO, Panasonic DMW-DMS1E and DMW-MS2, plus RØDE, DJI, Sennheiser, Deity, Hollyland, Sony, Canon, Nikon and the camera's built-in mic), sound sources, gain, auto level, limiter, low cut, and each mic's own switches – 32-bit float on/off, pickup patterns, wind/noise cancelling, safety track, onboard backup recording – live level meter on the monitor, clipping and noise warnings, speech clarity
 - **Group photos in 1, 2 or 3 rows:** each row stands further back, so you can see which rows are still sharp
 - **Light scenes:** summer, spring, autumn, winter, overcast, golden hour, blue hour, night, wedding hall, party/disco
 - **12 languages:** German, Bosnian, Serbian, Albanian, English, Turkish, Spanish, French, Russian, Japanese, Chinese, Korean

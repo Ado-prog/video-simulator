@@ -11,9 +11,30 @@ export type Mic = {
   selfNoise: number; // dB(A)
   sens: number; // relative output in dB (0 = typical lav)
   rejection: number; // dB less room sound thanks to directivity
-  float32?: boolean; // on-board 32-bit float backup recording
+  float32?: boolean; // 32-bit float recording (switchable)
+  f32cam?: boolean; // 32-bit float goes into the camera, not a transmitter
+  pat?: PatternId[]; // switchable pickup patterns, first = default
+  nc?: "nc" | "wind"; // noise / wind-noise cancelling
+  safety?: number; // safety track level in dB (negative)
+  onboard?: boolean; // onboard recording in the transmitter
   mine?: boolean; // in Mustafi Studio's kit
 };
+
+/** Pickup patterns: dB more/less room rejection and on-axis level vs. the mic's default. */
+export const PATTERNS = {
+  sc: { rej: 0, sens: 0 },
+  shot: { rej: 0, sens: 0 },
+  card: { rej: -3, sens: 0 },
+  omni: { rej: -6, sens: 0 },
+  stereo: { rej: -6, sens: 0 },
+  st90: { rej: -5, sens: 0 },
+  st120: { rej: -7, sens: 0 },
+  rear: { rej: 0, sens: -15 }, // picks up behind the camera, subject in front gets quieter
+  bi: { rej: -3, sens: 0 },
+} as const;
+export type PatternId = keyof typeof PATTERNS;
+
+type Features = Pick<Mic, "float32" | "f32cam" | "pat" | "nc" | "safety" | "onboard" | "mine">;
 
 const TYPE_DEFAULTS: Record<MicType, { sens: number; rejection: number }> = {
   lav: { sens: 0, rejection: 0 },
@@ -22,30 +43,33 @@ const TYPE_DEFAULTS: Record<MicType, { sens: number; rejection: number }> = {
   internal: { sens: -4, rejection: 0 },
 };
 
-type Row = [string, string, string, MicType, number, { float32?: boolean; mine?: boolean }?];
+type Row = [string, string, string, MicType, number, Features?];
 
 const ROWS: Row[] = [
-  ["rode-wpro", "RØDE", "Wireless PRO", "lav", 28, { float32: true, mine: true }],
-  ["pana-ms2", "Panasonic", "DMW-MS2 (Shotgun)", "oncam", 20, { mine: true }],
-  ["rode-wgo3", "RØDE", "Wireless GO (Gen 3)", "lav", 28, { float32: true }],
-  ["rode-wme", "RØDE", "Wireless ME", "lav", 29],
-  ["rode-vmntg", "RØDE", "VideoMic NTG", "oncam", 15],
+  ["rode-wpro", "RØDE", "Wireless PRO", "lav", 28, { float32: true, safety: -20, onboard: true, mine: true }],
+  ["pana-dms1", "Panasonic", "DMW-DMS1E (Digital Shotgun)", "oncam", 16, {
+    float32: true, f32cam: true, pat: ["sc", "card", "st90", "st120", "rear", "bi"], nc: "wind", safety: -20, mine: true,
+  }],
+  ["pana-ms2", "Panasonic", "DMW-MS2 (Shotgun)", "oncam", 20, { pat: ["shot", "stereo"], mine: true }],
+  ["rode-wgo3", "RØDE", "Wireless GO (Gen 3)", "lav", 28, { float32: true, safety: -20, onboard: true }],
+  ["rode-wme", "RØDE", "Wireless ME", "lav", 29, { onboard: true }],
+  ["rode-vmntg", "RØDE", "VideoMic NTG", "oncam", 15, { safety: -20 }],
   ["rode-vmgo2", "RØDE", "VideoMic GO II", "oncam", 19],
   ["rode-vmicro2", "RØDE", "VideoMicro II", "oncam", 22],
   ["rode-ntg4p", "RØDE", "NTG4+", "boom", 16],
   ["rode-ntg5", "RØDE", "NTG5", "boom", 10],
-  ["dji-mic2", "DJI", "Mic 2", "lav", 28, { float32: true }],
-  ["dji-micmini", "DJI", "Mic Mini", "lav", 30],
+  ["dji-mic2", "DJI", "Mic 2", "lav", 28, { float32: true, nc: "nc", safety: -6, onboard: true }],
+  ["dji-micmini", "DJI", "Mic Mini", "lav", 30, { nc: "nc" }],
   ["senn-mke600", "Sennheiser", "MKE 600", "oncam", 15],
   ["senn-mke400", "Sennheiser", "MKE 400 (2nd gen)", "oncam", 18],
-  ["senn-profile", "Sennheiser", "Profile Wireless", "lav", 29],
+  ["senn-profile", "Sennheiser", "Profile Wireless", "lav", 29, { onboard: true }],
   ["senn-ewdp", "Sennheiser", "EW-DP ME 2", "lav", 30],
   ["deity-d3pro", "Deity", "V-Mic D3 Pro", "oncam", 18],
-  ["holly-m2", "Hollyland", "Lark M2", "lav", 30],
-  ["holly-max", "Hollyland", "Lark Max", "lav", 28],
-  ["sony-ecmb10", "Sony", "ECM-B10", "oncam", 20],
-  ["sony-ecmb1m", "Sony", "ECM-B1M", "oncam", 19],
-  ["canon-dme1d", "Canon", "DM-E1D", "oncam", 21],
+  ["holly-m2", "Hollyland", "Lark M2", "lav", 30, { nc: "nc" }],
+  ["holly-max", "Hollyland", "Lark Max", "lav", 28, { nc: "nc", safety: -6, onboard: true }],
+  ["sony-ecmb10", "Sony", "ECM-B10", "oncam", 20, { pat: ["sc", "card", "omni"] }],
+  ["sony-ecmb1m", "Sony", "ECM-B1M", "oncam", 19, { pat: ["sc", "card", "omni"] }],
+  ["canon-dme1d", "Canon", "DM-E1D", "oncam", 21, { pat: ["shot", "st90", "st120"] }],
   ["nikon-me1", "Nikon", "ME-1", "oncam", 23],
 ];
 
@@ -96,6 +120,7 @@ export type AudioInput = {
   gain: number; // dB
   limiter: boolean;
   lowCut: boolean;
+  float32?: boolean; // 32-bit float switched on (and supported)
 };
 
 export type AudioResult = {
@@ -108,6 +133,7 @@ export type AudioResult = {
   limiting: boolean;
   overdriven: boolean;
   snr: number | null; // speech over room sound, dB
+  f32over?: boolean; // above 0 dBFS but safe in the 32-bit float file
 };
 
 export function micDistance(mic: Mic, source: SourceId, cameraDistanceM: number) {
@@ -134,6 +160,11 @@ export function audioLevels(a: AudioInput): AudioResult {
   const ceiling = -2;
   const limiting = a.limiter && rawPeak > ceiling;
   const peak = a.limiter ? Math.min(rawPeak, ceiling) : Math.min(rawPeak, 0);
+  if (a.float32 && !a.limiter) {
+    // 32-bit float: nothing clips, the level can simply be lowered in post
+    return { distanceM, avg, peak: rawPeak, rawPeak, noiseFloor, clip: false, limiting: false, overdriven: false,
+      snr: src.speech ? srcLevel - roomLevel : null, f32over: rawPeak > 0 };
+  }
   return {
     distanceM,
     avg: a.limiter ? Math.min(avg, ceiling - 4) : Math.min(avg, 0),
@@ -151,4 +182,10 @@ export function audioLevels(a: AudioInput): AudioResult {
 export function autoGain(a: Omit<AudioInput, "gain" | "limiter">) {
   const probe = audioLevels({ ...a, gain: 0, limiter: false });
   return Math.max(-12, Math.min(30, Math.round(-18 - probe.avg)));
+}
+
+/** The mic as it behaves with the chosen pattern and noise cancelling. */
+export function effectiveMic(mic: Mic, pattern: PatternId | null, nc: boolean): Mic {
+  const p = pattern ? PATTERNS[pattern] : { rej: 0, sens: 0 };
+  return { ...mic, sens: mic.sens + p.sens, rejection: mic.rejection + p.rej + (mic.nc && nc ? 8 : 0) };
 }

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import Monitor, { type SubjectKind, ROW_GAP, rowCount } from "./Monitor";
-import { MICS, MIC_BRANDS, INTERNAL_MIC, SOURCES, type SourceId, audioLevels, autoGain } from "./audio";
+import { MICS, MIC_BRANDS, INTERNAL_MIC, SOURCES, type SourceId, type PatternId, audioLevels, autoGain, effectiveMic } from "./audio";
+import { stylesFor, makerLutsFor, CREATIVE_LUTS, NEUTRAL_LOOK } from "./looks";
 import PhotoDiagram from "./PhotoDiagram";
 import { LensArt, IrisArt, CameraArt, cameraKind } from "./GearArt";
 import { DICT, LANGUAGES, fill, loadLang, saveLang, type Lang } from "./i18n";
@@ -245,9 +246,17 @@ export default function App() {
   const [wbMode, setWbMode] = useState<WbMode>("auto");
   const [wbK, setWbK] = useState(5600);
   const [profileId, setProfileId] = useState("standard");
-  const [lut, setLut] = useState(true);
+  const [lutId, setLutId] = useState(""); // "" = first manufacturer LUT, "none" = flat Log
+  const [styleId, setStyleId] = useState("");
   const logs = logProfilesFor(camera);
   const logProfile = logs.find((x) => x.id === profileId);
+  const styles = stylesFor(camera);
+  const style = styles.find((x) => x.id === styleId) ?? styles[0];
+  const makerLuts = logProfile ? makerLutsFor(logProfile.name) : [];
+  const creativeLut = CREATIVE_LUTS.find((x) => x.id === lutId);
+  const makerLut = makerLuts.find((x) => x.id === lutId) ?? makerLuts[0];
+  const lutNone = lutId === "none";
+  const lutValue = lutNone ? "none" : creativeLut ? creativeLut.id : makerLut?.id ?? "none";
   const minIso = logProfile?.minIso ?? 100;
   const isoChoices = [...new Set([minIso, ...ISOS.filter((v) => v >= minIso)])];
 
@@ -264,6 +273,8 @@ export default function App() {
 
   const sceneEV = scene.ev + boost - filterStops;
   const activeLog = isVideo ? logProfile : undefined;
+  const look = activeLog ? (lutNone ? NEUTRAL_LOOK : creativeLut?.look ?? makerLut?.look ?? NEUTRAL_LOOK) : style.look;
+  const lutTag = lutNone ? "" : creativeLut ? ` + ${t[creativeLut.id]}` : " + LUT";
   const activeMinIso = isVideo ? minIso : 100;
   const effShutter = isVideo
     ? shutter
@@ -311,12 +322,23 @@ export default function App() {
   const [autoLevel, setAutoLevel] = useState(false);
   const [limiter, setLimiter] = useState(true);
   const [lowCut, setLowCut] = useState(false);
+  const [float32, setFloat32] = useState(true);
+  const [patternId, setPatternId] = useState<PatternId | "">("");
+  const [noiseCancel, setNoiseCancel] = useState(false);
+  const [safetyOn, setSafetyOn] = useState(true);
+  const [onboard, setOnboard] = useState(true);
   const mic = MICS.find((x) => x.id === micId) ?? INTERNAL_MIC;
-  const audioBase = { mic, source: sourceId, sceneId, outdoor: !scene.palette.indoor, cameraDistanceM: focusM, lowCut };
+  const pattern = mic.pat ? (patternId && mic.pat.includes(patternId) ? patternId : mic.pat[0]) : null;
+  const f32On = !!mic.float32 && float32;
+  const audioBase = {
+    mic: effectiveMic(mic, pattern, noiseCancel), source: sourceId, sceneId, outdoor: !scene.palette.indoor,
+    cameraDistanceM: focusM, lowCut, float32: f32On,
+  };
   const effGain = autoLevel ? autoGain(audioBase) : gain;
   const audio = audioLevels({ ...audioBase, gain: effGain, limiter });
   const quality = audio.snr === null ? null : audio.snr >= 15 ? "good" : audio.snr >= 6 ? "fair" : "poor";
   const tooNoisy = audio.avg - audio.noiseFloor < 18;
+  const safetyPeak = !f32On && mic.safety && safetyOn && (audio.clip || audio.overdriven) ? Math.round(audio.rawPeak + mic.safety) : null;
   const typeLabel = { lav: t.t_lav, oncam: t.t_oncam, boom: t.t_boom, internal: t.t_internal }[mic.type];
 
   // ── Group rows: which rows are inside the sharp zone
@@ -326,6 +348,16 @@ export default function App() {
   });
 
   const sel = (id: string) => ({ id, className: "control" });
+  const styleSelect = (id: string) => (
+    <>
+      <label htmlFor={id}>{t.pictureStyle}</label>
+      <select {...sel(id)} value={style.id} onChange={(e) => setStyleId(e.target.value)}>
+        {styles.map((x) => (
+          <option key={x.id} value={x.id}>{x.name}</option>
+        ))}
+      </select>
+    </>
+  );
 
   const g_cam = (
     <>
@@ -508,6 +540,7 @@ export default function App() {
                 <option key={m} value={m}>{(t.wbModes as Record<string, string>)[m]}</option>
               ))}
             </select>
+            {styleSelect("pstyle")}
             {wbMode === "kelvin" && (
               <>
                 <div className="row-label">
@@ -580,14 +613,27 @@ export default function App() {
                 <option key={x.id} value={x.id}>{x.name === "Log" && !camera ? t.logGeneric : x.name}</option>
               ))}
             </select>
-            {logProfile && (
+            {logProfile ? (
               <>
-                <label className="check">
-                  <input type="checkbox" id="lut" checked={lut} onChange={(e) => setLut(e.target.checked)} />
-                  {t.lutPreview}
-                </label>
+                <label htmlFor="lut">{t.lutMonitor}</label>
+                <select {...sel("lut")} value={lutValue} onChange={(e) => setLutId(e.target.value)}>
+                  <option value="none">{t.lutNone}</option>
+                  <optgroup label={t.lutMaker}>
+                    {makerLuts.map((x) => (
+                      <option key={x.id} value={x.id}>{x.name}</option>
+                    ))}
+                  </optgroup>
+                  <optgroup label={t.lutCreative}>
+                    {CREATIVE_LUTS.map((x) => (
+                      <option key={x.id} value={x.id}>{t[x.id]}</option>
+                    ))}
+                  </optgroup>
+                </select>
+                {lutNone && <p className="note">{t.lutNoneTip}</p>}
                 <p className="note">{fill(t.logTip, minIso)}</p>
               </>
+            ) : (
+              styleSelect("vstyle")
             )}
 
             <label htmlFor="wb">{t.wb}</label>
@@ -638,7 +684,47 @@ export default function App() {
               <span className="chip">{typeLabel}</span>
               <span className="chip">{fill(t.micDistance, formatMeters(audio.distanceM * 1000))}</span>
             </p>
-            {mic.float32 && <p className="note">{t.float32}</p>}
+            {mic.pat && (
+              <>
+                <label htmlFor="micpat">{t.pattern}</label>
+                <select {...sel("micpat")} value={pattern ?? ""} onChange={(e) => setPatternId(e.target.value as PatternId)}>
+                  {mic.pat.map((x) => (
+                    <option key={x} value={x}>{t.pat[x]}</option>
+                  ))}
+                </select>
+                {pattern === "rear" && <p className="note">{t.rearTip}</p>}
+              </>
+            )}
+            {(mic.float32 || mic.nc || mic.safety || mic.onboard) && (
+              <div className="checks">
+                {mic.float32 && (
+                  <label className="check">
+                    <input type="checkbox" id="f32" checked={float32} onChange={(e) => setFloat32(e.target.checked)} />
+                    {t.f32}
+                  </label>
+                )}
+                {mic.nc && (
+                  <label className="check">
+                    <input type="checkbox" id="micnc" checked={noiseCancel} onChange={(e) => setNoiseCancel(e.target.checked)} />
+                    {t[mic.nc]}
+                  </label>
+                )}
+                {mic.safety && (
+                  <label className="check">
+                    <input type="checkbox" id="safety" checked={safetyOn} onChange={(e) => setSafetyOn(e.target.checked)} />
+                    {mic.f32cam ? t.dmsBackup : fill(t.safety, mic.safety)}
+                  </label>
+                )}
+                {mic.onboard && (
+                  <label className="check">
+                    <input type="checkbox" id="onboard" checked={onboard} onChange={(e) => setOnboard(e.target.checked)} />
+                    {t.onboard}
+                  </label>
+                )}
+              </div>
+            )}
+            {mic.float32 && <p className={f32On ? "ok" : "note"}>{f32On ? (mic.f32cam ? t.f32cam : t.float32) : t.f32off}</p>}
+            {mic.onboard && onboard && <p className="note">{t.onboardOn}</p>}
 
             <label htmlFor="source">{t.source}</label>
             <select {...sel("source")} value={sourceId} onChange={(e) => setSourceId(e.target.value as SourceId)}>
@@ -673,7 +759,9 @@ export default function App() {
                 {t.intelligibility}: {t[`q_${quality}` as const]}
               </p>
             )}
-            {audio.clip ? (
+            {audio.f32over ? (
+              <p className="note">{t.f32over}</p>
+            ) : audio.clip ? (
               <p className="warn warn-strong">{t.clip}</p>
             ) : audio.overdriven ? (
               <p className="warn warn-strong">{t.overdriven}</p>
@@ -685,6 +773,9 @@ export default function App() {
               <p className="ok">{t.goodLevel}</p>
             )}
             {audio.limiting && !audio.overdriven && <p className="note">{t.limiting}</p>}
+            {safetyPeak !== null && (
+              <p className={safetyPeak < 0 ? "ok" : "warn"}>{fill(safetyPeak < 0 ? t.safetyOk : t.safetyBad, safetyPeak)}</p>
+            )}
           </fieldset>
           )}
     </>
@@ -874,7 +965,8 @@ export default function App() {
             exposureDelta={exposureDelta}
             cast={cast}
             grain={grain}
-            logView={!!activeLog && !lut}
+            logView={!!activeLog && lutNone}
+            look={look}
             cpl={cplEffect}
             uv={uvOn}
             label={t.monitor}
@@ -883,7 +975,7 @@ export default function App() {
               shutter: formatShutter(effShutter),
               iso: useAuto ? `AUTO ${auto.display}` : String(effIso),
               focus: formatMeters(focusM * 1000),
-              profile: activeLog ? `${activeLog.name}${lut ? " + LUT" : ""}` : "",
+              profile: activeLog ? `${activeLog.name}${lutTag}` : style === styles[0] ? "" : style.name,
               filters: filterTag,
               wb: `${wbMode === "auto" ? "AWB " : ""}${Math.round(camWbK / 100) * 100}K`,
             }}
