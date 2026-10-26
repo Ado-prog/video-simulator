@@ -41,6 +41,7 @@ import {
   autoIso,
   ND_FILTERS,
   BACKDROPS,
+  PHOTO_BACKDROPS,
   type BackdropKind,
   CPL_LOSS,
   pickNd,
@@ -1576,6 +1577,7 @@ export default function App() {
             subject={subject}
             palette={viewPalette}
             backdrop={backdropKind}
+            photo={bd?.photo ? `./${bd.photo}` : undefined}
             exposureDelta={exposureDelta}
             cast={cast}
             grain={grain}
@@ -1609,9 +1611,16 @@ export default function App() {
           <div className="backdrop-row">
             <label htmlFor="backdrop">{t.backdrop}</label>
             <select id="backdrop" className="control" value={backdropId} onChange={(e) => setBackdropId(e.target.value)}>
-              {(["auto", "garden", "curtain", "forest", "city", "beach"] as const).map((k) => (
-                <option key={k} value={k}>{t.backdrops[k]}</option>
-              ))}
+              <optgroup label={t.bgDrawn}>
+                {(["auto", "garden", "curtain", "forest", "city", "beach"] as const).map((k) => (
+                  <option key={k} value={k}>{t.backdrops[k]}</option>
+                ))}
+              </optgroup>
+              <optgroup label={t.bgPhotos}>
+                {PHOTO_BACKDROPS.map((k) => (
+                  <option key={k} value={k}>{t.photoBackdrops[k]}</option>
+                ))}
+              </optgroup>
             </select>
           </div>
           <div className="card">

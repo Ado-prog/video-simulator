@@ -28,6 +28,7 @@ type Figure = {
   skin: string;
   hair: string;
   longHair?: boolean;
+  eyes?: string;
 };
 type Row = { offset: number; figures: Figure[] };
 
@@ -45,6 +46,7 @@ function person(i: number, x: number, dress: boolean, extra: Partial<Figure> = {
     skin: SKINS[(i * 5 + 1) % SKINS.length],
     hair: HAIRS[(i * 3 + 2) % HAIRS.length],
     longHair: dress && i % 3 !== 1,
+    eyes: ["#4a2f1e", "#3c5a6e", "#5a4a2a", "#2e1f16", "#4f6a4a"][(i * 3) % 5],
     ...extra,
   };
 }
@@ -88,6 +90,7 @@ type Props = {
   subject: SubjectKind;
   palette: ScenePalette;
   backdrop: BackdropKind;
+  photo?: string; // background photo URL
   exposureDelta: number;
   cast: [number, number, number];
   grain: number;
@@ -138,9 +141,23 @@ const ZEBRA_TILES = {
   [-1]: zebraTile("M-1.5 4.5l3 3M0 0L6 6M4.5 -1.5l3 3"),
 } as Record<number, string>;
 
+// Photos used on the monitor, as data URLs (an SVG drawn into a canvas cannot load external files)
+const INLINE = new Map<string, string>();
+async function inlineImage(href: string) {
+  if (INLINE.has(href)) return;
+  const blob = await (await fetch(href)).blob();
+  const data = await new Promise<string>((ok) => {
+    const r = new FileReader();
+    r.onload = () => ok(String(r.result));
+    r.readAsDataURL(blob);
+  });
+  INLINE.set(href, data);
+}
+
 /** Rasterises the picture (without overlays) and draws waveform, histogram and focus peaking. */
 function useScopes(svgRef: React.RefObject<SVGSVGElement>, canvasRef: React.RefObject<HTMLCanvasElement>, a: Assist, H: number, key: string) {
   const on = a.wfm !== "off" || a.histogram || a.peaking;
+  const [retry, setRetry] = useState(0);
   useEffect(() => {
     const cv = canvasRef.current;
     const ctx = cv?.getContext("2d");
@@ -157,6 +174,16 @@ function useScopes(svgRef: React.RefObject<SVGSVGElement>, canvasRef: React.RefO
       const SH = Math.round(H * 2);
       const clone = svg.cloneNode(true) as SVGSVGElement;
       clone.querySelectorAll("[data-noscan],[data-assist]").forEach((n) => n.remove());
+      for (const im of clone.querySelectorAll("image")) {
+        const href = im.getAttribute("href") ?? "";
+        if (href.startsWith("data:")) continue;
+        const data = INLINE.get(href);
+        if (data) im.setAttribute("href", data);
+        else {
+          inlineImage(href).then(() => setRetry((r) => r + 1));
+          return;
+        }
+      }
       clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
       clone.setAttribute("width", String(SW));
       clone.setAttribute("height", String(SH));
@@ -192,7 +219,7 @@ function useScopes(svgRef: React.RefObject<SVGSVGElement>, canvasRef: React.RefO
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [key, on, a.peaking, a.wfm, a.histogram, H, svgRef, canvasRef]);
+  }, [key, on, a.peaking, a.wfm, a.histogram, H, svgRef, canvasRef, retry]);
 }
 
 function drawPeaking(ctx: CanvasRenderingContext2D, lum: Float32Array, SW: number, SH: number) {
@@ -344,26 +371,52 @@ function FigureShape({ f }: { f: Figure }) {
     C${-R} ${cy - ry * 0.62} ${-R * 0.6} ${cy - ry} 0 ${cy - ry} Z`;
 
   const eyeY = cy + ry * 0.02;
+  const nw = u * (f.dress ? 0.12 : 0.16); // half neck width
+  const neck = `M${-nw} ${cy + ry * 0.55} C${-nw} ${chinY + u * 0.1} ${-nw * 1.05} ${shoulderY - u * 0.15} ${-nw * 1.5} ${shoulderY + u * 0.05}
+    L${nw * 1.5} ${shoulderY + u * 0.05} C${nw * 1.05} ${shoulderY - u * 0.15} ${nw} ${chinY + u * 0.1} ${nw} ${cy + ry * 0.55} Z`;
   const features = (
     <g>
       {/* brows */}
       <path d={`M${-R * 0.62} ${eyeY - ry * 0.2} Q${-R * 0.38} ${eyeY - ry * 0.3} ${-R * 0.14} ${eyeY - ry * 0.21}`} stroke={f.hair} strokeWidth={u * 0.035} strokeLinecap="round" fill="none" opacity={0.85} />
       <path d={`M${R * 0.62} ${eyeY - ry * 0.2} Q${R * 0.38} ${eyeY - ry * 0.3} ${R * 0.14} ${eyeY - ry * 0.21}`} stroke={f.hair} strokeWidth={u * 0.035} strokeLinecap="round" fill="none" opacity={0.85} />
-      {/* eyes */}
-      <ellipse cx={-R * 0.38} cy={eyeY} rx={R * 0.17} ry={ry * 0.055} fill="#f4efea" />
-      <ellipse cx={R * 0.38} cy={eyeY} rx={R * 0.17} ry={ry * 0.055} fill="#f4efea" />
-      <circle cx={-R * 0.36} cy={eyeY} r={ry * 0.05} fill="#2a1c14" />
-      <circle cx={R * 0.4} cy={eyeY} r={ry * 0.05} fill="#2a1c14" />
+      {/* eye sockets, eyes with iris, catchlight and lids */}
+      <ellipse cx={-R * 0.38} cy={eyeY - ry * 0.03} rx={R * 0.26} ry={ry * 0.11} fill={skinShadow} opacity={0.7} />
+      <ellipse cx={R * 0.38} cy={eyeY - ry * 0.03} rx={R * 0.26} ry={ry * 0.11} fill={skinShadow} opacity={0.9} />
+      <ellipse cx={-R * 0.38} cy={eyeY} rx={R * 0.145} ry={ry * 0.045} fill="#e9e2db" />
+      <ellipse cx={R * 0.38} cy={eyeY} rx={R * 0.145} ry={ry * 0.045} fill="#ddd5cd" />
+      <circle cx={-R * 0.36} cy={eyeY} r={ry * 0.044} fill={f.eyes ?? "#4a2f1e"} />
+      <circle cx={R * 0.4} cy={eyeY} r={ry * 0.044} fill={f.eyes ?? "#4a2f1e"} />
+      <circle cx={-R * 0.36} cy={eyeY} r={ry * 0.022} fill="#0d0907" />
+      <circle cx={R * 0.4} cy={eyeY} r={ry * 0.022} fill="#0d0907" />
+      <circle cx={-R * 0.39} cy={eyeY - ry * 0.02} r={ry * 0.012} fill="#ffffff" />
+      <circle cx={R * 0.37} cy={eyeY - ry * 0.02} r={ry * 0.012} fill="#ffffff" />
+      <path d={`M${-R * 0.56} ${eyeY - ry * 0.01} Q${-R * 0.38} ${eyeY - ry * 0.09} ${-R * 0.2} ${eyeY}`} stroke="rgba(40,20,10,0.55)" strokeWidth={u * 0.012} fill="none" />
+      <path d={`M${R * 0.56} ${eyeY - ry * 0.01} Q${R * 0.38} ${eyeY - ry * 0.09} ${R * 0.2} ${eyeY}`} stroke="rgba(40,20,10,0.55)" strokeWidth={u * 0.012} fill="none" />
+      <path d={`M${-R * 0.52} ${eyeY + ry * 0.07} Q${-R * 0.38} ${eyeY + ry * 0.11} ${-R * 0.24} ${eyeY + ry * 0.07}`} stroke={skinShadow} strokeWidth={u * 0.012} fill="none" />
+      <path d={`M${R * 0.52} ${eyeY + ry * 0.07} Q${R * 0.38} ${eyeY + ry * 0.11} ${R * 0.24} ${eyeY + ry * 0.07}`} stroke={skinShadow} strokeWidth={u * 0.012} fill="none" />
       {f.dress && (
         <>
           <path d={`M${-R * 0.58} ${eyeY - ry * 0.03} Q${-R * 0.38} ${eyeY - ry * 0.1} ${-R * 0.18} ${eyeY - ry * 0.02}`} stroke="#1a1210" strokeWidth={u * 0.02} fill="none" />
           <path d={`M${R * 0.58} ${eyeY - ry * 0.03} Q${R * 0.38} ${eyeY - ry * 0.1} ${R * 0.18} ${eyeY - ry * 0.02}`} stroke="#1a1210" strokeWidth={u * 0.02} fill="none" />
         </>
       )}
-      {/* nose: soft shadow on the left side and the tip */}
-      <path d={`M${-R * 0.04} ${eyeY + ry * 0.05} C${-R * 0.1} ${eyeY + ry * 0.25} ${-R * 0.18} ${eyeY + ry * 0.38} ${-R * 0.12} ${eyeY + ry * 0.44} Q0 ${eyeY + ry * 0.5} ${R * 0.12} ${eyeY + ry * 0.44}`} stroke={skinShadow} strokeWidth={u * 0.03} fill="none" strokeLinecap="round" />
-      {/* mouth */}
-      <path d={`M${-R * 0.3} ${cy + ry * 0.66} Q0 ${cy + ry * 0.6} ${R * 0.3} ${cy + ry * 0.66} Q0 ${cy + ry * (f.dress ? 0.8 : 0.74)} ${-R * 0.3} ${cy + ry * 0.66} Z`} fill={lip} opacity={f.dress ? 0.85 : 0.6} />
+      {/* nose: shadowed side, lit bridge, tip and nostrils */}
+      <path d={`M${R * 0.04} ${eyeY + ry * 0.04} C${R * 0.1} ${eyeY + ry * 0.22} ${R * 0.2} ${eyeY + ry * 0.36} ${R * 0.16} ${eyeY + ry * 0.44} L${R * 0.02} ${eyeY + ry * 0.44} Z`} fill={skinShadow} opacity={0.8} />
+      <path d={`M${-R * 0.03} ${eyeY + ry * 0.06} L${-R * 0.05} ${eyeY + ry * 0.36}`} stroke="rgba(255,255,255,0.18)" strokeWidth={u * 0.025} strokeLinecap="round" />
+      <ellipse cx={-R * 0.02} cy={eyeY + ry * 0.4} rx={R * 0.09} ry={ry * 0.05} fill="rgba(255,255,255,0.12)" />
+      <ellipse cx={-R * 0.1} cy={eyeY + ry * 0.47} rx={R * 0.05} ry={ry * 0.025} fill="rgba(60,25,15,0.5)" />
+      <ellipse cx={R * 0.1} cy={eyeY + ry * 0.47} rx={R * 0.05} ry={ry * 0.025} fill="rgba(60,25,15,0.55)" />
+      <path d={`M0 ${eyeY + ry * 0.5} L0 ${cy + ry * 0.6}`} stroke={skinShadow} strokeWidth={u * 0.02} opacity={0.6} />
+      {/* lips: darker upper lip, fuller lower lip with a highlight */}
+      <path d={`M${-R * 0.3} ${cy + ry * 0.66} Q${-R * 0.12} ${cy + ry * 0.6} 0 ${cy + ry * 0.63} Q${R * 0.12} ${cy + ry * 0.6} ${R * 0.3} ${cy + ry * 0.66} Q0 ${cy + ry * 0.67} ${-R * 0.3} ${cy + ry * 0.66} Z`} fill={lip} opacity={f.dress ? 0.95 : 0.7} />
+      <path d={`M${-R * 0.27} ${cy + ry * 0.67} Q0 ${cy + ry * (f.dress ? 0.8 : 0.75)} ${R * 0.27} ${cy + ry * 0.67} Q0 ${cy + ry * 0.68} ${-R * 0.27} ${cy + ry * 0.67} Z`} fill={lip} opacity={f.dress ? 0.75 : 0.5} />
+      <path d={`M${-R * 0.27} ${cy + ry * 0.67} Q0 ${cy + ry * (f.dress ? 0.8 : 0.75)} ${R * 0.27} ${cy + ry * 0.67} Z`} fill="url(#m-lips)" />
+      <path d={`M${-R * 0.3} ${cy + ry * 0.665} Q0 ${cy + ry * 0.685} ${R * 0.3} ${cy + ry * 0.665}`} stroke="rgba(60,20,15,0.45)" strokeWidth={u * 0.01} fill="none" />
+      {/* cheekbone light, chin light, jaw shadow */}
+      <ellipse cx={-R * 0.55} cy={cy + ry * 0.22} rx={R * 0.22} ry={ry * 0.1} fill="#ffffff" opacity={0.08} />
+      <ellipse cx={0} cy={cy + ry * 0.88} rx={R * 0.2} ry={ry * 0.06} fill="#ffffff" opacity={0.08} />
+      <path d={`M${R * 0.98} ${cy} C${R * 0.95} ${cy + ry * 0.45} ${R * 0.75} ${cy + ry * 0.75} ${R * 0.45} ${cy + ry * 0.92} C${R * 0.68} ${cy + ry * 0.62} ${R * 0.82} ${cy + ry * 0.35} ${R * 0.8} ${cy} Z`} fill={skinShadow} opacity={0.7} />
+      {!f.dress && <path d={`M${-R * 0.75} ${cy + ry * 0.45} C${-R * 0.55} ${cy + ry * 0.92} ${R * 0.55} ${cy + ry * 0.92} ${R * 0.75} ${cy + ry * 0.45} C${R * 0.5} ${cy + ry * 1.0} ${-R * 0.5} ${cy + ry * 1.0} ${-R * 0.75} ${cy + ry * 0.45} Z`} fill="rgba(40,30,25,0.1)" />}
       {f.dress && <ellipse cx={-R * 0.55} cy={cy + ry * 0.38} rx={R * 0.2} ry={ry * 0.1} fill="#e07a7a" opacity={0.18} />}
       {f.dress && <ellipse cx={R * 0.55} cy={cy + ry * 0.38} rx={R * 0.2} ry={ry * 0.1} fill="#e07a7a" opacity={0.18} />}
     </g>
@@ -387,19 +440,23 @@ function FigureShape({ f }: { f: Figure }) {
     C${-R * 0.55} ${cy - ry * 0.6} ${-R * 0.95} ${cy - ry * 0.3} ${-R * 1.05} ${cy + ry * 0.15} Z`;
 
   // ── suit
-  const jacket = `M${-u * 0.16} ${shoulderY - u * 0.08}
+  const collarY = shoulderY - u * 0.22;
+  const jacket = `M${-u * 0.17} ${collarY}
     C${-sw * 0.7} ${shoulderY - u * 0.06} ${-sw * 0.98} ${shoulderY + u * 0.02} ${-sw} ${shoulderY + u * 0.35}
     C${-sw * 0.98} ${shoulderY + u * 0.9} ${-sw * 0.82} ${waistY - u * 0.3} ${-sw * 0.78} ${waistY}
     C${-sw * 0.8} ${waistY + u * 0.5} ${-sw * 0.84} ${hipY} ${-sw * 0.82} ${hipY + u * 0.38}
     L${sw * 0.82} ${hipY + u * 0.38}
     C${sw * 0.84} ${hipY} ${sw * 0.8} ${waistY + u * 0.5} ${sw * 0.78} ${waistY}
     C${sw * 0.82} ${waistY - u * 0.3} ${sw * 0.98} ${shoulderY + u * 0.9} ${sw} ${shoulderY + u * 0.35}
-    C${sw * 0.98} ${shoulderY + u * 0.02} ${sw * 0.7} ${shoulderY - u * 0.06} ${u * 0.16} ${shoulderY - u * 0.08} Z`;
+    C${sw * 0.98} ${shoulderY + u * 0.02} ${sw * 0.7} ${shoulderY - u * 0.06} ${u * 0.17} ${collarY} Z`;
   const vBottom = waistY - u * 0.15;
   const legs = (
     <>
       <path d={`M${-sw * 0.74} ${hipY + u * 0.2} L${-u * 0.03} ${hipY + u * 0.2} L${-u * 0.07} ${-u * 0.1} L${-sw * 0.56} ${-u * 0.1} Z`} fill={f.tone} />
       <path d={`M${sw * 0.74} ${hipY + u * 0.2} L${u * 0.03} ${hipY + u * 0.2} L${u * 0.07} ${-u * 0.1} L${sw * 0.56} ${-u * 0.1} Z`} fill={f.tone} />
+      <path d={`M${-sw * 0.74} ${hipY + u * 0.2} L${-u * 0.03} ${hipY + u * 0.2} L${-u * 0.07} ${-u * 0.1} L${-sw * 0.56} ${-u * 0.1} Z`} fill="url(#m-cyl)" />
+      <path d={`M${sw * 0.74} ${hipY + u * 0.2} L${u * 0.03} ${hipY + u * 0.2} L${u * 0.07} ${-u * 0.1} L${sw * 0.56} ${-u * 0.1} Z`} fill="url(#m-cyl)" />
+      <path d={`M${-sw * 0.6} ${-u * 1.9} q${sw * 0.2} ${u * 0.08} ${sw * 0.45} 0 M${sw * 0.6} ${-u * 1.7} q${-sw * 0.2} ${u * 0.08} ${-sw * 0.45} 0`} stroke="rgba(0,0,0,0.18)" strokeWidth={u * 0.02} fill="none" />
       <path d={`M${-sw * 0.36} ${hipY + u * 0.5} L${-sw * 0.33} ${-u * 0.12}`} stroke="rgba(255,255,255,0.1)" strokeWidth={u * 0.025} />
       <path d={`M${sw * 0.36} ${hipY + u * 0.5} L${sw * 0.33} ${-u * 0.12}`} stroke="rgba(0,0,0,0.18)" strokeWidth={u * 0.025} />
       <path d={`M${-sw * 0.6} ${-u * 0.12} h${sw * 0.56} c${u * 0.06} 0 ${u * 0.06} ${u * 0.12} 0 ${u * 0.12} h${-sw * 0.62} c${-u * 0.05} 0 ${-u * 0.05} ${-u * 0.12} ${u * 0.06} ${-u * 0.12} z`} fill={dark} />
@@ -413,6 +470,9 @@ function FigureShape({ f }: { f: Figure }) {
           C${x + u * 0.09} ${y + u * 0.25} ${x + u * 0.11} ${y + u * 0.1} ${x + u * 0.09} ${y - u * 0.06} Z`}
       fill={f.skin}
     />
+  );
+  const fingers = (x: number, y: number) => (
+    <path d={`M${x - u * 0.04} ${y + u * 0.12} l0 ${u * 0.12} M${x} ${y + u * 0.13} l0 ${u * 0.13} M${x + u * 0.04} ${y + u * 0.12} l0 ${u * 0.11}`} stroke="rgba(70,35,20,0.35)" strokeWidth={u * 0.01} />
   );
 
   const sleeve = (side: 1 | -1) => {
@@ -428,13 +488,26 @@ function FigureShape({ f }: { f: Figure }) {
               L${wristX + side * w * 0.5} ${wristY} C${wristX + side * u * 0.22} ${waistY} ${x0 + side * u * 0.38} ${y0 + u * 0.6} ${x0 + side * w} ${y0 - u * 0.05} Z`}
           fill={f.dress ? f.skin : f.tone}
         />
+        <path
+          d={`M${x0 - side * w} ${y0} C${x0 + side * u * 0.15} ${y0 + u * 0.8} ${wristX + side * u * 0.05} ${waistY} ${wristX - side * w * 0.5} ${wristY}
+              L${wristX + side * w * 0.5} ${wristY} C${wristX + side * u * 0.22} ${waistY} ${x0 + side * u * 0.38} ${y0 + u * 0.6} ${x0 + side * w} ${y0 - u * 0.05} Z`}
+          fill="url(#m-cyl)"
+        />
+        {!f.dress && (
+          <path d={`M${wristX - side * w * 0.6} ${waistY - u * 0.15} q${side * w * 0.6} ${u * 0.1} ${side * w * 1.1} ${-u * 0.02} M${wristX - side * w * 0.5} ${waistY + u * 0.05} q${side * w * 0.5} ${u * 0.08} ${side * w * 1.0} 0`} stroke="rgba(0,0,0,0.25)" strokeWidth={u * 0.018} fill="none" />
+        )}
         {!f.dress && <rect x={wristX - u * 0.1} y={wristY - u * 0.05} width={u * 0.2} height={u * 0.07} rx={u * 0.02} fill="#f2f0ec" />}
         {hand(wristX, wristY + u * 0.03, side)}
+        {fingers(wristX, wristY + u * 0.03)}
       </g>
     );
   };
 
   // ── dress
+  const shoulders = `M${-u * 0.15} ${shoulderY - u * 0.06} C${-sw * 0.6} ${shoulderY - u * 0.05} ${-sw * 0.95} ${shoulderY + u * 0.02} ${-sw * 1.0} ${shoulderY + u * 0.28}
+    C${-sw * 1.03} ${shoulderY + u * 0.52} ${-sw * 0.9} ${shoulderY + u * 0.72} ${-sw * 0.7} ${shoulderY + u * 0.82}
+    L${sw * 0.7} ${shoulderY + u * 0.82} C${sw * 0.9} ${shoulderY + u * 0.72} ${sw * 1.03} ${shoulderY + u * 0.52} ${sw * 1.0} ${shoulderY + u * 0.28}
+    C${sw * 0.95} ${shoulderY + u * 0.02} ${sw * 0.6} ${shoulderY - u * 0.05} ${u * 0.15} ${shoulderY - u * 0.06} Z`;
   const bodiceTop = f.bride ? shoulderY + u * 0.5 : shoulderY - u * 0.04;
   const bodice = f.bride
     ? `M${-sw * 0.66} ${bodiceTop} Q${-sw * 0.33} ${bodiceTop - u * 0.12} 0 ${bodiceTop + u * 0.12} Q${sw * 0.33} ${bodiceTop - u * 0.12} ${sw * 0.66} ${bodiceTop}
@@ -453,8 +526,10 @@ function FigureShape({ f }: { f: Figure }) {
 
   return (
     <g transform={`translate(${f.x} 0)`}>
+      <ellipse cx={u * 0.15} cy={0} rx={(f.bride ? skirtW * 1.15 : sw * 1.25)} ry={u * 0.14} fill="url(#m-ground)" />
       {/* long hair falls behind the shoulders */}
       {f.longHair && !f.bride && <path d={longHairBack} fill={f.hair} />}
+      {f.longHair && !f.bride && <path d={longHairBack} fill="url(#m-hair)" />}
       {/* bride: veil behind the body */}
       {f.bride && (
         <path d={`M${-R * 0.2} ${cy - ry * 0.7} C${-R * 1.6} ${cy} ${-sw * 1.5} ${waistY} ${-sw * 1.6} ${hipY + u * 1.2} L${sw * 1.6} ${hipY + u * 1.2} C${sw * 1.5} ${waistY} ${R * 1.6} ${cy} ${R * 0.2} ${cy - ry * 0.7} Z`} fill="#ffffff" opacity={0.28} />
@@ -475,22 +550,28 @@ function FigureShape({ f }: { f: Figure }) {
       )}
 
       {/* neck */}
-      <path d={`M${-u * 0.12} ${cy + ry * 0.55} L${-u * 0.14} ${shoulderY + u * 0.05} L${u * 0.14} ${shoulderY + u * 0.05} L${u * 0.12} ${cy + ry * 0.55} Z`} fill={f.skin} />
+      <path d={neck} fill={f.skin} />
+      <path d={neck} fill="url(#m-cyl)" />
       <path d={`M${-u * 0.12} ${chinY - u * 0.02} Q0 ${chinY + u * 0.12} ${u * 0.12} ${chinY - u * 0.02} L${u * 0.13} ${chinY + u * 0.1} L${-u * 0.13} ${chinY + u * 0.1} Z`} fill={skinShadow} />
 
       {f.dress ? (
         <>
-          {/* bare shoulders / neckline */}
-          <path d={`M${-u * 0.16} ${shoulderY - u * 0.06} C${-sw * 0.75} ${shoulderY - u * 0.04} ${-sw} ${shoulderY + u * 0.12} ${-sw * 0.92} ${shoulderY + u * 0.5}
-              L${sw * 0.92} ${shoulderY + u * 0.5} C${sw} ${shoulderY + u * 0.12} ${sw * 0.75} ${shoulderY - u * 0.04} ${u * 0.16} ${shoulderY - u * 0.06} Z`} fill={f.skin} />
           {sleeve(-1)}
           {sleeve(1)}
+          {/* bare shoulders, rounded over the upper arms, down to the armpits */}
+          <path d={shoulders} fill={f.skin} />
+          <path d={shoulders} fill="url(#m-shade)" opacity={0.85} />
+          <path d={`M${-sw * 0.3} ${shoulderY + u * 0.02} q${sw * 0.15} ${u * 0.08} ${sw * 0.28} ${u * 0.04} M${sw * 0.3} ${shoulderY + u * 0.02} q${-sw * 0.15} ${u * 0.08} ${-sw * 0.28} ${u * 0.04}`} stroke={skinShadow} strokeWidth={u * 0.02} fill="none" />
           <path d={skirt} fill={f.tone} />
           <path d={skirt} fill="url(#m-fold)" opacity={f.bride ? 0.5 : 0.3} />
-          <path d={folds} stroke="rgba(0,0,0,0.12)" strokeWidth={u * 0.03} fill="none" />
+          <path d={skirt} fill="url(#m-satin)" />
+          <path d={skirt} fill="url(#m-vert)" />
+          <path d={folds} stroke="rgba(0,0,0,0.14)" strokeWidth={u * 0.035} fill="none" />
+          <path d={folds} stroke="rgba(255,255,255,0.16)" strokeWidth={u * 0.02} fill="none" transform={`translate(${-u * 0.05} 0)`} />
           <path d={bodice} fill={f.tone} />
           {!f.bride && <path d={`M${-u * 0.16} ${bodiceTop} L0 ${shoulderY + u * 0.5} L${u * 0.16} ${bodiceTop} Z`} fill={f.skin} />}
           <path d={bodice} fill="url(#m-shade)" />
+          <path d={bodice} fill="url(#m-satin)" opacity={0.7} />
           {f.bride && <rect x={-sw * 0.52} y={waistY - u * 0.12} width={sw * 1.04} height={u * 0.14} rx={u * 0.04} fill="#e8dcc6" />}
           {f.bride && (
             <g>
@@ -512,15 +593,15 @@ function FigureShape({ f }: { f: Figure }) {
           {sleeve(1)}
           <path d={jacket} fill={f.tone} />
           {/* shirt, collar, tie */}
-          <path d={`M${-u * 0.18} ${shoulderY - u * 0.07} L0 ${vBottom} L${u * 0.18} ${shoulderY - u * 0.07} Z`} fill="#f5f3ef" />
-          <path d={`M${-u * 0.18} ${shoulderY - u * 0.07} L${-u * 0.02} ${shoulderY + u * 0.12} L${-u * 0.1} ${shoulderY + u * 0.2} Z`} fill="#e4e1db" />
-          <path d={`M${u * 0.18} ${shoulderY - u * 0.07} L${u * 0.02} ${shoulderY + u * 0.12} L${u * 0.1} ${shoulderY + u * 0.2} Z`} fill="#e4e1db" />
-          <path d={`M${-u * 0.045} ${shoulderY + u * 0.1} L${u * 0.045} ${shoulderY + u * 0.1} L${u * 0.065} ${vBottom - u * 0.2} L0 ${vBottom - u * 0.08} L${-u * 0.065} ${vBottom - u * 0.2} Z`} fill={f.groom ? "#c9b48a" : f.x < 0 ? "#3b3550" : "#5a2230"} />
+          <path d={`M${-u * 0.18} ${collarY} L0 ${vBottom} L${u * 0.18} ${collarY} Z`} fill="#f5f3ef" />
+          <path d={`M${-u * 0.17} ${collarY - u * 0.03} L${-u * 0.01} ${collarY + u * 0.17} L${-u * 0.12} ${collarY + u * 0.24} Z`} fill="#e4e1db" />
+          <path d={`M${u * 0.17} ${collarY - u * 0.03} L${u * 0.01} ${collarY + u * 0.17} L${u * 0.12} ${collarY + u * 0.24} Z`} fill="#e4e1db" />
+          <path d={`M${-u * 0.045} ${collarY + u * 0.15} L${u * 0.045} ${collarY + u * 0.15} L${u * 0.065} ${vBottom - u * 0.2} L0 ${vBottom - u * 0.08} L${-u * 0.065} ${vBottom - u * 0.2} Z`} fill={f.groom ? "#c9b48a" : f.x < 0 ? "#3b3550" : "#5a2230"} />
           {/* lapels */}
-          <path d={`M${-u * 0.18} ${shoulderY - u * 0.07} L${-u * 0.42} ${shoulderY + u * 0.45} L${-u * 0.3} ${shoulderY + u * 0.5} L${-u * 0.02} ${vBottom}`} fill="rgba(0,0,0,0.22)" />
-          <path d={`M${u * 0.18} ${shoulderY - u * 0.07} L${u * 0.42} ${shoulderY + u * 0.45} L${u * 0.3} ${shoulderY + u * 0.5} L${u * 0.02} ${vBottom}`} fill="rgba(0,0,0,0.22)" />
-          <path d={`M${-u * 0.18} ${shoulderY - u * 0.07} L${-u * 0.42} ${shoulderY + u * 0.45} L${-u * 0.02} ${vBottom}`} stroke="rgba(255,255,255,0.16)" strokeWidth={u * 0.025} fill="none" />
-          <path d={`M${u * 0.18} ${shoulderY - u * 0.07} L${u * 0.42} ${shoulderY + u * 0.45} L${u * 0.02} ${vBottom}`} stroke="rgba(255,255,255,0.1)" strokeWidth={u * 0.025} fill="none" />
+          <path d={`M${-u * 0.18} ${collarY} L${-u * 0.42} ${shoulderY + u * 0.45} L${-u * 0.3} ${shoulderY + u * 0.5} L${-u * 0.02} ${vBottom}`} fill="rgba(0,0,0,0.22)" />
+          <path d={`M${u * 0.18} ${collarY} L${u * 0.42} ${shoulderY + u * 0.45} L${u * 0.3} ${shoulderY + u * 0.5} L${u * 0.02} ${vBottom}`} fill="rgba(0,0,0,0.22)" />
+          <path d={`M${-u * 0.18} ${collarY} L${-u * 0.42} ${shoulderY + u * 0.45} L${-u * 0.02} ${vBottom}`} stroke="rgba(255,255,255,0.16)" strokeWidth={u * 0.025} fill="none" />
+          <path d={`M${u * 0.18} ${collarY} L${u * 0.42} ${shoulderY + u * 0.45} L${u * 0.02} ${vBottom}`} stroke="rgba(255,255,255,0.1)" strokeWidth={u * 0.025} fill="none" />
           {/* buttons and pocket square */}
           <circle cx={0} cy={vBottom + u * 0.12} r={u * 0.035} fill="rgba(0,0,0,0.5)" />
           <circle cx={0} cy={vBottom + u * 0.42} r={u * 0.035} fill="rgba(0,0,0,0.5)" />
@@ -534,6 +615,9 @@ function FigureShape({ f }: { f: Figure }) {
               <path d={`M${-u * 0.38} ${shoulderY + u * 0.48} l${-u * 0.04} ${u * 0.12}`} stroke="#5a7a46" strokeWidth={u * 0.025} />
             </g>
           )}
+          <path d={`M0 ${vBottom + u * 0.12} L${-sw * 0.55} ${waistY - u * 0.45} M0 ${vBottom + u * 0.12} L${sw * 0.5} ${waistY - u * 0.5} M0 ${vBottom + u * 0.12} L${-sw * 0.5} ${waistY + u * 0.55}`} stroke="rgba(0,0,0,0.16)" strokeWidth={u * 0.02} fill="none" />
+          <path d={`M${-sw * 0.92} ${shoulderY + u * 0.3} q${sw * 0.12} ${-u * 0.22} ${sw * 0.5} ${-u * 0.3} M${sw * 0.92} ${shoulderY + u * 0.3} q${-sw * 0.12} ${-u * 0.22} ${-sw * 0.5} ${-u * 0.3}`} stroke="rgba(255,255,255,0.08)" strokeWidth={u * 0.02} fill="none" />
+          <path d={`M${-u * 0.15} ${shoulderY + u * 0.02} L0 ${shoulderY + u * 0.22} L${u * 0.15} ${shoulderY + u * 0.02}`} stroke="rgba(0,0,0,0.12)" strokeWidth={u * 0.03} fill="none" />
           <path d={jacket} fill="url(#m-shade)" />
         </>
       )}
@@ -557,8 +641,11 @@ function FigureShape({ f }: { f: Figure }) {
       ) : (
         <path d={shortHair} fill={f.hair} />
       )}
-      {/* soft hair highlight */}
-      <path d={`M${-R * 0.5} ${cy - ry * 0.95} Q0 ${cy - ry * 1.08} ${R * 0.45} ${cy - ry * 0.96}`} stroke="rgba(255,255,255,0.18)" strokeWidth={u * 0.04} fill="none" />
+      {/* hair volume and strands */}
+      <path d={f.longHair && !f.bride ? longHairFront : f.dress ? updo : shortHair} fill="url(#m-hair)" />
+      {[-0.5, -0.2, 0.15, 0.45].map((k, i) => (
+        <path key={i} d={`M${R * k} ${cy - ry * 1.08} Q${R * (k * 1.6 + 0.1)} ${cy - ry * 0.85} ${R * (k * 2 + (k < 0 ? -0.1 : 0.1))} ${cy - ry * 0.5}`} stroke={i % 2 ? "rgba(255,255,255,0.14)" : "rgba(0,0,0,0.22)"} strokeWidth={u * 0.018} fill="none" />
+      ))}
       {f.bride && (
         <>
           <path d={`M${-R * 0.75} ${cy - ry * 0.95} Q0 ${cy - ry * 1.3} ${R * 0.75} ${cy - ry * 0.95}`} stroke="#f6f1e6" strokeWidth={u * 0.05} fill="none" />
@@ -663,6 +750,10 @@ export default function Monitor(p: Props) {
   const lightsD = d + 2;
   const backD = d + 4.5;
   const hillsD = 120;
+  const photoD = d + 15; // background photos: the venue about 15 m behind the subject
+  // photos are framed like a ~28 mm (full-frame) shot; longer lenses crop into them
+  const refHalfV = Math.atan(10.125 / 28);
+  const photoZoom = Math.max(1, Math.tan(refHalfV) / Math.tan(vfov / 2));
   const branchD = Math.max(d * 0.4, 0.35);
 
   const gain = Math.pow(2, p.exposureDelta);
@@ -735,15 +826,53 @@ export default function Monitor(p: Props) {
               <stop offset="0%" stopColor={P.groundTop} />
               <stop offset="100%" stopColor={P.groundBottom} />
             </linearGradient>
+            {/* light comes from the upper left: rounded forms get a lit side, a core shadow and a reflected edge */}
             <linearGradient id="m-shade" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.16" />
-              <stop offset="45%" stopColor="#ffffff" stopOpacity="0" />
-              <stop offset="100%" stopColor="#000000" stopOpacity="0.28" />
-            </linearGradient>
-            <radialGradient id="m-face" cx="0.38" cy="0.35" r="0.75">
-              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.18" />
-              <stop offset="70%" stopColor="#000000" stopOpacity="0" />
+              <stop offset="0%" stopColor="#000000" stopOpacity="0.2" />
+              <stop offset="16%" stopColor="#ffffff" stopOpacity="0.16" />
+              <stop offset="48%" stopColor="#ffffff" stopOpacity="0" />
+              <stop offset="88%" stopColor="#000000" stopOpacity="0.3" />
               <stop offset="100%" stopColor="#000000" stopOpacity="0.22" />
+            </linearGradient>
+            <linearGradient id="m-cyl" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#000000" stopOpacity="0.28" />
+              <stop offset="22%" stopColor="#ffffff" stopOpacity="0.16" />
+              <stop offset="50%" stopColor="#ffffff" stopOpacity="0" />
+              <stop offset="85%" stopColor="#000000" stopOpacity="0.32" />
+              <stop offset="100%" stopColor="#000000" stopOpacity="0.2" />
+            </linearGradient>
+            <linearGradient id="m-vert" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.1" />
+              <stop offset="45%" stopColor="#000000" stopOpacity="0" />
+              <stop offset="100%" stopColor="#000000" stopOpacity="0.22" />
+            </linearGradient>
+            <linearGradient id="m-hair" x1="0" y1="0" x2="0.35" y2="1">
+              <stop offset="0%" stopColor="#000000" stopOpacity="0.15" />
+              <stop offset="22%" stopColor="#ffffff" stopOpacity="0.22" />
+              <stop offset="34%" stopColor="#ffffff" stopOpacity="0.02" />
+              <stop offset="100%" stopColor="#000000" stopOpacity="0.3" />
+            </linearGradient>
+            <linearGradient id="m-satin" x1="0" y1="0" x2="1" y2="0.3">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0" />
+              <stop offset="30%" stopColor="#ffffff" stopOpacity="0.28" />
+              <stop offset="42%" stopColor="#ffffff" stopOpacity="0" />
+              <stop offset="70%" stopColor="#000000" stopOpacity="0.06" />
+              <stop offset="100%" stopColor="#000000" stopOpacity="0.2" />
+            </linearGradient>
+            <radialGradient id="m-face" cx="0.36" cy="0.38" r="0.78">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.2" />
+              <stop offset="45%" stopColor="#ffffff" stopOpacity="0.04" />
+              <stop offset="78%" stopColor="#000000" stopOpacity="0.06" />
+              <stop offset="100%" stopColor="#000000" stopOpacity="0.3" />
+            </radialGradient>
+            <radialGradient id="m-ground">
+              <stop offset="0%" stopColor="#000000" stopOpacity="0.45" />
+              <stop offset="60%" stopColor="#000000" stopOpacity="0.18" />
+              <stop offset="100%" stopColor="#000000" stopOpacity="0" />
+            </radialGradient>
+            <radialGradient id="m-lips" cx="0.5" cy="0.35" r="0.7">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.25" />
+              <stop offset="100%" stopColor="#000000" stopOpacity="0.15" />
             </radialGradient>
             <linearGradient id="m-fold" x1="0" y1="0" x2="1" y2="0">
               <stop offset="0%" stopColor="#000000" stopOpacity="0.18" />
@@ -766,7 +895,8 @@ export default function Monitor(p: Props) {
             {([
               ["m-b-hills", sd(hillsD)],
               ["m-b-back", sd(backD)],
-              ...subjRows.map((row, i): [string, number] => [`m-b-row-${i}`, sd(d + row.offset)]),
+              ["m-b-photo", sd(photoD)],
+              ...subjRows.map((row, i): [string, number] => [`m-b-row-${i}`, Math.max(sd(d + row.offset), 0.22)]),
               ["m-b-branch", sd(branchD)],
             ] as [string, number][]).map(([id, s]) => (
               <filter key={id} id={id} filterUnits="userSpaceOnUse" x={-100} y={-100} width={W + 200} height={H + 200}>
@@ -859,7 +989,19 @@ export default function Monitor(p: Props) {
                 <rect width={W} height={H / 2} fill="url(#m-cpl)" opacity={p.cpl * 0.55} style={{ mixBlendMode: "multiply" }} />
               )}
 
-              {!P.indoor && p.backdrop !== "sea" && (
+              {p.photo && (
+                <g filter="url(#m-b-photo)">
+                  <image
+                    href={p.photo}
+                    x={W / 2 - (W * photoZoom) / 2}
+                    y={H / 2 - (H * photoZoom) / 2}
+                    width={W * photoZoom}
+                    height={H * photoZoom}
+                    preserveAspectRatio="xMidYMid slice"
+                  />
+                </g>
+              )}
+              {!p.photo && !P.indoor && p.backdrop !== "sea" && (
                 <g filter="url(#m-b-hills)">
                   <path
                     d={`M0 ${H / 2 + 1} L0 ${H / 2 - 12} Q70 ${H / 2 - 28} 140 ${H / 2 - 14} T260 ${H / 2 - 18} T320 ${H / 2 - 10} L320 ${H / 2 + 1} Z`}
@@ -877,7 +1019,7 @@ export default function Monitor(p: Props) {
               )}
               <g filter="url(#m-b-back)">
                 <g transform={layer(backD)}>
-                  {p.backdrop === "buildings" ? (
+                  {p.photo ? null : p.backdrop === "buildings" ? (
                     backItems.map((x, i) => {
                       const h = 6 + ((i * 37) % 9);
                       const w = 1.7;
@@ -906,7 +1048,7 @@ export default function Monitor(p: Props) {
                 </g>
               </g>
 
-              {lights.map((l, i) => {
+              {!p.photo && lights.map((l, i) => {
                 const cx = W / 2 + l.x * lScale;
                 const cy = H / 2 + l.y * lScale;
                 const sharpR = Math.max(0.03 * lScale, 0.6);

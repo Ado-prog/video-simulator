@@ -29,6 +29,7 @@ See on a simulated camera monitor how focus distance, focal length, aperture, li
 - **DMW-DMS1E 4-channel mode:** CH1/CH2 main audio, CH3 omni, CH4 omni −20 dB with their levels
 - **Flash & shutter (photo):** TTL and HSS with each camera's sync speed, mechanical / electronic shutter with banding and skew warnings, dynamic range of scene vs. camera, exposure bracketing, 500 and NPF rules for stars, long-exposure and ND time calculator
 - **Sun planner:** golden and blue hour, sunrise and sunset for any date in Zürich, Basel, Bern, Sarajevo, Tuzla, Beograd, Wien and more, or your own location
+- **Photo backgrounds:** real wedding venues (garden by the sea, garden with chairs, lake at sunset, hill with aisle, beach with flower arch, ballroom), blurred by the depth of field; the drawn backgrounds stay available
 - **Filters:** ND2–ND64000, variable ND, CPL, UV, plus a one-click "expose correctly" that picks the ND you need
 - **Audio (video mode):** microphones (RØDE Wireless PRO, Panasonic DMW-DMS1E and DMW-MS2, plus RØDE, DJI, Sennheiser, Deity, Hollyland, Sony, Canon, Nikon and the camera's built-in mic), sound sources, gain, auto level, limiter, low cut, and each mic's own switches – 32-bit float on/off, pickup patterns, wind/noise cancelling, safety track, onboard backup recording – live level meter on the monitor, clipping and noise warnings, speech clarity
 - **Group photos in 1, 2 or 3 rows:** each row stands further back, so you can see which rows are still sharp
@@ -54,3 +55,12 @@ If this helps you on set, a ⭐ on GitHub helps other photographers and videogra
 
 **Keywords:** depth of field calculator, DOF simulator, bokeh preview, exposure simulator, ND filter calculator, 180 degree shutter rule, V-Log, S-Log3, wedding videography, Schärfentiefe-Rechner, Belichtung
 
+## Photo credits
+
+Background photos from [Pexels](https://www.pexels.com/license/) (free to use), cropped and resized:
+[Mohan Nannapaneni](https://www.pexels.com/photo/wedding-decoration-in-a-garden-13931905/) (garden by the sea),
+[Alina T](https://www.pexels.com/photo/chairs-and-arch-outdoors-for-wedding-ceremony-11433914/) (garden with chairs),
+[Paul Lichtblau](https://www.pexels.com/photo/sunset-lakeside-wedding-setup-in-brandenburg-40248731/) (lake at sunset),
+[Lukas Blazek](https://www.pexels.com/photo/wedding-reception-574011/) (hill with aisle),
+[Soly Moses](https://www.pexels.com/photo/arch-decorated-with-white-cloth-and-flowers-10962460/) (beach with flower arch),
+[Clément Proust](https://www.pexels.com/photo/luxury-restaurant-hall-19569865/) (ballroom).

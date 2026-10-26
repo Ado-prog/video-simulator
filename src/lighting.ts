@@ -310,8 +310,8 @@ export function nearestIso(target: number, minIso = 100) {
 }
 
 // ── Backgrounds that can be chosen independently of the light scene
-export type BackdropKind = "trees" | "curtain" | "buildings" | "sea";
-export const BACKDROPS: Record<string, { kind: BackdropKind; palette: Partial<ScenePalette> }> = {
+export type BackdropKind = "trees" | "curtain" | "buildings" | "sea" | "photo";
+export const BACKDROPS: Record<string, { kind: BackdropKind; palette: Partial<ScenePalette>; photo?: string }> = {
   garden: {
     kind: "trees",
     palette: {
@@ -347,4 +347,13 @@ export const BACKDROPS: Record<string, { kind: BackdropKind; palette: Partial<Sc
       hills: "#2f86b5", trees: ["#2f86b5", "#4aa3c9", "#2a6f9a"], trunk: "#7a5a3a", leaves: ["#5f9a46", "#4f8a3a"],
     },
   },
+  // real photos (Pexels, free licence), shown blurred by the depth of field
+  "p-garden-sea": { kind: "photo", photo: "bg/garden-sea.jpg", palette: { indoor: false } },
+  "p-garden-chairs": { kind: "photo", photo: "bg/garden-chairs.jpg", palette: { indoor: false } },
+  "p-lake-sunset": { kind: "photo", photo: "bg/lake-sunset.jpg", palette: { indoor: false } },
+  "p-hill-aisle": { kind: "photo", photo: "bg/hill-aisle.jpg", palette: { indoor: false } },
+  "p-beach-arch": { kind: "photo", photo: "bg/beach-arch.jpg", palette: { indoor: false } },
+  "p-hall": { kind: "photo", photo: "bg/hall-chandeliers.jpg", palette: { indoor: true } },
 };
+
+export const PHOTO_BACKDROPS = ["p-garden-sea", "p-garden-chairs", "p-lake-sunset", "p-hill-aisle", "p-beach-arch", "p-hall"] as const;

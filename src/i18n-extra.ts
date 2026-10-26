@@ -2,6 +2,9 @@
 // Languages without their own entry fall back to English.
 
 const de = {
+  bgDrawn: "Gezeichnet",
+  bgPhotos: "Fotos",
+  photoBackdrops: { "p-garden-sea": "Garten am Meer (Trauung)", "p-garden-chairs": "Garten mit Stühlen", "p-lake-sunset": "See bei Sonnenuntergang", "p-hill-aisle": "Hügel mit Gang", "p-beach-arch": "Strand mit Blumenbogen", "p-hall": "Festsaal mit Kronleuchtern" },
   recTime: "Aufnahmezeit",
   cardSlots: "Kartenslots dieser Kamera",
   cardNeeds: "mind. {x}",
@@ -139,6 +142,9 @@ const de = {
 type Extra = typeof de;
 
 const bs: Extra = {
+  bgDrawn: "Nacrtano",
+  bgPhotos: "Fotografije",
+  photoBackdrops: { "p-garden-sea": "Bašta uz more (vjenčanje)", "p-garden-chairs": "Bašta sa stolicama", "p-lake-sunset": "Jezero u zalazak sunca", "p-hill-aisle": "Brdo sa stazom", "p-beach-arch": "Plaža sa lukom od cvijeća", "p-hall": "Svadbena sala sa lusterima" },
   recTime: "Vrijeme snimanja",
   cardSlots: "Slotovi za kartice ove kamere",
   cardNeeds: "min. {x}",
@@ -276,6 +282,7 @@ const bs: Extra = {
 
 const sr: Extra = {
   ...bs,
+  photoBackdrops: { "p-garden-sea": "Bašta uz more (venčanje)", "p-garden-chairs": "Bašta sa stolicama", "p-lake-sunset": "Jezero u zalazak sunca", "p-hill-aisle": "Brdo sa stazom", "p-beach-arch": "Plaža sa lukom od cveća", "p-hall": "Svadbena sala sa lusterima" },
   recTime: "Vreme snimanja",
   roninTip: "Gimbal: mirni kadrovi u hodu. IBIS ostavi normalno, E-stabilizaciju isključi – inače rade jedna protiv druge",
   mp4LiteTip: "MP4 (Lite): manje datoteke za brzo slanje na mobilni (H.265), nije za jaku korekciju boja",
@@ -340,6 +347,9 @@ const sr: Extra = {
 };
 
 const en: Extra = {
+  bgDrawn: "Drawn",
+  bgPhotos: "Photos",
+  photoBackdrops: { "p-garden-sea": "Garden by the sea (ceremony)", "p-garden-chairs": "Garden with chairs", "p-lake-sunset": "Lake at sunset", "p-hill-aisle": "Hill with aisle", "p-beach-arch": "Beach with flower arch", "p-hall": "Ballroom with chandeliers" },
   recTime: "Recording time",
   cardSlots: "Card slots in this camera",
   cardNeeds: "min. {x}",
