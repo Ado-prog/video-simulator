@@ -49,6 +49,13 @@ import {
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), hi);
 
+// Timeline frame rates offered by Final Cut Pro and DaVinci Resolve
+const TIMELINE_RATES = [23.976, 24, 25, 29.97, 30, 47.952, 48, 50, 59.94, 60, 95.904, 96, 100, 119.88, 120];
+const rateLabel = (r: number) => `${Number.isInteger(r) ? r : r.toFixed(2)}p`;
+/** NTSC cameras record 24/30/60/120 as 23.976/29.97/59.94/119.88. */
+const realFps = (sys: VideoSystem, rate: number) =>
+  sys === "NTSC" && rate !== 24 ? Math.round((rate * 1000) / 1001 * 1000) / 1000 : sys === "NTSC" ? 23.976 : rate;
+
 // Focus distance slider runs on a log scale from 0.3 m to 30 m.
 const D_MIN = 0.3;
 const D_MAX = 30;
@@ -267,6 +274,10 @@ export default function App() {
   const isoChoices = [...new Set([minIso, ...baseIsos, ...ISOS.filter((v) => v >= minIso)])].sort((a, b) => a - b);
 
   const changeVideo = (sys: VideoSystem, rate: number) => {
+    // a new system resets the timeline; a normal frame rate (≤ 30p) puts the timeline on the same rate,
+    // higher rates keep the timeline so they play back as slow motion
+    if (sys !== vSystem) setTimelineFps(sys === "NTSC" ? 29.97 : 25);
+    else if (rate <= 30) setTimelineFps(realFps(sys, rate));
     setVSystem(sys);
     setFps(rate);
     setShutter(shutter180(sys, rate));
@@ -310,6 +321,8 @@ export default function App() {
   const ronin = RONINS.find((r) => r.id === roninId) ?? RONINS[1];
   const [stab, setStab] = useState<"off" | "ibis" | "eis" | "boost">("ibis");
   const [timelineFps, setTimelineFps] = useState(25);
+  const camRate = realFps(vSystem, fps);
+  const tlRatio = camRate / timelineFps;
   const [resId, setResId] = useState<ResolutionId>("uhd");
   const [codecId, setCodecId] = useState<CodecId>("h265");
   const [containerId, setContainerId] = useState("");
@@ -989,8 +1002,8 @@ export default function App() {
               <div>
                 <label htmlFor="timeline">{t.timeline}</label>
                 <select {...sel("timeline")} value={String(timelineFps)} onChange={(e) => setTimelineFps(Number(e.target.value))}>
-                  {[24, 25, 30].map((f) => (
-                    <option key={f} value={String(f)}>{f}p</option>
+                  {TIMELINE_RATES.map((f) => (
+                    <option key={f} value={String(f)}>{rateLabel(f)}</option>
                   ))}
                 </select>
               </div>
@@ -1003,8 +1016,14 @@ export default function App() {
                 </select>
               </div>
             </div>
-            {fps > timelineFps * 1.5 && (
-              <p className="ok">{fill(t.slowmo, Math.round((timelineFps / fps) * 100), Math.round((fps / timelineFps) * 10) / 10)}</p>
+            {tlRatio >= 1.5 ? (
+              <p className="ok">{fill(t.slowmo, Math.round((1 / tlRatio) * 100), Math.round(tlRatio * 10) / 10)}</p>
+            ) : Math.abs(tlRatio - 1) < 0.002 ? (
+              <p className="ok">{t.tlMatch}</p>
+            ) : tlRatio < 0.8 ? (
+              <p className="warn">{fill(t.tlLower, rateLabel(camRate), rateLabel(timelineFps))}</p>
+            ) : (
+              <p className="warn">{fill(t.tlConform, rateLabel(camRate), rateLabel(timelineFps))}</p>
             )}
             {fps > facts.maxFps && <p className="warn">{fill(t.fpsLimit, fps, facts.maxFps)}</p>}
             {dualIso && (

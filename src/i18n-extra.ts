@@ -2,6 +2,9 @@
 // Languages without their own entry fall back to English.
 
 const de = {
+  tlMatch: "✓ Bildrate = Timeline: normale Geschwindigkeit",
+  tlLower: "⚠ {x} auf einer {y}-Timeline: zu wenig Bilder – Bilder werden doppelt gezeigt, es ruckelt",
+  tlConform: "⚠ {x} passt nicht zur {y}-Timeline: wird umgerechnet – leichtes Ruckeln oder anderes Tempo",
   markerN: "Rahmen {x}",
   markerTipMulti: "Diese Kamera zeigt bis zu {x} Rahmen gleichzeitig, z. B. 16:9 und 9:16 für Reels aus derselben Aufnahme. Die Maske gilt für Rahmen 1",
   markerTipOne: "Diese Kamera zeigt einen Rahmen (Aspect Marker) gleichzeitig",
@@ -132,6 +135,9 @@ const de = {
 type Extra = typeof de;
 
 const bs: Extra = {
+  tlMatch: "✓ Bildrate = timeline: normalna brzina",
+  tlLower: "⚠ {x} na {y} timeline-u: premalo sličica – sličice se ponavljaju, trza",
+  tlConform: "⚠ {x} ne odgovara {y} timeline-u: preračunava se – malo trzanja ili drugi tempo",
   markerN: "Okvir {x}",
   markerTipMulti: "Ova kamera prikazuje do {x} okvira istovremeno, npr. 16:9 i 9:16 za Reels iz istog snimka. Maska važi za okvir 1",
   markerTipOne: "Ova kamera prikazuje jedan okvir (aspect marker) istovremeno",
@@ -325,6 +331,9 @@ const sr: Extra = {
 };
 
 const en: Extra = {
+  tlMatch: "✓ Frame rate = timeline: normal speed",
+  tlLower: "⚠ {x} on a {y} timeline: too few frames – frames get repeated, it stutters",
+  tlConform: "⚠ {x} doesn't match the {y} timeline: it gets conformed – slight stutter or different speed",
   markerN: "Marker {x}",
   markerTipMulti: "This camera shows up to {x} frame markers at once, e.g. 16:9 and 9:16 for Reels from the same shot. The mask applies to marker 1",
   markerTipOne: "This camera shows one frame marker (aspect marker) at a time",
