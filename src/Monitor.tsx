@@ -107,7 +107,8 @@ export type Assist = {
   wfm: "off" | "wave" | "vector";
   histogram: boolean;
   peaking: boolean;
-  frame: { ratio: number; color: string; mask: number } | null; // frame marker
+  frames: { ratio: number; color: string }[]; // frame markers; the first one gets the mask
+  frameMask: number; // 0–1
 };
 
 // False colour bands by IRE: [from %, r, g, b] – null = grey picture
@@ -591,10 +592,9 @@ export default function Monitor(p: Props) {
   const zebraTables = p.assist.zebras.map((z) =>
     Array.from({ length: 201 }, (_, i) => (i / 200 >= z.lo && i / 200 <= z.hi ? 1 : 0)).join(" ")
   );
-  const fr = p.assist.frame;
-  const g = fr?.ratio ?? 0;
-  const guideW = g && g < W / H ? H * g : W;
-  const guideH = g && g > W / H ? W / g : H;
+  const box = (r: number) => ({ w: r < W / H ? H * r : W, h: r > W / H ? W / r : H });
+  const g = p.assist.frames[0]?.ratio ?? 0;
+  const { w: guideW, h: guideH } = box(g || W / H);
 
   return (
     <figure className="monitor">
@@ -836,17 +836,22 @@ export default function Monitor(p: Props) {
               <g data-noscan="">
                 {guideW < W && (
                   <>
-                    <rect width={(W - guideW) / 2} height={H} fill="#000" opacity={fr!.mask} />
-                    <rect x={(W + guideW) / 2} width={(W - guideW) / 2} height={H} fill="#000" opacity={fr!.mask} />
+                    <rect width={(W - guideW) / 2} height={H} fill="#000" opacity={p.assist.frameMask} />
+                    <rect x={(W + guideW) / 2} width={(W - guideW) / 2} height={H} fill="#000" opacity={p.assist.frameMask} />
                   </>
                 )}
                 {guideH < H && (
                   <>
-                    <rect width={W} height={(H - guideH) / 2} fill="#000" opacity={fr!.mask} />
-                    <rect y={(H + guideH) / 2} width={W} height={(H - guideH) / 2} fill="#000" opacity={fr!.mask} />
+                    <rect width={W} height={(H - guideH) / 2} fill="#000" opacity={p.assist.frameMask} />
+                    <rect y={(H + guideH) / 2} width={W} height={(H - guideH) / 2} fill="#000" opacity={p.assist.frameMask} />
                   </>
                 )}
-                <rect x={(W - guideW) / 2} y={(H - guideH) / 2} width={guideW} height={guideH} fill="none" stroke={fr!.color} strokeOpacity={0.9} strokeWidth={0.8} />
+                {p.assist.frames.map((f, i) => {
+                  const b = box(f.ratio);
+                  return (
+                    <rect key={i} x={(W - b.w) / 2} y={(H - b.h) / 2} width={b.w} height={b.h} fill="none" stroke={f.color} strokeOpacity={0.9} strokeWidth={0.8} />
+                  );
+                })}
               </g>
             )}
 

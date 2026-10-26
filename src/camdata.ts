@@ -11,19 +11,20 @@ type Facts = {
   k8?: boolean;
   k6?: boolean;
   maxFps: number; // highest frame rate in 4K
+  frames?: number; // frame markers shown at once (default 1)
 };
 
 const F: Record<string, Facts> = {
-  "pana-s1ii": { mp: 24, readout: 11, dualIso: [640, 4000], sync: 1 / 250, openGate: true, k6: true, maxFps: 120 },
-  "pana-s1rii": { mp: 44, readout: 15, dualIso: [640, 4000], sync: 1 / 250, openGate: true, k8: true, k6: true, maxFps: 120 },
+  "pana-s1ii": { mp: 24, readout: 11, dualIso: [640, 4000], sync: 1 / 250, openGate: true, k6: true, maxFps: 120, frames: 3 },
+  "pana-s1rii": { mp: 44, readout: 15, dualIso: [640, 4000], sync: 1 / 250, openGate: true, k8: true, k6: true, maxFps: 120, frames: 3 },
   "pana-s1h": { mp: 24, readout: 21, dualIso: [640, 4000], sync: 1 / 320, k6: true, maxFps: 60 },
-  "pana-s5ii": { mp: 24, readout: 22, dualIso: [640, 4000], sync: 1 / 250, openGate: true, k6: true, maxFps: 60 },
-  "pana-s5iix": { mp: 24, readout: 22, dualIso: [640, 4000], sync: 1 / 250, openGate: true, k6: true, maxFps: 60 },
+  "pana-s5ii": { mp: 24, readout: 22, dualIso: [640, 4000], sync: 1 / 250, openGate: true, k6: true, maxFps: 60, frames: 3 },
+  "pana-s5iix": { mp: 24, readout: 22, dualIso: [640, 4000], sync: 1 / 250, openGate: true, k6: true, maxFps: 60, frames: 3 },
   "pana-s5": { mp: 24, readout: 22, dualIso: [640, 4000], sync: 1 / 200, maxFps: 60 },
   "pana-s9": { mp: 24, readout: 22, dualIso: [640, 4000], openGate: true, k6: true, maxFps: 60 },
-  "pana-gh7": { mp: 25, readout: 11, dualIso: [500, 2000], sync: 1 / 250, openGate: true, k6: true, maxFps: 120 },
+  "pana-gh7": { mp: 25, readout: 11, dualIso: [500, 2000], sync: 1 / 250, openGate: true, k6: true, maxFps: 120, frames: 3 },
   "pana-gh6": { mp: 25, readout: 12, sync: 1 / 250, openGate: true, k6: true, maxFps: 120 },
-  "pana-g9ii": { mp: 25, readout: 12, dualIso: [500, 2000], sync: 1 / 250, openGate: true, k6: true, maxFps: 120 },
+  "pana-g9ii": { mp: 25, readout: 12, dualIso: [500, 2000], sync: 1 / 250, openGate: true, k6: true, maxFps: 120, frames: 3 },
   "sony-a1ii": { mp: 50, readout: 4, sync: 1 / 400, k8: true, maxFps: 120 },
   "sony-a9iii": { mp: 24, readout: 0, sync: 1 / 80000, maxFps: 120 },
   "sony-a7rv": { mp: 61, readout: 16, sync: 1 / 250, k8: true, maxFps: 60 },
@@ -94,3 +95,17 @@ export const SCENE_DR: Record<string, number> = {
 export function pixelPitch(sensorWidthMM: number, sensorHeightMM: number, mp: number) {
   return (sensorWidthMM * 1000) / Math.sqrt((mp * 1e6 * sensorWidthMM) / sensorHeightMM);
 }
+
+/** DJI Ronin gimbals: payload in kg. */
+export const RONINS = [
+  { id: "rs4mini", name: "DJI RS 4 Mini", payload: 2 },
+  { id: "rs4", name: "DJI RS 4", payload: 3 },
+  { id: "rs4pro", name: "DJI RS 4 Pro", payload: 4.5 },
+  { id: "rs3mini", name: "DJI RS 3 Mini", payload: 2 },
+  { id: "rs3pro", name: "DJI RS 3 Pro", payload: 4.5 },
+] as const;
+export type RoninId = (typeof RONINS)[number]["id"];
+
+/** Gimbal follow modes and how fast the picture typically turns (degrees per second). */
+export const RONIN_MODES = { lock: 3, pf: 20, ptf: 20, fpv: 45 } as const;
+export type RoninMode = keyof typeof RONIN_MODES;

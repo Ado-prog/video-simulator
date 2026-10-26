@@ -621,3 +621,5 @@ body.is-resizing { cursor: col-resize; user-select: none; }
 .grid3 > div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .custom-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
 .custom-row button { flex: 1 1 auto; }
+.marker-row { display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr); gap: 6px; align-items: center; margin-top: 6px; }
+.marker-row .check { white-space: nowrap; }

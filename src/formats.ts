@@ -12,23 +12,79 @@ export type ResolutionId = (typeof RESOLUTIONS)[number]["id"];
 
 /** Mbit/s at 4K UHD 25p; scaled by pixels and frame rate. */
 export const CODECS = [
-  { id: "h264", label: "H.264 8-bit 4:2:0", mbps: 100, cap: 200 },
-  { id: "h265", label: "H.265 10-bit 4:2:0", mbps: 100, cap: 400 },
-  { id: "h265i", label: "H.265 10-bit 4:2:2 All-I", mbps: 400, cap: 1900 },
-  { id: "pr422", label: "Apple ProRes 422", mbps: 490, cap: 4000 },
-  { id: "pr422hq", label: "Apple ProRes 422 HQ", mbps: 740, cap: 6000 },
-  { id: "raw", label: "ProRes RAW / BRAW", mbps: 1100, cap: 8000 },
+  { id: "h264", label: "H.264 8-bit 4:2:0 Long GOP", mbps: 100, cap: 200, gop: true },
+  { id: "h264_422", label: "H.264 10-bit 4:2:2 Long GOP", mbps: 150, cap: 400, gop: true },
+  { id: "h264i", label: "H.264 10-bit 4:2:2 All-I", mbps: 400, cap: 1900, gop: false },
+  { id: "h265", label: "H.265 10-bit 4:2:0", mbps: 100, cap: 400, gop: true },
+  { id: "h265_422", label: "H.265 10-bit 4:2:2", mbps: 140, cap: 500, gop: true },
+  { id: "pr422", label: "Apple ProRes 422", mbps: 490, cap: 4000, gop: false },
+  { id: "pr422hq", label: "Apple ProRes 422 HQ", mbps: 740, cap: 6000, gop: false },
+  { id: "prraw", label: "Apple ProRes RAW", mbps: 1000, cap: 8000, gop: false },
+  { id: "nraw", label: "N-RAW", mbps: 1100, cap: 8000, gop: false },
+  { id: "crm", label: "Cinema RAW Light", mbps: 1300, cap: 8000, gop: false },
 ] as const;
 export type CodecId = (typeof CODECS)[number]["id"];
 
+export type Container = { id: string; label: string; codecs: CodecId[]; factor?: number };
+
+const PANA_PRORES = ["pana-s1ii", "pana-s1rii", "pana-gh7", "pana-gh6", "pana-g9ii", "pana-s5iix"];
+const PANA_LITE = ["pana-s1ii", "pana-s1rii", "pana-s5ii", "pana-s5iix", "pana-s9", "pana-gh7", "pana-g9ii"];
+const NIKON_PRO = ["nikon-z9", "nikon-z8", "nikon-z6iii", "nikon-z5ii"];
+const CANON_RAW = ["canon-r1", "canon-r3", "canon-r5ii"];
+
+/** Recording file formats and the codecs each one offers on this camera. */
+export function containersFor(cam: { id: string; brand: string } | undefined): Container[] {
+  const id = cam?.id ?? "";
+  switch (cam?.brand) {
+    case "Panasonic": {
+      const pr: CodecId[] = PANA_PRORES.includes(id) ? ["pr422", "pr422hq", "prraw"] : [];
+      const list: Container[] = [
+        { id: "mov", label: "MOV", codecs: ["h264", "h264_422", "h264i", "h265", ...pr] },
+        { id: "mp4", label: "MP4", codecs: ["h264", "h265"] },
+      ];
+      if (PANA_LITE.includes(id)) list.push({ id: "mp4lite", label: "MP4 (Lite)", codecs: ["h265"], factor: 0.6 });
+      return list;
+    }
+    case "Sony":
+      return [
+        { id: "xavcs", label: "XAVC S (MP4)", codecs: ["h264", "h264_422"] },
+        { id: "xavchs", label: "XAVC HS (MP4)", codecs: ["h265", "h265_422"] },
+        { id: "xavcsi", label: "XAVC S-I (MP4)", codecs: ["h264i"] },
+      ];
+    case "Canon": {
+      const list: Container[] = [{ id: "mp4", label: "MP4", codecs: ["h264", "h265_422"] }];
+      if (CANON_RAW.includes(id)) list.push({ id: "crm", label: "RAW (.CRM)", codecs: ["crm"] });
+      return list;
+    }
+    case "Nikon": {
+      if (id === "nikon-zfc") return [{ id: "mov", label: "MOV", codecs: ["h264"] }, { id: "mp4", label: "MP4", codecs: ["h264"] }];
+      const pro = NIKON_PRO.includes(id);
+      const list: Container[] = [
+        { id: "mov", label: "MOV", codecs: pro ? ["h264", "h265", "pr422hq", "prraw"] : ["h264", "h265"] },
+        { id: "mp4", label: "MP4", codecs: ["h264", "h265"] },
+      ];
+      if (pro) list.push({ id: "nev", label: "N-RAW (.NEV)", codecs: ["nraw"] });
+      return list;
+    }
+    case "DJI":
+      return [{ id: "mp4", label: "MP4", codecs: ["h264", "h265"] }, { id: "mov", label: "MOV", codecs: ["h264", "h265"] }];
+    case "Insta360":
+      return [{ id: "mp4", label: "MP4 / INSV", codecs: ["h264", "h265"] }];
+  }
+  return [
+    { id: "mov", label: "MOV", codecs: ["h264", "h265", "pr422", "pr422hq"] },
+    { id: "mp4", label: "MP4", codecs: ["h264", "h265"] },
+  ];
+}
+
 const UHD = 3840 * 2160;
 
-export function bitrate(res: ResolutionId, codec: CodecId, fps: number) {
+export function bitrate(res: ResolutionId, codec: CodecId, fps: number, factor = 1) {
   const r = RESOLUTIONS.find((x) => x.id === res)!;
   const c = CODECS.find((x) => x.id === codec)!;
   // long-GOP codecs grow slower than linearly with resolution and frame rate
-  const exp = codec === "h264" || codec === "h265" ? 0.7 : 1;
-  const v = c.mbps * Math.pow(r.px / UHD, exp) * Math.pow(fps / 25, exp);
+  const exp = c.gop ? 0.7 : 1;
+  const v = c.mbps * factor * Math.pow(r.px / UHD, exp) * Math.pow(fps / 25, exp);
   return Math.round(Math.min(v, c.cap) / 10) * 10;
 }
 

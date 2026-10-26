@@ -2,6 +2,17 @@
 // Languages without their own entry fall back to English.
 
 const de = {
+  markerN: "Rahmen {x}",
+  markerTipMulti: "Diese Kamera zeigt bis zu {x} Rahmen gleichzeitig, z. B. 16:9 und 9:16 für Reels aus derselben Aufnahme. Die Maske gilt für Rahmen 1",
+  markerTipOne: "Diese Kamera zeigt einen Rahmen (Aspect Marker) gleichzeitig",
+  roninModel: "Gimbal",
+  roninMode: "Gimbal-Modus",
+  roninModes: { lock: "Lock (Richtung fest)", pf: "PF – Schwenk folgt", ptf: "PTF – Schwenk + Neigung folgen", fpv: "FPV – folgt allen Achsen" },
+  roninPayload: "Traglast bis ca. {x} kg (Kamera + Objektiv + Zubehör)",
+  roninTip: "Gimbal: ruhige Fahrten im Gehen. IBIS auf normal lassen, E-Stabi aus – sonst arbeiten beide gegeneinander",
+  roninEis: "⚠ E-Stabi mit Gimbal: kann Wackeln/Ruckeln verursachen und kostet Bildausschnitt – besser ausschalten",
+  fileFormat: "Dateiformat",
+  mp4LiteTip: "MP4 (Lite): kleinere Dateien zum schnellen Teilen aufs Handy (H.265), nicht für starke Farbkorrektur",
   zebraNames: {
     pana: { z1: "Zebra 1", z2: "Zebra 2" },
     sony: { z1: "Zebra-Pegel", z2: "Benutzerdef. (Bereich)" },
@@ -52,7 +63,7 @@ const de = {
   guides: { none: "Kein Rahmen", "9x16": "9:16 Reels / TikTok", "4x5": "4:5 Instagram", "1x1": "1:1 Quadrat", "239": "2,39:1 Kino" },
   rec: "Aufnahme & Bewegung",
   motion: "Kamerabewegung",
-  motions: { static: "Stativ / ruhig", slow: "Langsamer Schwenk", fast: "Schneller Schwenk", walk: "Aus der Hand, gehend", car: "Aus dem Auto / schnelle Drohne" },
+  motions: { static: "Stativ / ruhig", slow: "Langsamer Schwenk", fast: "Schneller Schwenk", walk: "Aus der Hand, gehend", ronin: "Mit Gimbal (DJI Ronin)", car: "Aus dem Auto / schnelle Drohne" },
   stab: "Stabilisierung",
   stabs: { off: "Aus", ibis: "IBIS (Sensor)", eis: "IBIS + E-Stabi (Crop ~1,1×)", boost: "E-Stabi stark (Crop ~1,25×)" },
   readout: "Sensor-Auslesezeit ca. {x} ms",
@@ -121,6 +132,17 @@ const de = {
 type Extra = typeof de;
 
 const bs: Extra = {
+  markerN: "Okvir {x}",
+  markerTipMulti: "Ova kamera prikazuje do {x} okvira istovremeno, npr. 16:9 i 9:16 za Reels iz istog snimka. Maska važi za okvir 1",
+  markerTipOne: "Ova kamera prikazuje jedan okvir (aspect marker) istovremeno",
+  roninModel: "Gimbal",
+  roninMode: "Mod gimbala",
+  roninModes: { lock: "Lock (pravac fiksiran)", pf: "PF – prati švenk", ptf: "PTF – prati švenk + nagib", fpv: "FPV – prati sve ose" },
+  roninPayload: "Nosivost do oko {x} kg (kamera + objektiv + oprema)",
+  roninTip: "Gimbal: mirni kadrovi u hodu. IBIS ostavi normalno, E-stabilizaciju isključi – inače rade jedna protiv druge",
+  roninEis: "⚠ E-stabilizacija sa gimbalom: može praviti drhtanje i smanjuje kadar – bolje isključi",
+  fileFormat: "Format datoteke",
+  mp4LiteTip: "MP4 (Lite): manje datoteke za brzo slanje na mobitel (H.265), nije za jaku korekciju boja",
   zebraNames: {
     pana: { z1: "Zebra 1", z2: "Zebra 2" },
     sony: { z1: "Nivo zebre", z2: "Korisnički (raspon)" },
@@ -171,7 +193,7 @@ const bs: Extra = {
   guides: { none: "Bez okvira", "9x16": "9:16 Reels / TikTok", "4x5": "4:5 Instagram", "1x1": "1:1 kvadrat", "239": "2,39:1 kino" },
   rec: "Snimanje i pokret",
   motion: "Pokret kamere",
-  motions: { static: "Stativ / mirno", slow: "Spori švenk", fast: "Brzi švenk", walk: "Iz ruke, u hodu", car: "Iz auta / brzi dron" },
+  motions: { static: "Stativ / mirno", slow: "Spori švenk", fast: "Brzi švenk", walk: "Iz ruke, u hodu", ronin: "Sa gimbalom (DJI Ronin)", car: "Iz auta / brzi dron" },
   stab: "Stabilizacija",
   stabs: { off: "Isključeno", ibis: "IBIS (senzor)", eis: "IBIS + E-stabilizacija (crop ~1,1×)", boost: "Jaka E-stabilizacija (crop ~1,25×)" },
   readout: "Vrijeme očitavanja senzora oko {x} ms",
@@ -240,6 +262,8 @@ const bs: Extra = {
 
 const sr: Extra = {
   ...bs,
+  roninTip: "Gimbal: mirni kadrovi u hodu. IBIS ostavi normalno, E-stabilizaciju isključi – inače rade jedna protiv druge",
+  mp4LiteTip: "MP4 (Lite): manje datoteke za brzo slanje na mobilni (H.265), nije za jaku korekciju boja",
   zebraNames: {
     pana: { z1: "Zebra 1", z2: "Zebra 2" },
     sony: { z1: "Nivo zebre", z2: "Korisnički (raspon)" },
@@ -301,6 +325,17 @@ const sr: Extra = {
 };
 
 const en: Extra = {
+  markerN: "Marker {x}",
+  markerTipMulti: "This camera shows up to {x} frame markers at once, e.g. 16:9 and 9:16 for Reels from the same shot. The mask applies to marker 1",
+  markerTipOne: "This camera shows one frame marker (aspect marker) at a time",
+  roninModel: "Gimbal",
+  roninMode: "Gimbal mode",
+  roninModes: { lock: "Lock (direction fixed)", pf: "PF – pan follow", ptf: "PTF – pan + tilt follow", fpv: "FPV – follows all axes" },
+  roninPayload: "Payload up to about {x} kg (camera + lens + accessories)",
+  roninTip: "Gimbal: smooth moves while walking. Keep IBIS on normal, E-stab off – otherwise they fight each other",
+  roninEis: "⚠ E-stab on a gimbal: can cause jitter and costs framing – better turn it off",
+  fileFormat: "File format",
+  mp4LiteTip: "MP4 (Lite): smaller files for quick sharing to a phone (H.265), not for heavy grading",
   zebraNames: {
     pana: { z1: "Zebra 1", z2: "Zebra 2" },
     sony: { z1: "Zebra level", z2: "Custom (range)" },
@@ -351,7 +386,7 @@ const en: Extra = {
   guides: { none: "No guide", "9x16": "9:16 Reels / TikTok", "4x5": "4:5 Instagram", "1x1": "1:1 square", "239": "2.39:1 cinema" },
   rec: "Recording & movement",
   motion: "Camera movement",
-  motions: { static: "Tripod / still", slow: "Slow pan", fast: "Fast pan", walk: "Handheld, walking", car: "From a car / fast drone" },
+  motions: { static: "Tripod / still", slow: "Slow pan", fast: "Fast pan", walk: "Handheld, walking", ronin: "On a gimbal (DJI Ronin)", car: "From a car / fast drone" },
   stab: "Stabilisation",
   stabs: { off: "Off", ibis: "IBIS (sensor)", eis: "IBIS + E-stab (crop ~1.1×)", boost: "Strong E-stab (crop ~1.25×)" },
   readout: "Sensor readout about {x} ms",

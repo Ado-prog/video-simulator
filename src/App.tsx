@@ -2,8 +2,8 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerE
 import Monitor, { type SubjectKind, ROW_GAP, rowCount } from "./Monitor";
 import { MICS, MIC_BRANDS, INTERNAL_MIC, SOURCES, type SourceId, type PatternId, audioLevels, autoGain, effectiveMic } from "./audio";
 import { stylesFor, makerLutsFor, CREATIVE_LUTS, NEUTRAL_LOOK } from "./looks";
-import { factsFor, sensorDR, SCENE_DR, pixelPitch } from "./camdata";
-import { RESOLUTIONS, CODECS, bitrate, cardFor, type ResolutionId, type CodecId } from "./formats";
+import { factsFor, sensorDR, SCENE_DR, pixelPitch, RONINS, RONIN_MODES, type RoninId, type RoninMode } from "./camdata";
+import { RESOLUTIONS, CODECS, bitrate, cardFor, containersFor, type ResolutionId, type CodecId } from "./formats";
 import { zebraSpecFor, zebraBands, FRAME_RATIOS, FRAME_COLORS, type ZebraMode, type FrameRatioId, type FrameColor } from "./zebra";
 import { sunDay, PLACES } from "./sun";
 import PhotoDiagram from "./PhotoDiagram";
@@ -291,25 +291,40 @@ export default function App() {
   const [histogram, setHistogram] = useState(false);
   const [peaking, setPeaking] = useState(false);
   const [frameOn, setFrameOn] = useState(false);
-  const [frameRatio, setFrameRatio] = useState<FrameRatioId>("2.39");
-  const [frameColor, setFrameColor] = useState<FrameColor>("white");
+  type Marker = { on: boolean; ratio: FrameRatioId; color: FrameColor };
+  const [frameMarkers, setFrameMarkers] = useState<Marker[]>([
+    { on: true, ratio: "2.39", color: "white" },
+    { on: false, ratio: "9:16", color: "yellow" },
+    { on: false, ratio: "4:5", color: "green" },
+  ]);
+  const setMarker = (i: number, patch: Partial<Marker>) =>
+    setFrameMarkers((all) => all.map((m, k) => (k === i ? { ...m, ...patch } : m)));
+  const markerCount = facts.frames ?? 1;
+  const activeMarkers = frameMarkers.slice(0, markerCount).filter((m) => m.on);
   const [frameMask, setFrameMask] = useState(50);
 
   // ── Recording & movement (video)
-  const [motion, setMotion] = useState<"static" | "slow" | "fast" | "walk" | "car">("static");
+  const [motion, setMotion] = useState<"static" | "slow" | "fast" | "walk" | "ronin" | "car">("static");
+  const [roninId, setRoninId] = useState<RoninId>("rs4");
+  const [roninMode, setRoninMode] = useState<RoninMode>("pf");
+  const ronin = RONINS.find((r) => r.id === roninId) ?? RONINS[1];
   const [stab, setStab] = useState<"off" | "ibis" | "eis" | "boost">("ibis");
   const [timelineFps, setTimelineFps] = useState(25);
   const [resId, setResId] = useState<ResolutionId>("uhd");
   const [codecId, setCodecId] = useState<CodecId>("h265");
+  const [containerId, setContainerId] = useState("");
+  const containers = containersFor(camera);
+  const container = containers.find((c) => c.id === containerId) ?? containers[0];
+  const codec: CodecId = container.codecs.includes(codecId) ? codecId : container.codecs.includes("h265") ? "h265" : container.codecs[0];
   const stabCrop = isVideo ? (stab === "eis" ? 1.1 : stab === "boost" ? 1.25 : 1) : 1;
   const hfov = 2 * Math.atan((sensor.width / stabCrop) / 2 / focal) * (180 / Math.PI);
-  const panSpeed = { static: 0, slow: 10, fast: 60, walk: 15, car: 90 }[motion]; // degrees per second
+  const panSpeed = motion === "ronin" ? RONIN_MODES[roninMode] : { static: 0, slow: 10, fast: 60, walk: 15, car: 90 }[motion]; // degrees per second
   const leanDeg = isVideo && facts.readout > 0
     ? (Math.atan(((panSpeed * facts.readout) / 1000 / hfov) * (16 / 9)) * 180) / Math.PI
     : 0;
   const resolutions = RESOLUTIONS.filter((r) => !("needs" in r) || facts[r.needs]);
   const res = resolutions.find((r) => r.id === resId) ?? resolutions[1];
-  const mbps = bitrate(res.id, codecId, fps);
+  const mbps = bitrate(res.id, codec, fps, container.factor);
 
   // ── Flash, shutter type, bracketing (photo)
   const [flashMode, setFlashMode] = useState<"off" | "ttl" | "hss">("off");
@@ -465,8 +480,8 @@ export default function App() {
     shootMode, cameraId, lensId, manualSensor, focal, aperture, focusM,
     vSystem, fps, shutter, isoAuto, iso, wbMode, wbK, profileId, lutId, styleId,
     expMode, photoShutter, photoIso, ndId, vnd, cplOn, cplRot, uvOn,
-    zebraMode, zebraLevels, falseColor, wfmOn, wfmType, histogram, peaking, frameOn, frameRatio, frameColor, frameMask,
-    motion, stab, timelineFps, resId, codecId, flashMode, shutterType, bracketId,
+    zebraMode, zebraLevels, falseColor, wfmOn, wfmType, histogram, peaking, frameOn, frameMarkers, frameMask,
+    motion, roninId, roninMode, stab, timelineFps, resId, codecId, containerId, flashMode, shutterType, bracketId,
     micId, sourceId, gain, autoLevel, limiter, lowCut, float32, patternId, noiseCancel, safetyOn, onboard,
   });
   const setters = {
@@ -476,7 +491,7 @@ export default function App() {
     expMode: setExpMode, photoShutter: setPhotoShutter, photoIso: setPhotoIso, ndId: setNdId, vnd: setVnd, cplOn: setCplOn,
     cplRot: setCplRot, uvOn: setUvOn, zebraMode: setZebraMode, zebraLevels: setZebraLevels, falseColor: setFalseColor,
     wfmOn: setWfmOn, wfmType: setWfmType, histogram: setHistogram, peaking: setPeaking, frameOn: setFrameOn,
-    frameRatio: setFrameRatio, frameColor: setFrameColor, frameMask: setFrameMask, motion: setMotion, stab: setStab,
+    frameMarkers: setFrameMarkers, frameMask: setFrameMask, motion: setMotion, roninId: setRoninId, roninMode: setRoninMode, stab: setStab, containerId: setContainerId,
     timelineFps: setTimelineFps, resId: setResId, codecId: setCodecId, flashMode: setFlashMode, shutterType: setShutterType,
     bracketId: setBracketId, micId: setMicId, sourceId: setSourceId, gain: setGain, autoLevel: setAutoLevel,
     limiter: setLimiter, lowCut: setLowCut, float32: setFloat32, patternId: setPatternId, noiseCancel: setNoiseCancel,
@@ -874,24 +889,26 @@ export default function App() {
               {t.frameMarker}
             </label>
             {frameOn && (
-              <div className="grid3">
-                <div>
-                  <label htmlFor="frameratio">{t.frameAspect}</label>
-                  <select {...sel("frameratio")} value={frameRatio} onChange={(e) => setFrameRatio(e.target.value as FrameRatioId)}>
-                    {FRAME_RATIOS.map((r) => (
-                      <option key={r.id} value={r.id}>{r.label}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label htmlFor="framecolor">{t.frameColor}</label>
-                  <select {...sel("framecolor")} value={frameColor} onChange={(e) => setFrameColor(e.target.value as FrameColor)}>
-                    {(Object.keys(FRAME_COLORS) as FrameColor[]).map((c) => (
-                      <option key={c} value={c}>{t.colors[c]}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
+              <>
+                {frameMarkers.slice(0, markerCount).map((m, i) => (
+                  <div key={i} className="marker-row">
+                    <label className="check">
+                      <input type="checkbox" id={`marker${i}`} checked={m.on} onChange={(e) => setMarker(i, { on: e.target.checked })} />
+                      {markerCount > 1 ? fill(t.markerN, i + 1) : t.frameAspect}
+                    </label>
+                    <select {...sel(`markerratio${i}`)} aria-label={t.frameAspect} value={m.ratio} disabled={!m.on} onChange={(e) => setMarker(i, { ratio: e.target.value as FrameRatioId })}>
+                      {FRAME_RATIOS.map((r) => (
+                        <option key={r.id} value={r.id}>{r.label}</option>
+                      ))}
+                    </select>
+                    <select {...sel(`markercolor${i}`)} aria-label={t.frameColor} value={m.color} disabled={!m.on} onChange={(e) => setMarker(i, { color: e.target.value as FrameColor })}>
+                      {(Object.keys(FRAME_COLORS) as FrameColor[]).map((c) => (
+                        <option key={c} value={c}>{t.colors[c]}</option>
+                      ))}
+                    </select>
+                  </div>
+                ))}
+                <div className="marker-row">
                   <label htmlFor="framemask">{t.frameMask}</label>
                   <select {...sel("framemask")} value={String(frameMask)} onChange={(e) => setFrameMask(Number(e.target.value))}>
                     {[0, 25, 50, 75, 100].map((v) => (
@@ -899,7 +916,8 @@ export default function App() {
                     ))}
                   </select>
                 </div>
-              </div>
+                <p className="note">{markerCount > 1 ? fill(t.markerTipMulti, markerCount) : t.markerTipOne}</p>
+              </>
             )}
           </fieldset>
     </>
@@ -914,7 +932,7 @@ export default function App() {
               <div>
                 <label htmlFor="motion">{t.motion}</label>
                 <select {...sel("motion")} value={motion} onChange={(e) => setMotion(e.target.value as typeof motion)}>
-                  {(["static", "slow", "fast", "walk", "car"] as const).map((k) => (
+                  {(["static", "slow", "fast", "walk", "ronin", "car"] as const).map((k) => (
                     <option key={k} value={k}>{t.motions[k]}</option>
                   ))}
                 </select>
@@ -932,6 +950,31 @@ export default function App() {
               <span className="chip">{facts.readout === 0 ? t.globalShutter : fill(t.readout, facts.readout)}</span>
             </p>
             {stabCrop > 1 && <p className="note">{fill(t.stabCrop, stabCrop, Math.round(focal * crop * stabCrop))}</p>}
+            {motion === "ronin" && (
+              <>
+                <div className="grid2">
+                  <div>
+                    <label htmlFor="ronin">{t.roninModel}</label>
+                    <select {...sel("ronin")} value={roninId} onChange={(e) => setRoninId(e.target.value as RoninId)}>
+                      {RONINS.map((r) => (
+                        <option key={r.id} value={r.id}>{r.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="roninmode">{t.roninMode}</label>
+                    <select {...sel("roninmode")} value={roninMode} onChange={(e) => setRoninMode(e.target.value as RoninMode)}>
+                      {(Object.keys(RONIN_MODES) as RoninMode[]).map((m) => (
+                        <option key={m} value={m}>{t.roninModes[m]}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <p className="chip-row"><span className="chip">{fill(t.roninPayload, ronin.payload)}</span></p>
+                <p className="note">{t.roninTip}</p>
+                {stab !== "off" && stab !== "ibis" && <p className="warn">{t.roninEis}</p>}
+              </>
+            )}
             {motion === "walk" && stab === "off" ? (
               <p className="warn">{t.shakeWalk}</p>
             ) : leanDeg >= 1.5 ? (
@@ -973,12 +1016,25 @@ export default function App() {
               </>
             )}
 
-            <label htmlFor="codec">{t.codec}</label>
-            <select {...sel("codec")} value={codecId} onChange={(e) => setCodecId(e.target.value as CodecId)}>
-              {CODECS.map((c) => (
-                <option key={c.id} value={c.id}>{c.label}</option>
-              ))}
-            </select>
+            <div className="grid2">
+              <div>
+                <label htmlFor="container">{t.fileFormat}</label>
+                <select {...sel("container")} value={container.id} onChange={(e) => setContainerId(e.target.value)}>
+                  {containers.map((c) => (
+                    <option key={c.id} value={c.id}>{c.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="codec">{t.codec}</label>
+                <select {...sel("codec")} value={codec} onChange={(e) => setCodecId(e.target.value as CodecId)}>
+                  {CODECS.filter((c) => container.codecs.includes(c.id)).map((c) => (
+                    <option key={c.id} value={c.id}>{c.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            {container.id === "mp4lite" && <p className="note">{t.mp4LiteTip}</p>}
             <p className="levels">{fill(t.dataRate, mbps, ((mbps * 60) / 8 / 1000).toFixed(1))}</p>
             <p className="note">{fill(t.cardTime, Math.round((256 * 1000 * 8) / (mbps * 60)), cardFor(mbps))}</p>
             {res.id === "og" && <p className="note">{t.ogTip}</p>}
@@ -1495,9 +1551,10 @@ export default function App() {
               wfm: wfmOn ? wfmType : "off",
               histogram,
               peaking,
-              frame: frameOn
-                ? { ratio: FRAME_RATIOS.find((r) => r.id === frameRatio)!.r, color: FRAME_COLORS[frameColor], mask: frameMask / 100 }
-                : null,
+              frames: frameOn
+                ? activeMarkers.map((m) => ({ ratio: FRAME_RATIOS.find((r) => r.id === m.ratio)!.r, color: FRAME_COLORS[m.color] }))
+                : [],
+              frameMask: frameMask / 100,
             }}
             skew={leanDeg}
             cpl={cplEffect}
