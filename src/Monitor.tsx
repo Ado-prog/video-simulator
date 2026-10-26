@@ -111,7 +111,7 @@ function IlluPerson({ pic, x, heightM, flip }: { pic: Illu; x: number; heightM: 
   const wM = (heightM * pic.w) / pic.h;
   return (
     <g transform={`translate(${x} 0)`}>
-      <ellipse cx={0} cy={0} rx={wM * 0.42} ry={0.05} fill="url(#m-ground)" />
+      <ellipse cx={0} cy={0} rx={wM * 0.42} ry={0.05} fill="url(#m-shadow)" />
       <image href={pic.href} x={-wM / 2} y={-heightM} width={wM} height={heightM} preserveAspectRatio="none" transform={flip ? "scale(-1 1)" : undefined} />
     </g>
   );
@@ -530,7 +530,7 @@ function FigureShape({ f }: { f: Figure }) {
 
   return (
     <g transform={`translate(${f.x} 0)`}>
-      <ellipse cx={u * 0.15} cy={0} rx={f.bride ? skirtW * 1.1 : sw * 1.2} ry={u * 0.13} fill="url(#m-ground)" />
+      <ellipse cx={u * 0.15} cy={0} rx={f.bride ? skirtW * 1.1 : sw * 1.2} ry={u * 0.13} fill="url(#m-shadow)" />
       {woman && f.longHair && !f.bride && <path d={longBack} fill={f.hair} />}
       {woman && f.longHair && !f.bride && <path d={longBack} fill="url(#m-hair)" />}
       {f.bride && (
@@ -884,7 +884,7 @@ export default function Monitor(p: Props) {
               <circle cx="0" cy="0" r="0.002" fill="#ffffff" opacity="0.6" />
               <circle cx="0.022" cy="0.022" r="0.002" fill="#ffffff" opacity="0.6" />
             </pattern>
-            <radialGradient id="m-ground">
+            <radialGradient id="m-shadow">
               <stop offset="0%" stopColor="#000000" stopOpacity="0.45" />
               <stop offset="60%" stopColor="#000000" stopOpacity="0.18" />
               <stop offset="100%" stopColor="#000000" stopOpacity="0" />
