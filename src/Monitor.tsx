@@ -91,7 +91,6 @@ type Props = {
   palette: ScenePalette;
   backdrop: BackdropKind;
   photo?: string; // background photo URL
-  people?: PhotoPeople; // real people instead of the drawn figures
   exposureDelta: number;
   cast: [number, number, number];
   grain: number;
@@ -104,37 +103,6 @@ type Props = {
   hud: { fps: string; shutter: string; iso: string; focus: string; profile: string; filters: string; wb: string };
   label: string;
 };
-
-export type Pic = { href: string; w: number; h: number; cut: boolean };
-export type PhotoPeople = { couple?: Pic; single?: Pic; singleHeight: number; men: Pic[]; women: Pic[] };
-
-/** A cut-out photo standing on the ground at x (metres); head top at heightM. */
-function PhotoPerson({ pic, x, heightM, widthGuess, flip }: { pic: Pic; x: number; heightM: number; widthGuess: number; flip?: boolean }) {
-  let hM = heightM;
-  let wM = (hM * pic.w) / pic.h;
-  let top = -heightM;
-  if (pic.cut) {
-    // feet are missing: size by a typical width and keep the head at the right height
-    wM = widthGuess;
-    hM = (wM * pic.h) / pic.w;
-    if (hM > heightM) top = -hM;
-  }
-  return (
-    <g transform={`translate(${x} 0)`}>
-      {!pic.cut && <ellipse cx={0} cy={0} rx={wM * 0.42} ry={0.05} fill="url(#m-ground)" />}
-      <image
-        href={pic.href}
-        x={-wM / 2}
-        y={top}
-        width={wM}
-        height={hM}
-        preserveAspectRatio="none"
-        filter="url(#m-person)"
-        transform={flip ? "scale(-1 1)" : undefined}
-      />
-    </g>
-  );
-}
 
 /** Exposure and framing tools drawn on the monitor. */
 export type Assist = {
@@ -424,8 +392,8 @@ function FigureShape({ f }: { f: Figure }) {
       <circle cx={R * 0.4} cy={eyeY} r={ry * 0.022} fill="#0d0907" />
       <circle cx={-R * 0.39} cy={eyeY - ry * 0.02} r={ry * 0.012} fill="#ffffff" />
       <circle cx={R * 0.37} cy={eyeY - ry * 0.02} r={ry * 0.012} fill="#ffffff" />
-      <path d={`M${-R * 0.56} ${eyeY - ry * 0.01} Q${-R * 0.38} ${eyeY - ry * 0.09} ${-R * 0.2} ${eyeY}`} stroke="rgba(40,20,10,0.55)" strokeWidth={u * 0.012} fill="none" />
-      <path d={`M${R * 0.56} ${eyeY - ry * 0.01} Q${R * 0.38} ${eyeY - ry * 0.09} ${R * 0.2} ${eyeY}`} stroke="rgba(40,20,10,0.55)" strokeWidth={u * 0.012} fill="none" />
+      <path d={`M${-R * 0.56} ${eyeY - ry * 0.01} Q${-R * 0.38} ${eyeY - ry * 0.09} ${-R * 0.2} ${eyeY}`} stroke="rgba(30,15,8,0.8)" strokeWidth={u * 0.016} fill="none" />
+      <path d={`M${R * 0.56} ${eyeY - ry * 0.01} Q${R * 0.38} ${eyeY - ry * 0.09} ${R * 0.2} ${eyeY}`} stroke="rgba(30,15,8,0.8)" strokeWidth={u * 0.016} fill="none" />
       <path d={`M${-R * 0.52} ${eyeY + ry * 0.07} Q${-R * 0.38} ${eyeY + ry * 0.11} ${-R * 0.24} ${eyeY + ry * 0.07}`} stroke={skinShadow} strokeWidth={u * 0.012} fill="none" />
       <path d={`M${R * 0.52} ${eyeY + ry * 0.07} Q${R * 0.38} ${eyeY + ry * 0.11} ${R * 0.24} ${eyeY + ry * 0.07}`} stroke={skinShadow} strokeWidth={u * 0.012} fill="none" />
       {f.dress && (
@@ -559,7 +527,7 @@ function FigureShape({ f }: { f: Figure }) {
   const folds = [-0.55, -0.2, 0.15, 0.5].map((k) => `M${k * sw * 0.8} ${waistY + u * 0.2} Q${k * skirtW * 0.75} ${(waistY + skirtBottom) / 2} ${k * skirtW * 0.95} ${skirtBottom}`).join(" ");
 
   return (
-    <g transform={`translate(${f.x} 0)`}>
+    <g transform={`translate(${f.x} 0)`} filter="url(#m-sharp)">
       <ellipse cx={u * 0.15} cy={0} rx={(f.bride ? skirtW * 1.15 : sw * 1.25)} ry={u * 0.14} fill="url(#m-ground)" />
       {/* long hair falls behind the shoulders */}
       {f.longHair && !f.bride && <path d={longHairBack} fill={f.hair} />}
@@ -593,16 +561,16 @@ function FigureShape({ f }: { f: Figure }) {
           {sleeve(-1)}
           {sleeve(1)}
           {/* bare shoulders, rounded over the upper arms, down to the armpits */}
-          <path d={shoulders} fill={f.skin} />
+          <path d={shoulders} fill={f.skin} stroke="rgba(70,35,20,0.35)" strokeWidth={u * 0.012} />
           <path d={shoulders} fill="url(#m-shade)" opacity={0.85} />
           <path d={`M${-sw * 0.3} ${shoulderY + u * 0.02} q${sw * 0.15} ${u * 0.08} ${sw * 0.28} ${u * 0.04} M${sw * 0.3} ${shoulderY + u * 0.02} q${-sw * 0.15} ${u * 0.08} ${-sw * 0.28} ${u * 0.04}`} stroke={skinShadow} strokeWidth={u * 0.02} fill="none" />
-          <path d={skirt} fill={f.tone} />
+          <path d={skirt} fill={f.tone} stroke="rgba(0,0,0,0.2)" strokeWidth={u * 0.014} />
           <path d={skirt} fill="url(#m-fold)" opacity={f.bride ? 0.5 : 0.3} />
           <path d={skirt} fill="url(#m-satin)" />
           <path d={skirt} fill="url(#m-vert)" />
           <path d={folds} stroke="rgba(0,0,0,0.14)" strokeWidth={u * 0.035} fill="none" />
           <path d={folds} stroke="rgba(255,255,255,0.16)" strokeWidth={u * 0.02} fill="none" transform={`translate(${-u * 0.05} 0)`} />
-          <path d={bodice} fill={f.tone} />
+          <path d={bodice} fill={f.tone} stroke="rgba(0,0,0,0.22)" strokeWidth={u * 0.014} />
           {!f.bride && <path d={`M${-u * 0.16} ${bodiceTop} L0 ${shoulderY + u * 0.5} L${u * 0.16} ${bodiceTop} Z`} fill={f.skin} />}
           <path d={bodice} fill="url(#m-shade)" />
           <path d={bodice} fill="url(#m-satin)" opacity={0.7} />
@@ -625,7 +593,7 @@ function FigureShape({ f }: { f: Figure }) {
         <>
           {sleeve(-1)}
           {sleeve(1)}
-          <path d={jacket} fill={f.tone} />
+          <path d={jacket} fill={f.tone} stroke="rgba(0,0,0,0.6)" strokeWidth={u * 0.018} />
           {/* shirt, collar, tie */}
           <path d={`M${-u * 0.18} ${collarY} L0 ${vBottom} L${u * 0.18} ${collarY} Z`} fill="#f5f3ef" />
           <path d={`M${-u * 0.17} ${collarY - u * 0.03} L${-u * 0.01} ${collarY + u * 0.17} L${-u * 0.12} ${collarY + u * 0.24} Z`} fill="#e4e1db" />
@@ -659,21 +627,21 @@ function FigureShape({ f }: { f: Figure }) {
       {/* ears, head, face */}
       <ellipse cx={-R * 0.98} cy={cy + ry * 0.08} rx={R * 0.15} ry={ry * 0.22} fill={f.skin} />
       <ellipse cx={R * 0.98} cy={cy + ry * 0.08} rx={R * 0.15} ry={ry * 0.22} fill={f.skin} />
-      <path d={face} fill={f.skin} />
+      <path d={face} fill={f.skin} stroke="rgba(70,35,20,0.5)" strokeWidth={u * 0.014} />
       <path d={face} fill="url(#m-face)" />
       {features}
 
       {/* hair on top */}
       {f.longHair && !f.bride ? (
-        <path d={longHairFront} fill={f.hair} />
+        <path d={longHairFront} fill={f.hair} stroke="rgba(0,0,0,0.45)" strokeWidth={u * 0.014} />
       ) : f.dress ? (
         <>
           {/* hair pinned up: bun and soft waves to the ears */}
           <ellipse cx={R * 0.1} cy={cy - ry * 1.12} rx={R * 0.5} ry={ry * 0.28} fill={f.hair} />
-          <path d={updo} fill={f.hair} />
+          <path d={updo} fill={f.hair} stroke="rgba(0,0,0,0.45)" strokeWidth={u * 0.014} />
         </>
       ) : (
-        <path d={shortHair} fill={f.hair} />
+        <path d={shortHair} fill={f.hair} stroke="rgba(0,0,0,0.45)" strokeWidth={u * 0.014} />
       )}
       {/* hair volume and strands */}
       <path d={f.longHair && !f.bride ? longHairFront : f.dress ? updo : shortHair} fill="url(#m-hair)" />
@@ -683,7 +651,7 @@ function FigureShape({ f }: { f: Figure }) {
       {f.bride && (
         <>
           <path d={`M${-R * 0.75} ${cy - ry * 0.95} Q0 ${cy - ry * 1.3} ${R * 0.75} ${cy - ry * 0.95}`} stroke="#f6f1e6" strokeWidth={u * 0.05} fill="none" />
-          <path d={`M${R * 0.2} ${cy - ry * 0.85} C${R * 1.9} ${cy} ${R * 2.1} ${shoulderY + u * 2} ${R * 1.4} ${waistY + u * 0.8} L${R * 0.9} ${shoulderY} Z`} fill="#ffffff" opacity={0.3} />
+          <path d={`M${R * 0.2} ${cy - ry * 0.85} C${R * 1.9} ${cy} ${R * 2.1} ${shoulderY + u * 2} ${R * 1.4} ${waistY + u * 0.8} L${R * 0.9} ${shoulderY} Z`} fill="#ffffff" opacity={0.16} />
         </>
       )}
     </g>
@@ -899,15 +867,9 @@ export default function Monitor(p: Props) {
               <stop offset="78%" stopColor="#000000" stopOpacity="0.06" />
               <stop offset="100%" stopColor="#000000" stopOpacity="0.3" />
             </radialGradient>
-            {/* photos of people: unsharp mask plus a little contrast and colour */}
-            <filter id="m-person" colorInterpolationFilters="sRGB">
-              <feConvolveMatrix order={3} kernelMatrix="0 -0.7 0 -0.7 3.8 -0.7 0 -0.7 0" preserveAlpha={true} />
-              <feColorMatrix type="saturate" values="1.15" />
-              <feComponentTransfer>
-                <feFuncR type="linear" slope={1.1} intercept={-0.04} />
-                <feFuncG type="linear" slope={1.1} intercept={-0.04} />
-                <feFuncB type="linear" slope={1.1} intercept={-0.04} />
-              </feComponentTransfer>
+            {/* crisp drawn figures: light unsharp mask */}
+            <filter id="m-sharp" colorInterpolationFilters="sRGB">
+              <feConvolveMatrix order={3} kernelMatrix="0 -0.55 0 -0.55 3.2 -0.55 0 -0.55 0" preserveAlpha={true} />
             </filter>
             <radialGradient id="m-ground">
               <stop offset="0%" stopColor="#000000" stopOpacity="0.45" />
@@ -1107,19 +1069,9 @@ export default function Monitor(p: Props) {
                   <g key={i} filter={`url(#m-b-row-${i})`}>
                     <g transform={layer(d + row.offset)}>
                       <g transform={`translate(0 ${EYE})`}>
-                        {p.people && p.subject === "couple" && p.people.couple ? (
-                          <PhotoPerson pic={p.people.couple} x={0} heightM={1.8} widthGuess={1.15} />
-                        ) : p.people && p.subject === "person" && p.people.single ? (
-                          <PhotoPerson pic={p.people.single} x={0} heightM={p.people.singleHeight} widthGuess={0.6} />
-                        ) : p.people && (p.people.men.length || p.people.women.length) ? (
-                          row.figures.map((f, j) => {
-                            const pool = f.dress && p.people!.women.length ? p.people!.women : p.people!.men.length ? p.people!.men : p.people!.women;
-                            const pic = pool[(j + i * 3) % pool.length];
-                            return <PhotoPerson key={j} pic={pic} x={f.x} heightM={f.h} widthGuess={0.6} flip={j % 2 === 1} />;
-                          })
-                        ) : (
-                          row.figures.map((f, j) => <FigureShape key={j} f={f} />)
-                        )}
+                        {row.figures.map((f, j) => (
+                          <FigureShape key={j} f={f} />
+                        ))}
                       </g>
                     </g>
                   </g>

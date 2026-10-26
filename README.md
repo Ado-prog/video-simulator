@@ -29,7 +29,6 @@ See on a simulated camera monitor how focus distance, focal length, aperture, li
 - **DMW-DMS1E 4-channel mode:** CH1/CH2 main audio, CH3 omni, CH4 omni −20 dB with their levels
 - **Flash & shutter (photo):** TTL and HSS with each camera's sync speed, mechanical / electronic shutter with banding and skew warnings, dynamic range of scene vs. camera, exposure bracketing, 500 and NPF rules for stars, long-exposure and ND time calculator
 - **Sun planner:** golden and blue hour, sunrise and sunset for any date in Zürich, Basel, Bern, Sarajevo, Tuzla, Beograd, Wien and more, or your own location
-- **Real people (optional):** switch "People" under the monitor from drawn figures to photos – 6 wedding couples, 8 brides, 13 men and 83 women, cut out and placed at their real size and distance, blurred by the depth of field; group photos pick guests automatically
 - **Photo backgrounds:** real wedding venues (garden by the sea, garden with chairs, lake at sunset, hill with aisle, beach with flower arch, ballroom), blurred by the depth of field; the drawn backgrounds stay available
 - **Filters:** ND2–ND64000, variable ND, CPL, UV, plus a one-click "expose correctly" that picks the ND you need
 - **Audio (video mode):** microphones (RØDE Wireless PRO, Panasonic DMW-DMS1E and DMW-MS2, plus RØDE, DJI, Sennheiser, Deity, Hollyland, Saramonic, Zoom, Tascam, Shure, Comica, Sony, Canon, Nikon and the camera's built-in mic), sound sources, gain, auto level, limiter, low cut, and each mic's own switches – 32-bit float on/off, pickup patterns, wind/noise cancelling, safety track, onboard backup recording – live level meter on the monitor, clipping and noise warnings, speech clarity
@@ -66,4 +65,3 @@ Background photos from [Pexels](https://www.pexels.com/license/) (free to use), 
 [Soly Moses](https://www.pexels.com/photo/arch-decorated-with-white-cloth-and-flowers-10962460/) (beach with flower arch),
 [Clément Proust](https://www.pexels.com/photo/luxury-restaurant-hall-19569865/) (ballroom).
 
-People photos: 95 from [Pexels](https://www.pexels.com/license/) and 15 from [Unsplash](https://unsplash.com/license) (free to use), cut out and resized. The original photo page of every person is listed in [`src/people.json`](src/people.json) (`src`).

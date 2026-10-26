@@ -2,13 +2,6 @@
 // Languages without their own entry fall back to English.
 
 const de = {
-  people: "Personen",
-  peoplePhotos: "Fotos (echte Personen)",
-  peopleDrawn: "Gezeichnet",
-  couplePick: "Brautpaar (Foto-Nr.)",
-  personPick: "Person (Foto-Nr.)",
-  personKinds: { bride: "Braut", man: "Männer", woman: "Frauen" },
-  guestPool: "Gäste: {x} Männer und {y} Frauen (ganze Figur), abwechselnd und gespiegelt",
   bgDrawn: "Gezeichnet",
   bgPhotos: "Fotos",
   photoBackdrops: { "p-garden-sea": "Garten am Meer (Trauung)", "p-garden-chairs": "Garten mit Stühlen", "p-lake-sunset": "See bei Sonnenuntergang", "p-hill-aisle": "Hügel mit Gang", "p-beach-arch": "Strand mit Blumenbogen", "p-hall": "Festsaal mit Kronleuchtern" },
@@ -149,13 +142,6 @@ const de = {
 type Extra = typeof de;
 
 const bs: Extra = {
-  people: "Osobe",
-  peoplePhotos: "Fotografije (pravi ljudi)",
-  peopleDrawn: "Nacrtano",
-  couplePick: "Mladenci (broj fotografije)",
-  personPick: "Osoba (broj fotografije)",
-  personKinds: { bride: "Mladenka", man: "Muškarci", woman: "Žene" },
-  guestPool: "Gosti: {x} muškaraca i {y} žena (cijela figura), naizmjenično i zrcalno",
   bgDrawn: "Nacrtano",
   bgPhotos: "Fotografije",
   photoBackdrops: { "p-garden-sea": "Bašta uz more (vjenčanje)", "p-garden-chairs": "Bašta sa stolicama", "p-lake-sunset": "Jezero u zalazak sunca", "p-hill-aisle": "Brdo sa stazom", "p-beach-arch": "Plaža sa lukom od cvijeća", "p-hall": "Svadbena sala sa lusterima" },
@@ -361,13 +347,6 @@ const sr: Extra = {
 };
 
 const en: Extra = {
-  people: "People",
-  peoplePhotos: "Photos (real people)",
-  peopleDrawn: "Drawn",
-  couplePick: "Couple (photo no.)",
-  personPick: "Person (photo no.)",
-  personKinds: { bride: "Bride", man: "Men", woman: "Women" },
-  guestPool: "Guests: {x} men and {y} women (whole figure), alternating and mirrored",
   bgDrawn: "Drawn",
   bgPhotos: "Photos",
   photoBackdrops: { "p-garden-sea": "Garden by the sea (ceremony)", "p-garden-chairs": "Garden with chairs", "p-lake-sunset": "Lake at sunset", "p-hill-aisle": "Hill with aisle", "p-beach-arch": "Beach with flower arch", "p-hall": "Ballroom with chandeliers" },
