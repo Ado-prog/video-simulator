@@ -129,6 +129,7 @@ function PhotoPerson({ pic, x, heightM, widthGuess, flip }: { pic: Pic; x: numbe
         width={wM}
         height={hM}
         preserveAspectRatio="none"
+        filter="url(#m-person)"
         transform={flip ? "scale(-1 1)" : undefined}
       />
     </g>
@@ -898,6 +899,16 @@ export default function Monitor(p: Props) {
               <stop offset="78%" stopColor="#000000" stopOpacity="0.06" />
               <stop offset="100%" stopColor="#000000" stopOpacity="0.3" />
             </radialGradient>
+            {/* photos of people: unsharp mask plus a little contrast and colour */}
+            <filter id="m-person" colorInterpolationFilters="sRGB">
+              <feConvolveMatrix order={3} kernelMatrix="0 -0.7 0 -0.7 3.8 -0.7 0 -0.7 0" preserveAlpha={true} />
+              <feColorMatrix type="saturate" values="1.15" />
+              <feComponentTransfer>
+                <feFuncR type="linear" slope={1.1} intercept={-0.04} />
+                <feFuncG type="linear" slope={1.1} intercept={-0.04} />
+                <feFuncB type="linear" slope={1.1} intercept={-0.04} />
+              </feComponentTransfer>
+            </filter>
             <radialGradient id="m-ground">
               <stop offset="0%" stopColor="#000000" stopOpacity="0.45" />
               <stop offset="60%" stopColor="#000000" stopOpacity="0.18" />
@@ -929,7 +940,7 @@ export default function Monitor(p: Props) {
               ["m-b-hills", sd(hillsD)],
               ["m-b-back", sd(backD)],
               ["m-b-photo", sd(photoD)],
-              ...subjRows.map((row, i): [string, number] => [`m-b-row-${i}`, Math.max(sd(d + row.offset), 0.22)]),
+              ...subjRows.map((row, i): [string, number] => [`m-b-row-${i}`, sd(d + row.offset)]),
               ["m-b-branch", sd(branchD)],
             ] as [string, number][]).map(([id, s]) => (
               <filter key={id} id={id} filterUnits="userSpaceOnUse" x={-100} y={-100} width={W + 200} height={H + 200}>
