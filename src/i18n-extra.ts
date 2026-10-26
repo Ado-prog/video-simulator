@@ -2,6 +2,10 @@
 // Languages without their own entry fall back to English.
 
 const de = {
+  recTime: "Aufnahmezeit",
+  cardSlots: "Kartenslots dieser Kamera",
+  cardNeeds: "mind. {x}",
+  cardTooSlow: "zu langsam für diesen Codec",
   tlMatch: "✓ Bildrate = Timeline: normale Geschwindigkeit",
   tlLower: "⚠ {x} auf einer {y}-Timeline: zu wenig Bilder – Bilder werden doppelt gezeigt, es ruckelt",
   tlConform: "⚠ {x} passt nicht zur {y}-Timeline: wird umgerechnet – leichtes Ruckeln oder anderes Tempo",
@@ -135,6 +139,10 @@ const de = {
 type Extra = typeof de;
 
 const bs: Extra = {
+  recTime: "Vrijeme snimanja",
+  cardSlots: "Slotovi za kartice ove kamere",
+  cardNeeds: "min. {x}",
+  cardTooSlow: "presporo za ovaj kodek",
   tlMatch: "✓ Bildrate = timeline: normalna brzina",
   tlLower: "⚠ {x} na {y} timeline-u: premalo sličica – sličice se ponavljaju, trza",
   tlConform: "⚠ {x} ne odgovara {y} timeline-u: preračunava se – malo trzanja ili drugi tempo",
@@ -268,6 +276,7 @@ const bs: Extra = {
 
 const sr: Extra = {
   ...bs,
+  recTime: "Vreme snimanja",
   roninTip: "Gimbal: mirni kadrovi u hodu. IBIS ostavi normalno, E-stabilizaciju isključi – inače rade jedna protiv druge",
   mp4LiteTip: "MP4 (Lite): manje datoteke za brzo slanje na mobilni (H.265), nije za jaku korekciju boja",
   zebraNames: {
@@ -331,6 +340,10 @@ const sr: Extra = {
 };
 
 const en: Extra = {
+  recTime: "Recording time",
+  cardSlots: "Card slots in this camera",
+  cardNeeds: "min. {x}",
+  cardTooSlow: "too slow for this codec",
   tlMatch: "✓ Frame rate = timeline: normal speed",
   tlLower: "⚠ {x} on a {y} timeline: too few frames – frames get repeated, it stutters",
   tlConform: "⚠ {x} doesn't match the {y} timeline: it gets conformed – slight stutter or different speed",

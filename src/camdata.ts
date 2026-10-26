@@ -1,6 +1,7 @@
 // Extra camera facts for the assist tools. Values are typical, rounded and approximate.
 
 import type { Camera } from "./gear";
+import type { MediaId } from "./formats";
 
 type Facts = {
   mp: number; // megapixels
@@ -111,3 +112,22 @@ export type RoninId = (typeof RONINS)[number]["id"];
 /** Gimbal follow modes and how fast the picture typically turns (degrees per second). */
 export const RONIN_MODES = { lock: 3, pf: 20, ptf: 20, fpv: 45 } as const;
 export type RoninMode = keyof typeof RONIN_MODES;
+
+/** Card slots of each camera (one entry per slot type). */
+const SLOTS: Record<string, MediaId[]> = {
+  "pana-s1ii": ["cfb", "sd", "ssd"], "pana-s1rii": ["cfb", "sd", "ssd"], "pana-s1h": ["sd", "sd"],
+  "pana-s5ii": ["sd", "sd"], "pana-s5iix": ["sd", "sd", "ssd"], "pana-s5": ["sd", "sd"], "pana-s9": ["sd", "ssd"],
+  "pana-gh7": ["cfb", "sd", "ssd"], "pana-gh6": ["cfb", "sd", "ssd"], "pana-g9ii": ["sd", "sd", "ssd"],
+  "sony-a1ii": ["cfasd", "cfasd"], "sony-a9iii": ["cfasd", "cfasd"], "sony-a7rv": ["cfasd", "cfasd"], "sony-a7iv": ["cfasd", "sd"],
+  "sony-a7siii": ["cfasd", "cfasd"], "sony-a7cii": ["sd"], "sony-fx5": ["cfasd", "cfasd"], "sony-fx3": ["cfasd", "cfasd"],
+  "sony-fx2": ["cfasd", "cfasd"], "sony-zve1": ["sd"], "sony-a6700": ["sd"], "sony-fx30": ["cfasd", "cfasd"], "sony-zve10ii": ["sd"],
+  "canon-r1": ["cfb", "cfb"], "canon-r3": ["cfb", "sd"], "canon-r5ii": ["cfb", "sd"], "canon-r6ii": ["sd", "sd"],
+  "canon-r8": ["sd"], "canon-r7": ["sd", "sd"], "canon-r10": ["sd"], "canon-r50": ["sd"],
+  "nikon-z9": ["cfb", "cfb"], "nikon-z8": ["cfb", "sd"], "nikon-z6iii": ["cfb", "sd"], "nikon-zf": ["sd", "microsd"],
+  "nikon-z5ii": ["sd", "sd"], "nikon-z50ii": ["sd"], "nikon-zfc": ["sd"],
+};
+
+export function slotsFor(cam: { id: string; brand: string } | undefined): MediaId[] {
+  if (!cam) return ["cfb", "sd"];
+  return SLOTS[cam.id] ?? (cam.brand === "DJI" || cam.brand === "Insta360" ? ["microsd"] : ["sd"]);
+}

@@ -111,3 +111,24 @@ export const GUIDES = [
   { id: "239", ratio: 2.39 },
 ] as const;
 export type GuideId = (typeof GUIDES)[number]["id"];
+
+// ── Recording media
+export type MediaId = "cfb" | "cfa" | "cfasd" | "sd" | "microsd" | "ssd";
+/** Highest sustained bitrate (Mbit/s) and the card class each tier needs. */
+export const MEDIA: Record<MediaId, { label: string; tiers: [number, string][] }> = {
+  cfb: { label: "CFexpress Type B", tiers: [[1600, "VPG200"], [3200, "VPG400"]] },
+  cfa: { label: "CFexpress Type A", tiers: [[1600, "VPG200"]] },
+  cfasd: { label: "CFexpress Type A / SD", tiers: [[240, "SD V30"], [480, "SD V60"], [720, "SD V90"], [1600, "CFexpress A VPG200"]] },
+  sd: { label: "SD UHS-II", tiers: [[240, "V30"], [480, "V60"], [720, "V90"]] },
+  microsd: { label: "microSD", tiers: [[240, "V30"], [480, "V60"]] },
+  ssd: { label: "SSD (USB-C)", tiers: [[8000, "NVMe, 1000 MB/s"]] },
+};
+
+/** Card class this medium needs for the bitrate, or null when the medium is too slow. */
+export function mediaClass(media: MediaId, mbps: number) {
+  const tier = MEDIA[media].tiers.find(([max]) => mbps <= max);
+  return tier ? tier[1] : null;
+}
+
+/** Minutes of footage on a card of `gb` gigabytes. */
+export const minutesOn = (gb: number, mbps: number) => Math.round((gb * 1000 * 8) / (mbps * 60));

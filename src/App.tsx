@@ -2,8 +2,8 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerE
 import Monitor, { type SubjectKind, ROW_GAP, rowCount } from "./Monitor";
 import { MICS, MIC_BRANDS, INTERNAL_MIC, SOURCES, type SourceId, type PatternId, audioLevels, autoGain, effectiveMic } from "./audio";
 import { stylesFor, makerLutsFor, CREATIVE_LUTS, NEUTRAL_LOOK } from "./looks";
-import { factsFor, sensorDR, SCENE_DR, pixelPitch, RONINS, RONIN_MODES, type RoninId, type RoninMode } from "./camdata";
-import { RESOLUTIONS, CODECS, bitrate, cardFor, containersFor, type ResolutionId, type CodecId } from "./formats";
+import { factsFor, slotsFor, sensorDR, SCENE_DR, pixelPitch, RONINS, RONIN_MODES, type RoninId, type RoninMode } from "./camdata";
+import { RESOLUTIONS, CODECS, MEDIA, bitrate, containersFor, mediaClass, minutesOn, type ResolutionId, type CodecId } from "./formats";
 import { zebraSpecFor, zebraBands, FRAME_RATIOS, FRAME_COLORS, type ZebraMode, type FrameRatioId, type FrameColor } from "./zebra";
 import { sunDay, PLACES } from "./sun";
 import PhotoDiagram from "./PhotoDiagram";
@@ -48,6 +48,7 @@ import {
 } from "./lighting";
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), hi);
+const formatMinutes = (min: number) => (min >= 120 ? `${Math.floor(min / 60)} h ${String(min % 60).padStart(2, "0")} min` : `${min} min`);
 
 // Timeline frame rates offered by Final Cut Pro and DaVinci Resolve
 const TIMELINE_RATES = [23.976, 24, 25, 29.97, 30, 47.952, 48, 50, 59.94, 60, 95.904, 96, 100, 119.88, 120];
@@ -1057,7 +1058,21 @@ export default function App() {
             </div>
             {container.id === "mp4lite" && <p className="note">{t.mp4LiteTip}</p>}
             <p className="levels">{fill(t.dataRate, mbps, ((mbps * 60) / 8 / 1000).toFixed(1))}</p>
-            <p className="note">{fill(t.cardTime, Math.round((256 * 1000 * 8) / (mbps * 60)), cardFor(mbps))}</p>
+            <p className="note">
+              {t.recTime}: {[128, 256, 512, 1000].map((gb) => `${gb === 1000 ? "1 TB" : `${gb} GB`} ≈ ${formatMinutes(minutesOn(gb, mbps))}`).join(" · ")}
+            </p>
+            <p className="eyebrow">{t.cardSlots}</p>
+            <ul className="slots">
+              {[...new Set(slotsFor(camera))].map((m) => {
+                const cls = mediaClass(m, mbps);
+                const n = slotsFor(camera).filter((x) => x === m).length;
+                return (
+                  <li key={m} className={cls ? "ok" : "warn"}>
+                    {n > 1 ? `${n}× ` : ""}{MEDIA[m].label}: {cls ? `✓ ${fill(t.cardNeeds, cls)}` : `✗ ${t.cardTooSlow}`}
+                  </li>
+                );
+              })}
+            </ul>
             {res.id === "og" && <p className="note">{t.ogTip}</p>}
           </fieldset>
           )}
