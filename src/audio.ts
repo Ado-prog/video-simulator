@@ -71,6 +71,24 @@ const ROWS: Row[] = [
   ["sony-ecmb1m", "Sony", "ECM-B1M", "oncam", 19, { pat: ["sc", "card", "omni"] }],
   ["canon-dme1d", "Canon", "DM-E1D", "oncam", 21, { pat: ["shot", "st90", "st120"] }],
   ["nikon-me1", "Nikon", "ME-1", "oncam", 23],
+  // more wireless and recorder systems
+  ["dji-mic3", "DJI", "Mic 3", "lav", 28, { float32: true, nc: "nc", onboard: true }],
+  ["dji-mic1", "DJI", "Mic (1st gen)", "lav", 30, { onboard: true }],
+  ["rode-wgo2", "RØDE", "Wireless GO II", "lav", 30, { safety: -20, onboard: true }],
+  ["rode-wmicro", "RØDE", "Wireless Micro", "lav", 30],
+  ["rode-vmproplus", "RØDE", "VideoMic Pro+", "oncam", 14],
+  ["senn-mke200", "Sennheiser", "MKE 200", "oncam", 22],
+  ["holly-m1", "Hollyland", "Lark M1", "lav", 30, { nc: "nc" }],
+  ["holly-m2s", "Hollyland", "Lark M2S", "lav", 30, { nc: "nc" }],
+  ["holly-c1", "Hollyland", "Lark C1", "lav", 30, { nc: "nc" }],
+  ["sara-ultra", "Saramonic", "Ultra", "lav", 28, { float32: true, nc: "nc", onboard: true }],
+  ["sara-blink500", "Saramonic", "Blink500 B2+", "lav", 30],
+  ["deity-theos", "Deity", "THEOS Digital Wireless", "lav", 28, { float32: true, onboard: true }],
+  ["zoom-f2", "Zoom", "F2 (Lav-Recorder)", "lav", 27, { float32: true, onboard: true }],
+  ["tascam-dr10l", "Tascam", "DR-10L Pro (Lav-Recorder)", "lav", 27, { float32: true, onboard: true }],
+  ["shure-movemic", "Shure", "MoveMic", "lav", 29],
+  ["sony-ecmw3", "Sony", "ECM-W3", "lav", 30, { nc: "nc" }],
+  ["comica-vimo", "Comica", "Vimo C", "lav", 30, { nc: "nc" }],
 ];
 
 export const MICS: Mic[] = ROWS.map(([id, brand, name, type, selfNoise, extra]) => ({

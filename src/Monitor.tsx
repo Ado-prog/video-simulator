@@ -91,6 +91,7 @@ type Props = {
   palette: ScenePalette;
   backdrop: BackdropKind;
   photo?: string; // background photo URL
+  people?: PhotoPeople; // real people instead of the drawn figures
   exposureDelta: number;
   cast: [number, number, number];
   grain: number;
@@ -103,6 +104,36 @@ type Props = {
   hud: { fps: string; shutter: string; iso: string; focus: string; profile: string; filters: string; wb: string };
   label: string;
 };
+
+export type Pic = { href: string; w: number; h: number; cut: boolean };
+export type PhotoPeople = { couple?: Pic; single?: Pic; singleHeight: number; men: Pic[]; women: Pic[] };
+
+/** A cut-out photo standing on the ground at x (metres); head top at heightM. */
+function PhotoPerson({ pic, x, heightM, widthGuess, flip }: { pic: Pic; x: number; heightM: number; widthGuess: number; flip?: boolean }) {
+  let hM = heightM;
+  let wM = (hM * pic.w) / pic.h;
+  let top = -heightM;
+  if (pic.cut) {
+    // feet are missing: size by a typical width and keep the head at the right height
+    wM = widthGuess;
+    hM = (wM * pic.h) / pic.w;
+    if (hM > heightM) top = -hM;
+  }
+  return (
+    <g transform={`translate(${x} 0)`}>
+      {!pic.cut && <ellipse cx={0} cy={0} rx={wM * 0.42} ry={0.05} fill="url(#m-ground)" />}
+      <image
+        href={pic.href}
+        x={-wM / 2}
+        y={top}
+        width={wM}
+        height={hM}
+        preserveAspectRatio="none"
+        transform={flip ? "scale(-1 1)" : undefined}
+      />
+    </g>
+  );
+}
 
 /** Exposure and framing tools drawn on the monitor. */
 export type Assist = {
@@ -174,15 +205,17 @@ function useScopes(svgRef: React.RefObject<SVGSVGElement>, canvasRef: React.RefO
       const SH = Math.round(H * 2);
       const clone = svg.cloneNode(true) as SVGSVGElement;
       clone.querySelectorAll("[data-noscan],[data-assist]").forEach((n) => n.remove());
+      const missing: string[] = [];
       for (const im of clone.querySelectorAll("image")) {
         const href = im.getAttribute("href") ?? "";
         if (href.startsWith("data:")) continue;
         const data = INLINE.get(href);
         if (data) im.setAttribute("href", data);
-        else {
-          inlineImage(href).then(() => setRetry((r) => r + 1));
-          return;
-        }
+        else missing.push(href);
+      }
+      if (missing.length) {
+        Promise.all([...new Set(missing)].map(inlineImage)).then(() => setRetry((r) => r + 1));
+        return;
       }
       clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
       clone.setAttribute("width", String(SW));
@@ -1063,9 +1096,19 @@ export default function Monitor(p: Props) {
                   <g key={i} filter={`url(#m-b-row-${i})`}>
                     <g transform={layer(d + row.offset)}>
                       <g transform={`translate(0 ${EYE})`}>
-                        {row.figures.map((f, j) => (
-                          <FigureShape key={j} f={f} />
-                        ))}
+                        {p.people && p.subject === "couple" && p.people.couple ? (
+                          <PhotoPerson pic={p.people.couple} x={0} heightM={1.8} widthGuess={1.15} />
+                        ) : p.people && p.subject === "person" && p.people.single ? (
+                          <PhotoPerson pic={p.people.single} x={0} heightM={p.people.singleHeight} widthGuess={0.6} />
+                        ) : p.people && (p.people.men.length || p.people.women.length) ? (
+                          row.figures.map((f, j) => {
+                            const pool = f.dress && p.people!.women.length ? p.people!.women : p.people!.men.length ? p.people!.men : p.people!.women;
+                            const pic = pool[(j + i * 3) % pool.length];
+                            return <PhotoPerson key={j} pic={pic} x={f.x} heightM={f.h} widthGuess={0.6} flip={j % 2 === 1} />;
+                          })
+                        ) : (
+                          row.figures.map((f, j) => <FigureShape key={j} f={f} />)
+                        )}
                       </g>
                     </g>
                   </g>

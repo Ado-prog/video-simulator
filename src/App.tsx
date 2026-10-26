@@ -6,6 +6,7 @@ import { factsFor, slotsFor, sensorDR, SCENE_DR, pixelPitch, RONINS, RONIN_MODES
 import { RESOLUTIONS, CODECS, MEDIA, bitrate, containersFor, mediaClass, minutesOn, type ResolutionId, type CodecId } from "./formats";
 import { zebraSpecFor, zebraBands, FRAME_RATIOS, FRAME_COLORS, type ZebraMode, type FrameRatioId, type FrameColor } from "./zebra";
 import { sunDay, PLACES } from "./sun";
+import { PHOTOS, COUPLES, DEFAULT_COUPLE, byKind, GUEST_MEN, GUEST_WOMEN, type PersonPhoto } from "./peoplePhotos";
 import PhotoDiagram from "./PhotoDiagram";
 import { LensArt, IrisArt, CameraArt, cameraKind } from "./GearArt";
 import { DICT, LANGUAGES, fill, loadLang, saveLang, type Lang } from "./i18n";
@@ -177,6 +178,24 @@ export default function App() {
   const [aperture, setAperture] = useState(2.8);
   const [focusM, setFocusM] = useState(3);
   const [subject, setSubject] = useState<SubjectKind>("couple");
+  // real people (photos) or the drawn figures
+  const [peopleMode, setPeopleMode] = useState<"photo" | "drawn">("drawn");
+  const [coupleN, setCoupleN] = useState(0);
+  const [singleN, setSingleN] = useState(0);
+  const couplePhoto = PHOTOS.find((p) => p.n === coupleN && p.kind === "couple") ?? DEFAULT_COUPLE;
+  const singlePhoto = PHOTOS.find((p) => p.n === singleN) ?? GUEST_MEN[0] ?? byKind("man")[0];
+  const pic = (p?: PersonPhoto) => (p ? { href: `./${p.file}`, w: p.w, h: p.h, cut: p.cut } : undefined);
+  const people =
+    peopleMode === "photo"
+      ? {
+          couple: pic(couplePhoto),
+          single: pic(singlePhoto),
+          singleHeight: singlePhoto?.kind === "man" ? 1.8 : 1.68,
+          men: (GUEST_MEN.length >= 3 ? GUEST_MEN : byKind("man")).map((p) => pic(p)!),
+          women: (GUEST_WOMEN.length >= 3 ? GUEST_WOMEN : byKind("woman")).map((p) => pic(p)!),
+        }
+      : undefined;
+
   const isPrime = !!lens && lens.minFocal === lens.maxFocal;
   const fMin = lens ? lens.minFocal : 3;
   const fMax = lens ? lens.maxFocal : 400;
@@ -497,6 +516,7 @@ export default function App() {
     shootMode, cameraId, lensId, manualSensor, focal, aperture, focusM,
     vSystem, fps, shutter, isoAuto, iso, wbMode, wbK, profileId, lutId, styleId,
     expMode, photoShutter, photoIso, ndId, vnd, cplOn, cplRot, uvOn,
+    peopleMode, coupleN, singleN, subject,
     zebraMode, zebraLevels, falseColor, wfmOn, wfmType, histogram, peaking, frameOn, frameMarkers, frameMask,
     motion, roninId, roninMode, stab, timelineFps, resId, codecId, containerId, flashMode, shutterType, bracketId,
     micId, sourceId, gain, autoLevel, limiter, lowCut, float32, patternId, noiseCancel, safetyOn, onboard,
@@ -506,7 +526,8 @@ export default function App() {
     aperture: setAperture, focusM: setFocusM, vSystem: setVSystem, fps: setFps, shutter: setShutter, isoAuto: setIsoAuto,
     iso: setIso, wbMode: setWbMode, wbK: setWbK, profileId: setProfileId, lutId: setLutId, styleId: setStyleId,
     expMode: setExpMode, photoShutter: setPhotoShutter, photoIso: setPhotoIso, ndId: setNdId, vnd: setVnd, cplOn: setCplOn,
-    cplRot: setCplRot, uvOn: setUvOn, zebraMode: setZebraMode, zebraLevels: setZebraLevels, falseColor: setFalseColor,
+    cplRot: setCplRot, uvOn: setUvOn, peopleMode: setPeopleMode, coupleN: setCoupleN,
+    singleN: setSingleN, subject: setSubject, zebraMode: setZebraMode, zebraLevels: setZebraLevels, falseColor: setFalseColor,
     wfmOn: setWfmOn, wfmType: setWfmType, histogram: setHistogram, peaking: setPeaking, frameOn: setFrameOn,
     frameMarkers: setFrameMarkers, frameMask: setFrameMask, motion: setMotion, roninId: setRoninId, roninMode: setRoninMode, stab: setStab, containerId: setContainerId,
     timelineFps: setTimelineFps, resId: setResId, codecId: setCodecId, flashMode: setFlashMode, shutterType: setShutterType,
@@ -1577,6 +1598,7 @@ export default function App() {
             subject={subject}
             palette={viewPalette}
             backdrop={backdropKind}
+            people={people}
             photo={bd?.photo ? `./${bd.photo}` : undefined}
             exposureDelta={exposureDelta}
             cast={cast}
@@ -1621,8 +1643,41 @@ export default function App() {
                   <option key={k} value={k}>{t.photoBackdrops[k]}</option>
                 ))}
               </optgroup>
+
             </select>
           </div>
+          <div className="backdrop-row people-row">
+            <label htmlFor="peoplemode">{t.people}</label>
+            <select id="peoplemode" className="control" value={peopleMode} onChange={(e) => setPeopleMode(e.target.value as "photo" | "drawn")}>
+              <option value="drawn">{t.peopleDrawn}</option>
+              <option value="photo">{t.peoplePhotos}</option>
+            </select>
+            {peopleMode === "photo" && (
+              <>
+                {subject === "couple" && (
+                  <select id="couplepick" className="control" aria-label={t.couplePick} value={String(couplePhoto?.n ?? "")} onChange={(e) => setCoupleN(Number(e.target.value))}>
+                    {COUPLES.map((p) => (
+                      <option key={p.n} value={String(p.n)}>#{p.n}{p.cut ? " ✂" : ""}</option>
+                    ))}
+                  </select>
+                )}
+                {subject === "person" && (
+                  <select id="singlepick" className="control" aria-label={t.personPick} value={String(singlePhoto?.n ?? "")} onChange={(e) => setSingleN(Number(e.target.value))}>
+                    {(["bride", "man", "woman"] as const).map((k) => (
+                      <optgroup key={k} label={t.personKinds[k]}>
+                        {byKind(k).map((p) => (
+                          <option key={p.n} value={String(p.n)}>#{p.n}{p.cut ? " ✂" : ""}</option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                )}
+              </>
+            )}
+          </div>
+          {peopleMode === "photo" && subject.startsWith("group") && (
+            <p className="note people-note">{fill(t.guestPool, GUEST_MEN.length, GUEST_WOMEN.length)}</p>
+          )}
           <div className="card">
             {g_custom}
             {g_light}
