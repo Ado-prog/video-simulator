@@ -178,7 +178,6 @@ export default function App() {
   const [aperture, setAperture] = useState(2.8);
   const [focusM, setFocusM] = useState(3);
   const [subject, setSubject] = useState<SubjectKind>("couple");
-  const [peopleMode, setPeopleMode] = useState<"drawn" | "illu">("illu");
 
   const isPrime = !!lens && lens.minFocal === lens.maxFocal;
   const fMin = lens ? lens.minFocal : 3;
@@ -515,7 +514,7 @@ export default function App() {
     shootMode, cameraId, lensId, manualSensor, focal, aperture, focusM,
     vSystem, fps, shutter, isoAuto, iso, wbMode, wbK, profileId, lutId, styleId,
     expMode, photoShutter, photoIso, ndId, vnd, cplOn, cplRot, uvOn,
-    subject, peopleMode,
+    subject,
     zebraMode, zebraLevels, falseColor, wfmOn, wfmType, histogram, peaking, frameOn, frameMarkers, frameMask,
     motion, roninId, roninMode, stab, timelineFps, resId, codecId, containerId, flashMode, shutterType, bracketId,
     micId, channelMode, sourceId, gain, autoLevel, limiter, lowCut, float32, patternId, noiseCancel, safetyOn, onboard,
@@ -526,7 +525,7 @@ export default function App() {
     iso: setIso, wbMode: setWbMode, wbK: setWbK, profileId: setProfileId, lutId: setLutId, styleId: setStyleId,
     expMode: setExpMode, photoShutter: setPhotoShutter, photoIso: setPhotoIso, ndId: setNdId, vnd: setVnd, cplOn: setCplOn,
     cplRot: setCplRot, uvOn: setUvOn,
-    subject: setSubject, peopleMode: setPeopleMode, zebraMode: setZebraMode, zebraLevels: setZebraLevels, falseColor: setFalseColor,
+    subject: setSubject, zebraMode: setZebraMode, zebraLevels: setZebraLevels, falseColor: setFalseColor,
     wfmOn: setWfmOn, wfmType: setWfmType, histogram: setHistogram, peaking: setPeaking, frameOn: setFrameOn,
     frameMarkers: setFrameMarkers, frameMask: setFrameMask, motion: setMotion, roninId: setRoninId, roninMode: setRoninMode, stab: setStab, containerId: setContainerId,
     timelineFps: setTimelineFps, resId: setResId, codecId: setCodecId, flashMode: setFlashMode, shutterType: setShutterType,
@@ -1549,7 +1548,7 @@ export default function App() {
               label={t.sharpZone}
               nearLabel={t.near}
               farLabel={t.far}
-              illu={peopleMode === "illu"}
+              illu
             />
           <dl className="stats">
             <div><dt>{t.near}</dt><dd>{formatMeters(dof.near)}</dd></div>
@@ -1612,7 +1611,7 @@ export default function App() {
             subject={subject}
             palette={viewPalette}
             backdrop={backdropKind}
-            illu={peopleMode === "illu" ? ILLU : undefined}
+            illu={ILLU}
             photo={bd?.photo ? `./${bd.photo}` : undefined}
             exposureDelta={exposureDelta}
             cast={cast}
@@ -1658,13 +1657,6 @@ export default function App() {
                 ))}
               </optgroup>
 
-            </select>
-          </div>
-          <div className="backdrop-row people-row">
-            <label htmlFor="peoplemode">{t.people}</label>
-            <select id="peoplemode" className="control" value={peopleMode} onChange={(e) => setPeopleMode(e.target.value as "drawn" | "illu")}>
-              <option value="drawn">{t.peopleDrawn}</option>
-              <option value="illu">{t.peopleIllu}</option>
             </select>
           </div>
           <div className="card">
