@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import Monitor, { type SubjectKind, ROW_GAP, rowCount } from "./Monitor";
-import { MICS, MIC_BRANDS, INTERNAL_MIC, SOURCES, type SourceId, type PatternId, audioLevels, autoGain, effectiveMic } from "./audio";
+import { MICS, MIC_BRANDS, INTERNAL_MIC, SOURCES, STEREO_PATTERNS, type SourceId, type PatternId, audioLevels, autoGain, effectiveMic } from "./audio";
 import { stylesFor, makerLutsFor, CREATIVE_LUTS, NEUTRAL_LOOK } from "./looks";
-import { factsFor, slotsFor, sensorDR, SCENE_DR, pixelPitch, RONINS, RONIN_MODES, type RoninId, type RoninMode } from "./camdata";
+import { ILLU } from "./illustrations";
+import { shoeFits, NO_AUDIO, factsFor, slotsFor, sensorDR, SCENE_DR, pixelPitch, RONINS, RONIN_MODES, type RoninId, type RoninMode } from "./camdata";
 import { RESOLUTIONS, CODECS, MEDIA, bitrate, containersFor, mediaClass, minutesOn, type ResolutionId, type CodecId } from "./formats";
 import { zebraSpecFor, zebraBands, FRAME_RATIOS, FRAME_COLORS, type ZebraMode, type FrameRatioId, type FrameColor } from "./zebra";
 import { sunDay, PLACES } from "./sun";
@@ -177,6 +178,7 @@ export default function App() {
   const [aperture, setAperture] = useState(2.8);
   const [focusM, setFocusM] = useState(3);
   const [subject, setSubject] = useState<SubjectKind>("couple");
+  const [peopleMode, setPeopleMode] = useState<"drawn" | "illu">("drawn");
 
   const isPrime = !!lens && lens.minFocal === lens.maxFocal;
   const fMin = lens ? lens.minFocal : 3;
@@ -453,6 +455,21 @@ export default function App() {
   const mic = MICS.find((x) => x.id === micId) ?? INTERNAL_MIC;
   const pattern = mic.pat ? (patternId && mic.pat.includes(patternId) ? patternId : mic.pat[0]) : null;
   const f32On = !!mic.float32 && float32;
+  // mono / stereo: depends on the mic (and for stereo mics on the chosen pattern)
+  const [channelMode, setChannelMode] = useState<"stereo" | "mono">("stereo");
+  const stereoPats = mic.pat?.filter((x) => STEREO_PATTERNS.includes(x)) ?? [];
+  const canStereo = !!mic.stereo;
+  const isStereo =
+    canStereo && channelMode === "stereo" && (mic.stereo !== "pattern" || (pattern !== null && STEREO_PATTERNS.includes(pattern)));
+  const pickChannels = (m: "stereo" | "mono") => {
+    setChannelMode(m);
+    if (mic.stereo === "pattern" && pattern) {
+      if (m === "stereo" && !STEREO_PATTERNS.includes(pattern) && stereoPats[0]) setPatternId(stereoPats[0]);
+      if (m === "mono" && STEREO_PATTERNS.includes(pattern) && mic.pat) setPatternId(mic.pat.find((x) => !STEREO_PATTERNS.includes(x)) ?? mic.pat[0]);
+    }
+  };
+  const noAudio = !!camera && NO_AUDIO.includes(camera.id);
+  const shoeBad = !noAudio && !!mic.shoe && !shoeFits(camera, mic.shoe);
   const audioBase = {
     mic: effectiveMic(mic, pattern, noiseCancel), source: sourceId, sceneId, outdoor: !scene.palette.indoor,
     cameraDistanceM: focusM, lowCut, float32: f32On,
@@ -498,10 +515,10 @@ export default function App() {
     shootMode, cameraId, lensId, manualSensor, focal, aperture, focusM,
     vSystem, fps, shutter, isoAuto, iso, wbMode, wbK, profileId, lutId, styleId,
     expMode, photoShutter, photoIso, ndId, vnd, cplOn, cplRot, uvOn,
-    subject,
+    subject, peopleMode,
     zebraMode, zebraLevels, falseColor, wfmOn, wfmType, histogram, peaking, frameOn, frameMarkers, frameMask,
     motion, roninId, roninMode, stab, timelineFps, resId, codecId, containerId, flashMode, shutterType, bracketId,
-    micId, sourceId, gain, autoLevel, limiter, lowCut, float32, patternId, noiseCancel, safetyOn, onboard,
+    micId, channelMode, sourceId, gain, autoLevel, limiter, lowCut, float32, patternId, noiseCancel, safetyOn, onboard,
   });
   const setters = {
     shootMode: setShootMode, cameraId: setCameraId, lensId: setLensId, manualSensor: setManualSensor, focal: setFocal,
@@ -509,11 +526,11 @@ export default function App() {
     iso: setIso, wbMode: setWbMode, wbK: setWbK, profileId: setProfileId, lutId: setLutId, styleId: setStyleId,
     expMode: setExpMode, photoShutter: setPhotoShutter, photoIso: setPhotoIso, ndId: setNdId, vnd: setVnd, cplOn: setCplOn,
     cplRot: setCplRot, uvOn: setUvOn,
-    subject: setSubject, zebraMode: setZebraMode, zebraLevels: setZebraLevels, falseColor: setFalseColor,
+    subject: setSubject, peopleMode: setPeopleMode, zebraMode: setZebraMode, zebraLevels: setZebraLevels, falseColor: setFalseColor,
     wfmOn: setWfmOn, wfmType: setWfmType, histogram: setHistogram, peaking: setPeaking, frameOn: setFrameOn,
     frameMarkers: setFrameMarkers, frameMask: setFrameMask, motion: setMotion, roninId: setRoninId, roninMode: setRoninMode, stab: setStab, containerId: setContainerId,
     timelineFps: setTimelineFps, resId: setResId, codecId: setCodecId, flashMode: setFlashMode, shutterType: setShutterType,
-    bracketId: setBracketId, micId: setMicId, sourceId: setSourceId, gain: setGain, autoLevel: setAutoLevel,
+    bracketId: setBracketId, micId: setMicId, channelMode: setChannelMode, sourceId: setSourceId, gain: setGain, autoLevel: setAutoLevel,
     limiter: setLimiter, lowCut: setLowCut, float32: setFloat32, patternId: setPatternId, noiseCancel: setNoiseCancel,
     safetyOn: setSafetyOn, onboard: setOnboard,
   } as unknown as Record<string, (v: unknown) => void>;
@@ -1303,6 +1320,16 @@ export default function App() {
                 {pattern === "rear" && <p className="note">{t.rearTip}</p>}
               </>
             )}
+            <label htmlFor="channels">{t.channels2}</label>
+            <select {...sel("channels")} value={isStereo ? "stereo" : "mono"} onChange={(e) => pickChannels(e.target.value as "stereo" | "mono")}>
+              <option value="stereo" disabled={!canStereo}>{t.stereo}{canStereo ? "" : ` – ${t.notAvailable}`}</option>
+              <option value="mono">{t.mono}</option>
+            </select>
+            <p className="note">
+              {!canStereo ? t.monoOnly : mic.stereo === "split" ? (isStereo ? t.stereoSplit : t.monoMerged) : mic.stereo === "pattern" ? (isStereo ? t.stereoPattern : t.monoPattern) : isStereo ? t.stereoInternal : t.monoInternal}
+            </p>
+            {noAudio && <p className="warn">{t.noAudioCam}</p>}
+            {shoeBad && <p className="warn">{fill(t.shoeWarn, `${mic.brand} ${mic.name}`, mic.shoe!)}</p>}
             {(mic.float32 || mic.nc || mic.safety || mic.onboard) && (
               <div className="checks">
                 {mic.float32 && (
@@ -1518,6 +1545,7 @@ export default function App() {
               label={t.sharpZone}
               nearLabel={t.near}
               farLabel={t.far}
+              illu={peopleMode === "illu"}
             />
           <dl className="stats">
             <div><dt>{t.near}</dt><dd>{formatMeters(dof.near)}</dd></div>
@@ -1571,7 +1599,7 @@ export default function App() {
           <Monitor
             mode={shootMode}
             aspect={isVideo ? 16 / 9 : sensor.width / sensor.height}
-            meter={{ avg: audio.avg, peak: audio.peak, clip: audio.clip, limiting: audio.limiting }}
+            meter={{ avg: audio.avg, peak: audio.peak, clip: audio.clip, limiting: audio.limiting, stereo: isStereo }}
             focal={focal}
             aperture={aperture}
             focusM={focusM}
@@ -1580,6 +1608,7 @@ export default function App() {
             subject={subject}
             palette={viewPalette}
             backdrop={backdropKind}
+            illu={peopleMode === "illu" ? ILLU : undefined}
             photo={bd?.photo ? `./${bd.photo}` : undefined}
             exposureDelta={exposureDelta}
             cast={cast}
@@ -1625,6 +1654,13 @@ export default function App() {
                 ))}
               </optgroup>
 
+            </select>
+          </div>
+          <div className="backdrop-row people-row">
+            <label htmlFor="peoplemode">{t.people}</label>
+            <select id="peoplemode" className="control" value={peopleMode} onChange={(e) => setPeopleMode(e.target.value as "drawn" | "illu")}>
+              <option value="drawn">{t.peopleDrawn}</option>
+              <option value="illu">{t.peopleIllu}</option>
             </select>
           </div>
           <div className="card">

@@ -131,3 +131,14 @@ export function slotsFor(cam: { id: string; brand: string } | undefined): MediaI
   if (!cam) return ["cfb", "sd"];
   return SLOTS[cam.id] ?? (cam.brand === "DJI" || cam.brand === "Insta360" ? ["microsd"] : ["sd"]);
 }
+
+/** Bodies with a digital hot shoe for that brand's shoe microphones. */
+const DIGITAL_SHOE: Record<string, string[]> = {
+  Panasonic: ["pana-s1ii", "pana-s1rii", "pana-s5ii", "pana-s5iix", "pana-gh7", "pana-g9ii"],
+  Sony: ["sony-a1ii", "sony-a9iii", "sony-a7rv", "sony-a7iv", "sony-a7siii", "sony-a7cii", "sony-fx5", "sony-fx3", "sony-fx2", "sony-zve1", "sony-a6700", "sony-fx30", "sony-zve10ii"],
+  Canon: ["canon-r1", "canon-r3", "canon-r5ii", "canon-r6ii", "canon-r8", "canon-r7", "canon-r10", "canon-r50"],
+};
+export const shoeFits = (cam: { id: string } | undefined, brand: string) => !cam || (DIGITAL_SHOE[brand] ?? []).includes(cam.id);
+
+/** Drones record no sound. */
+export const NO_AUDIO = ["dji-avata2", "dji-mini4pro", "dji-mini5pro", "dji-air3s", "dji-mavic4pro", "dji-mavic3pro"];

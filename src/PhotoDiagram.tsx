@@ -17,6 +17,16 @@ type Props = {
   label: string;
   nearLabel: string;
   farLabel: string;
+  illu?: boolean; // illustrated people instead of silhouettes
+};
+
+// Side-view illustrations (cut out, facing left; the videographer faces right), width / height
+const SIDE = {
+  couple: { href: "./illustration/side-couple.webp", ar: 545 / 900 },
+  groom: { href: "./illustration/side-groom.webp", ar: 175 / 900 },
+  man: { href: "./illustration/side-man.webp", ar: 171 / 900 },
+  woman: { href: "./illustration/side-woman.webp", ar: 190 / 900 },
+  camera: { href: "./illustration/side-camera.webp", ar: 312 / 900 },
 };
 
 
@@ -110,7 +120,25 @@ export default function PhotoDiagram(p: Props) {
         )}
         <line x1={x(p.focusM)} y1={y(TOP_M) - 4} x2={x(p.focusM)} y2={groundY} className="d-focus" />
 
-        {people.map((pp, i) => {
+        {p.illu &&
+          (() => {
+            // one picture per row; the couple is a single picture
+            const list =
+              p.subject === "couple"
+                ? [{ m: p.focusM, h: 1.84, pic: SIDE.couple }]
+                : p.subject === "person"
+                ? [{ m: p.focusM, h: 1.82, pic: SIDE.groom }]
+                : people.map((pp) => ({ m: pp.m, h: pp.h + 0.03, pic: pp.dress ? SIDE.woman : SIDE.man }));
+            return list.map((it, i) => {
+              const hPx = it.h * vs;
+              const wPx = hPx * it.pic.ar;
+              const inside = it.m * 1000 >= p.nearMM - 1 && it.m * 1000 <= p.farMM + 1;
+              return (
+                <image key={i} href={it.pic.href} x={x(it.m) - wPx * 0.35} y={groundY - hPx} width={wPx} height={hPx} opacity={inside ? 1 : 0.45} />
+              );
+            });
+          })()}
+        {!p.illu && people.map((pp, i) => {
           const px = pp.h * vs; // silhouettes scale with real height
           const inside = pp.m * 1000 >= p.nearMM - 1 && pp.m * 1000 <= p.farMM + 1;
           const woman = pp.dress;
@@ -123,7 +151,13 @@ export default function PhotoDiagram(p: Props) {
         })}
 
         {/* photographer, camera at eye level */}
-        {(() => {
+        {p.illu ? (
+          (() => {
+            const hPx = 1.72 * vs;
+            const wPx = hPx * SIDE.camera.ar;
+            return <image href={SIDE.camera.href} x={lensX - wPx} y={groundY - hPx} width={wPx} height={hPx} />;
+          })()
+        ) : (() => {
           const ph = 1.62 * vs;
           return (
             <g className="d-shooter" transform={`translate(${x(0) - 4} ${groundY}) scale(${-ph} ${ph})`}>
@@ -132,8 +166,8 @@ export default function PhotoDiagram(p: Props) {
             </g>
           );
         })()}
-        <rect x={x(0) - 2} y={y(EYE) - 6} width={12} height={10} rx={2} className="d-cam-body" />
-        <rect x={x(0) + 9} y={y(EYE) - 3.5} width={6} height={6} rx={1} className="d-cam-body" />
+        {!p.illu && <rect x={x(0) - 2} y={y(EYE) - 6} width={12} height={10} rx={2} className="d-cam-body" />}
+        {!p.illu && <rect x={x(0) + 9} y={y(EYE) - 3.5} width={6} height={6} rx={1} className="d-cam-body" />}
 
         <text x={padL + 2} y={16} className="d-title">
           {Math.round(p.focal * 10) / 10} mm · f/{p.aperture}

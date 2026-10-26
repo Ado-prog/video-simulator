@@ -17,8 +17,13 @@ export type Mic = {
   nc?: "nc" | "wind"; // noise / wind-noise cancelling
   safety?: number; // safety track level in dB (negative)
   onboard?: boolean; // onboard recording in the transmitter
+  stereo?: "pattern" | "split" | "mic"; // how it records stereo (none = mono only)
+  shoe?: "Panasonic" | "Sony" | "Canon"; // digital hot shoe: only on that brand's bodies
   mine?: boolean; // in Mustafi Studio's kit
 };
+
+/** Patterns that record two channels. */
+export const STEREO_PATTERNS: PatternId[] = ["st90", "st120", "stereo"];
 
 /** Pickup patterns: dB more/less room rejection and on-axis level vs. the mic's default. */
 export const PATTERNS = {
@@ -34,7 +39,7 @@ export const PATTERNS = {
 } as const;
 export type PatternId = keyof typeof PATTERNS;
 
-type Features = Pick<Mic, "float32" | "f32cam" | "pat" | "nc" | "safety" | "onboard" | "mine">;
+type Features = Pick<Mic, "float32" | "f32cam" | "pat" | "nc" | "safety" | "onboard" | "stereo" | "shoe" | "mine">;
 
 const TYPE_DEFAULTS: Record<MicType, { sens: number; rejection: number }> = {
   lav: { sens: 0, rejection: 0 },
@@ -46,49 +51,49 @@ const TYPE_DEFAULTS: Record<MicType, { sens: number; rejection: number }> = {
 type Row = [string, string, string, MicType, number, Features?];
 
 const ROWS: Row[] = [
-  ["rode-wpro", "RØDE", "Wireless PRO", "lav", 28, { float32: true, safety: -20, onboard: true, mine: true }],
+  ["rode-wpro", "RØDE", "Wireless PRO", "lav", 28, { stereo: "split", float32: true, safety: -20, onboard: true, mine: true }],
   ["pana-dms1", "Panasonic", "DMW-DMS1E (Digital Shotgun)", "oncam", 16, {
-    float32: true, f32cam: true, pat: ["sc", "card", "st90", "st120", "rear", "bi"], nc: "wind", safety: -20, mine: true,
+    stereo: "pattern", shoe: "Panasonic", float32: true, f32cam: true, pat: ["sc", "card", "st90", "st120", "rear", "bi"], nc: "wind", safety: -20, mine: true,
   }],
-  ["pana-ms2", "Panasonic", "DMW-MS2 (Shotgun)", "oncam", 20, { pat: ["shot", "stereo"], mine: true }],
-  ["rode-wgo3", "RØDE", "Wireless GO (Gen 3)", "lav", 28, { float32: true, safety: -20, onboard: true }],
-  ["rode-wme", "RØDE", "Wireless ME", "lav", 29, { onboard: true }],
+  ["pana-ms2", "Panasonic", "DMW-MS2 (Shotgun)", "oncam", 20, { stereo: "pattern", pat: ["shot", "stereo"], mine: true }],
+  ["rode-wgo3", "RØDE", "Wireless GO (Gen 3)", "lav", 28, { stereo: "split", float32: true, safety: -20, onboard: true }],
+  ["rode-wme", "RØDE", "Wireless ME", "lav", 29, { stereo: "split", onboard: true }],
   ["rode-vmntg", "RØDE", "VideoMic NTG", "oncam", 15, { safety: -20 }],
   ["rode-vmgo2", "RØDE", "VideoMic GO II", "oncam", 19],
   ["rode-vmicro2", "RØDE", "VideoMicro II", "oncam", 22],
   ["rode-ntg4p", "RØDE", "NTG4+", "boom", 16],
   ["rode-ntg5", "RØDE", "NTG5", "boom", 10],
-  ["dji-mic2", "DJI", "Mic 2", "lav", 28, { float32: true, nc: "nc", safety: -6, onboard: true }],
-  ["dji-micmini", "DJI", "Mic Mini", "lav", 30, { nc: "nc" }],
+  ["dji-mic2", "DJI", "Mic 2", "lav", 28, { stereo: "split", float32: true, nc: "nc", safety: -6, onboard: true }],
+  ["dji-micmini", "DJI", "Mic Mini", "lav", 30, { stereo: "split", nc: "nc" }],
   ["senn-mke600", "Sennheiser", "MKE 600", "oncam", 15],
   ["senn-mke400", "Sennheiser", "MKE 400 (2nd gen)", "oncam", 18],
-  ["senn-profile", "Sennheiser", "Profile Wireless", "lav", 29, { onboard: true }],
+  ["senn-profile", "Sennheiser", "Profile Wireless", "lav", 29, { stereo: "split", onboard: true }],
   ["senn-ewdp", "Sennheiser", "EW-DP ME 2", "lav", 30],
   ["deity-d3pro", "Deity", "V-Mic D3 Pro", "oncam", 18],
-  ["holly-m2", "Hollyland", "Lark M2", "lav", 30, { nc: "nc" }],
-  ["holly-max", "Hollyland", "Lark Max", "lav", 28, { nc: "nc", safety: -6, onboard: true }],
-  ["sony-ecmb10", "Sony", "ECM-B10", "oncam", 20, { pat: ["sc", "card", "omni"] }],
-  ["sony-ecmb1m", "Sony", "ECM-B1M", "oncam", 19, { pat: ["sc", "card", "omni"] }],
-  ["canon-dme1d", "Canon", "DM-E1D", "oncam", 21, { pat: ["shot", "st90", "st120"] }],
+  ["holly-m2", "Hollyland", "Lark M2", "lav", 30, { stereo: "split", nc: "nc" }],
+  ["holly-max", "Hollyland", "Lark Max", "lav", 28, { stereo: "split", nc: "nc", safety: -6, onboard: true }],
+  ["sony-ecmb10", "Sony", "ECM-B10", "oncam", 20, { shoe: "Sony", pat: ["sc", "card", "omni"] }],
+  ["sony-ecmb1m", "Sony", "ECM-B1M", "oncam", 19, { shoe: "Sony", pat: ["sc", "card", "omni"] }],
+  ["canon-dme1d", "Canon", "DM-E1D", "oncam", 21, { stereo: "pattern", shoe: "Canon", pat: ["shot", "st90", "st120"] }],
   ["nikon-me1", "Nikon", "ME-1", "oncam", 23],
   // more wireless and recorder systems
-  ["dji-mic3", "DJI", "Mic 3", "lav", 28, { float32: true, nc: "nc", onboard: true }],
-  ["dji-mic1", "DJI", "Mic (1st gen)", "lav", 30, { onboard: true }],
-  ["rode-wgo2", "RØDE", "Wireless GO II", "lav", 30, { safety: -20, onboard: true }],
-  ["rode-wmicro", "RØDE", "Wireless Micro", "lav", 30],
+  ["dji-mic3", "DJI", "Mic 3", "lav", 28, { stereo: "split", float32: true, nc: "nc", onboard: true }],
+  ["dji-mic1", "DJI", "Mic (1st gen)", "lav", 30, { stereo: "split", onboard: true }],
+  ["rode-wgo2", "RØDE", "Wireless GO II", "lav", 30, { stereo: "split", safety: -20, onboard: true }],
+  ["rode-wmicro", "RØDE", "Wireless Micro", "lav", 30, { stereo: "split" }],
   ["rode-vmproplus", "RØDE", "VideoMic Pro+", "oncam", 14],
   ["senn-mke200", "Sennheiser", "MKE 200", "oncam", 22],
-  ["holly-m1", "Hollyland", "Lark M1", "lav", 30, { nc: "nc" }],
-  ["holly-m2s", "Hollyland", "Lark M2S", "lav", 30, { nc: "nc" }],
-  ["holly-c1", "Hollyland", "Lark C1", "lav", 30, { nc: "nc" }],
-  ["sara-ultra", "Saramonic", "Ultra", "lav", 28, { float32: true, nc: "nc", onboard: true }],
-  ["sara-blink500", "Saramonic", "Blink500 B2+", "lav", 30],
-  ["deity-theos", "Deity", "THEOS Digital Wireless", "lav", 28, { float32: true, onboard: true }],
+  ["holly-m1", "Hollyland", "Lark M1", "lav", 30, { stereo: "split", nc: "nc" }],
+  ["holly-m2s", "Hollyland", "Lark M2S", "lav", 30, { stereo: "split", nc: "nc" }],
+  ["holly-c1", "Hollyland", "Lark C1", "lav", 30, { stereo: "split", nc: "nc" }],
+  ["sara-ultra", "Saramonic", "Ultra", "lav", 28, { stereo: "split", float32: true, nc: "nc", onboard: true }],
+  ["sara-blink500", "Saramonic", "Blink500 B2+", "lav", 30, { stereo: "split" }],
+  ["deity-theos", "Deity", "THEOS Digital Wireless", "lav", 28, { stereo: "split", float32: true, onboard: true }],
   ["zoom-f2", "Zoom", "F2 (Lav-Recorder)", "lav", 27, { float32: true, onboard: true }],
   ["tascam-dr10l", "Tascam", "DR-10L Pro (Lav-Recorder)", "lav", 27, { float32: true, onboard: true }],
-  ["shure-movemic", "Shure", "MoveMic", "lav", 29],
+  ["shure-movemic", "Shure", "MoveMic", "lav", 29, { stereo: "split" }],
   ["sony-ecmw3", "Sony", "ECM-W3", "lav", 30, { nc: "nc" }],
-  ["comica-vimo", "Comica", "Vimo C", "lav", 30, { nc: "nc" }],
+  ["comica-vimo", "Comica", "Vimo C", "lav", 30, { stereo: "split", nc: "nc" }],
 ];
 
 export const MICS: Mic[] = ROWS.map(([id, brand, name, type, selfNoise, extra]) => ({
@@ -107,6 +112,7 @@ export const INTERNAL_MIC: Mic = {
   name: "",
   type: "internal",
   selfNoise: 32,
+  stereo: "mic",
   ...TYPE_DEFAULTS.internal,
 };
 
