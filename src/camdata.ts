@@ -5,7 +5,7 @@ import type { Camera } from "./gear";
 type Facts = {
   mp: number; // megapixels
   readout: number; // ms, full-width video readout (0 = global shutter)
-  dualIso?: [number, number]; // native ISOs in Log
+  dualIso?: number[]; // native (base) ISOs in Log, two or three
   sync?: number; // flash sync speed in s (undefined = no hot-shoe flash)
   openGate?: boolean;
   k8?: boolean;
@@ -31,6 +31,8 @@ const F: Record<string, Facts> = {
   "sony-a7iv": { mp: 33, readout: 27, sync: 1 / 250, maxFps: 60 },
   "sony-a7siii": { mp: 12, readout: 9, dualIso: [640, 12800], sync: 1 / 250, maxFps: 120 },
   "sony-a7cii": { mp: 33, readout: 27, sync: 1 / 160, maxFps: 60 },
+  "sony-fx5": { mp: 16.6, readout: 4, dualIso: [800, 4000, 12800], openGate: true, maxFps: 120 },
+  "sony-fx2": { mp: 33, readout: 22, dualIso: [800, 4000], openGate: true, maxFps: 60 },
   "sony-fx3": { mp: 12, readout: 9, dualIso: [640, 12800], maxFps: 120 },
   "sony-zve1": { mp: 12, readout: 9, dualIso: [640, 12800], maxFps: 120 },
   "sony-a6700": { mp: 26, readout: 20, sync: 1 / 160, maxFps: 120 },

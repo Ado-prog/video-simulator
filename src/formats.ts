@@ -22,6 +22,7 @@ export const CODECS = [
   { id: "prraw", label: "Apple ProRes RAW", mbps: 1000, cap: 8000, gop: false },
   { id: "nraw", label: "N-RAW", mbps: 1100, cap: 8000, gop: false },
   { id: "crm", label: "Cinema RAW Light", mbps: 1300, cap: 8000, gop: false },
+  { id: "xocn", label: "X-OCN (16-bit RAW)", mbps: 1200, cap: 8000, gop: false },
 ] as const;
 export type CodecId = (typeof CODECS)[number]["id"];
 
@@ -45,12 +46,16 @@ export function containersFor(cam: { id: string; brand: string } | undefined): C
       if (PANA_LITE.includes(id)) list.push({ id: "mp4lite", label: "MP4 (Lite)", codecs: ["h265"], factor: 0.6 });
       return list;
     }
-    case "Sony":
-      return [
+    case "Sony": {
+      const list: Container[] = [
         { id: "xavcs", label: "XAVC S (MP4)", codecs: ["h264", "h264_422"] },
         { id: "xavchs", label: "XAVC HS (MP4)", codecs: ["h265", "h265_422"] },
         { id: "xavcsi", label: "XAVC S-I (MP4)", codecs: ["h264i"] },
       ];
+      if (id === "sony-fx5")
+        list.push({ id: "prores", label: "ProRes (MOV)", codecs: ["pr422", "pr422hq"] }, { id: "xocn", label: "X-OCN (MXF)", codecs: ["xocn"] });
+      return list;
+    }
     case "Canon": {
       const list: Container[] = [{ id: "mp4", label: "MP4", codecs: ["h264", "h265_422"] }];
       if (CANON_RAW.includes(id)) list.push({ id: "crm", label: "RAW (.CRM)", codecs: ["crm"] });

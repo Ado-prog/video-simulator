@@ -374,9 +374,11 @@ export default function App() {
   const shakeRisk = !isVideo && effShutter > 1 / shakeLimit;
   const camWbK = whiteBalanceKelvin(wbMode, lightK, wbK);
   const cast = colorCast(lightK, camWbK);
-  const dualIso = isVideo && activeLog && facts.dualIso && facts.dualIso[0] !== facts.dualIso[1] ? facts.dualIso : null;
+  const dualIso = isVideo && activeLog && facts.dualIso && facts.dualIso.length > 1 ? facts.dualIso : null;
   const onSecondBase = !!dualIso && effIso >= dualIso[1];
-  const noiseIso = onSecondBase ? (effIso * dualIso![0]) / dualIso![1] : effIso;
+  // noise follows the highest base ISO at or below the chosen ISO
+  const activeBase = dualIso ? [...dualIso].reverse().find((b) => effIso >= b) ?? dualIso[0] : 0;
+  const noiseIso = onSecondBase ? (effIso * dualIso![0]) / activeBase : effIso;
   const grain = Math.min(0.45, Math.max(0, Math.log2(noiseIso / 100)) * 0.045 * Math.sqrt(crop));
 
   // photo checks
@@ -1007,9 +1009,9 @@ export default function App() {
             {fps > facts.maxFps && <p className="warn">{fill(t.fpsLimit, fps, facts.maxFps)}</p>}
             {dualIso && (
               <>
-                <p className="chip-row"><span className="chip">{fill(t.dualIso, dualIso[0], dualIso[1])}</span></p>
+                <p className="chip-row"><span className="chip">{fill(t.dualIso, dualIso.slice(0, -1).join(" / "), dualIso[dualIso.length - 1])}</span></p>
                 {onSecondBase ? (
-                  <p className="ok">{t.dualIsoHigh}</p>
+                  <p className="ok">{fill(t.dualIsoHigh, activeBase)}</p>
                 ) : effIso >= dualIso[1] / 2.5 ? (
                   <p className="note">{fill(t.dualIsoTip, dualIso[0], dualIso[1])}</p>
                 ) : null}
