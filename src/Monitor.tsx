@@ -23,6 +23,7 @@ type Figure = {
   h: number;
   dress?: boolean;
   bride?: boolean;
+  groom?: boolean;
   tone: string; // suit or dress colour
   skin: string;
   hair: string;
@@ -55,7 +56,7 @@ function rows(kind: SubjectKind): Row[] {
       {
         offset: 0,
         figures: [
-          person(1, -0.27, false, { tone: "#1d2027", h: 1.82, skin: "#d9a582", hair: "#1a1310" }),
+          person(1, -0.27, false, { groom: true, tone: "#1d2027", h: 1.82, skin: "#d9a582", hair: "#1a1310" }),
           person(2, 0.25, true, { bride: true, tone: "#f4efe7", h: 1.66, skin: "#efc7a6", hair: "#5a3a26", longHair: true }),
         ],
       },
@@ -319,127 +320,250 @@ function drawHistogram(ctx: CanvasRenderingContext2D, lum: Float32Array, SW: num
 function FigureShape({ f }: { f: Figure }) {
   const u = f.h / 8; // head height
   const top = -f.h;
-  const headCY = top + u * 0.52;
-  const headRX = u * 0.34;
-  const headRY = u * 0.46;
-  const shoulderY = top + u * 1.38;
-  const waistY = top + u * 3.05;
+  const headRY = u * 0.5;
+  const headRX = u * (f.dress ? 0.34 : 0.37);
+  const headCY = top + headRY;
+  const chinY = headCY + headRY;
+  const shoulderY = top + u * 1.42;
+  const waistY = top + u * (f.dress ? 2.95 : 3.1);
   const hipY = top + u * 4;
-  const sw = f.dress ? u * 0.78 : u * 0.98; // half shoulder width
-  const dark = "#111318";
+  const sw = f.dress ? u * 0.8 : u * 1.0; // half shoulder width
+  const dark = "#121317";
+  const lip = f.dress ? "#b5545a" : "#9a5a4e";
+  const skinShadow = "rgba(80,40,20,0.22)";
 
-  const torso = f.dress
-    ? `M${-sw * 0.45} ${shoulderY - u * 0.02} C${-sw * 0.9} ${shoulderY} ${-sw} ${shoulderY + u * 0.2} ${-sw * 0.92} ${shoulderY + u * 0.55}
-       C${-sw * 0.8} ${shoulderY + u * 1.1} ${-sw * 0.55} ${waistY - u * 0.3} ${-sw * 0.52} ${waistY}
-       L${sw * 0.52} ${waistY} C${sw * 0.55} ${waistY - u * 0.3} ${sw * 0.8} ${shoulderY + u * 1.1} ${sw * 0.92} ${shoulderY + u * 0.55}
-       C${sw} ${shoulderY + u * 0.2} ${sw * 0.9} ${shoulderY} ${sw * 0.45} ${shoulderY - u * 0.02} Z`
-    : `M${-sw * 0.32} ${shoulderY - u * 0.06} C${-sw * 0.85} ${shoulderY - u * 0.04} ${-sw} ${shoulderY + u * 0.12} ${-sw} ${shoulderY + u * 0.5}
-       L${-sw * 0.84} ${waistY} L${-sw * 0.8} ${hipY + u * 0.15} L${sw * 0.8} ${hipY + u * 0.15} L${sw * 0.84} ${waistY}
-       L${sw} ${shoulderY + u * 0.5} C${sw} ${shoulderY + u * 0.12} ${sw * 0.85} ${shoulderY - u * 0.04} ${sw * 0.32} ${shoulderY - u * 0.06} Z`;
+  // face outline: cranium, cheekbones, jaw and chin
+  const R = headRX;
+  const cy = headCY;
+  const ry = headRY;
+  const face = `M0 ${cy - ry} C${R * 0.6} ${cy - ry} ${R} ${cy - ry * 0.62} ${R} ${cy - ry * 0.15}
+    C${R} ${cy + ry * 0.25} ${R * 0.9} ${cy + ry * 0.52} ${R * 0.62} ${cy + ry * 0.8}
+    C${R * 0.42} ${cy + ry * 0.97} ${R * 0.18} ${chinY} 0 ${chinY}
+    C${-R * 0.18} ${chinY} ${-R * 0.42} ${cy + ry * 0.97} ${-R * 0.62} ${cy + ry * 0.8}
+    C${-R * 0.9} ${cy + ry * 0.52} ${-R} ${cy + ry * 0.25} ${-R} ${cy - ry * 0.15}
+    C${-R} ${cy - ry * 0.62} ${-R * 0.6} ${cy - ry} 0 ${cy - ry} Z`;
 
-  const skirtBottom = f.bride ? 0 : -u * 1.25;
-  const skirtW = f.bride ? u * 1.25 : u * 0.8;
-  const skirt = `M${-sw * 0.52} ${waistY} C${-sw * 0.7} ${hipY} ${-skirtW * 0.9} ${(hipY + skirtBottom) / 2} ${-skirtW} ${skirtBottom}
-    Q0 ${skirtBottom + u * 0.12} ${skirtW} ${skirtBottom} C${skirtW * 0.9} ${(hipY + skirtBottom) / 2} ${sw * 0.7} ${hipY} ${sw * 0.52} ${waistY} Z`;
+  const eyeY = cy + ry * 0.02;
+  const features = (
+    <g>
+      {/* brows */}
+      <path d={`M${-R * 0.62} ${eyeY - ry * 0.2} Q${-R * 0.38} ${eyeY - ry * 0.3} ${-R * 0.14} ${eyeY - ry * 0.21}`} stroke={f.hair} strokeWidth={u * 0.035} strokeLinecap="round" fill="none" opacity={0.85} />
+      <path d={`M${R * 0.62} ${eyeY - ry * 0.2} Q${R * 0.38} ${eyeY - ry * 0.3} ${R * 0.14} ${eyeY - ry * 0.21}`} stroke={f.hair} strokeWidth={u * 0.035} strokeLinecap="round" fill="none" opacity={0.85} />
+      {/* eyes */}
+      <ellipse cx={-R * 0.38} cy={eyeY} rx={R * 0.17} ry={ry * 0.055} fill="#f4efea" />
+      <ellipse cx={R * 0.38} cy={eyeY} rx={R * 0.17} ry={ry * 0.055} fill="#f4efea" />
+      <circle cx={-R * 0.36} cy={eyeY} r={ry * 0.05} fill="#2a1c14" />
+      <circle cx={R * 0.4} cy={eyeY} r={ry * 0.05} fill="#2a1c14" />
+      {f.dress && (
+        <>
+          <path d={`M${-R * 0.58} ${eyeY - ry * 0.03} Q${-R * 0.38} ${eyeY - ry * 0.1} ${-R * 0.18} ${eyeY - ry * 0.02}`} stroke="#1a1210" strokeWidth={u * 0.02} fill="none" />
+          <path d={`M${R * 0.58} ${eyeY - ry * 0.03} Q${R * 0.38} ${eyeY - ry * 0.1} ${R * 0.18} ${eyeY - ry * 0.02}`} stroke="#1a1210" strokeWidth={u * 0.02} fill="none" />
+        </>
+      )}
+      {/* nose: soft shadow on the left side and the tip */}
+      <path d={`M${-R * 0.04} ${eyeY + ry * 0.05} C${-R * 0.1} ${eyeY + ry * 0.25} ${-R * 0.18} ${eyeY + ry * 0.38} ${-R * 0.12} ${eyeY + ry * 0.44} Q0 ${eyeY + ry * 0.5} ${R * 0.12} ${eyeY + ry * 0.44}`} stroke={skinShadow} strokeWidth={u * 0.03} fill="none" strokeLinecap="round" />
+      {/* mouth */}
+      <path d={`M${-R * 0.3} ${cy + ry * 0.66} Q0 ${cy + ry * 0.6} ${R * 0.3} ${cy + ry * 0.66} Q0 ${cy + ry * (f.dress ? 0.8 : 0.74)} ${-R * 0.3} ${cy + ry * 0.66} Z`} fill={lip} opacity={f.dress ? 0.85 : 0.6} />
+      {f.dress && <ellipse cx={-R * 0.55} cy={cy + ry * 0.38} rx={R * 0.2} ry={ry * 0.1} fill="#e07a7a" opacity={0.18} />}
+      {f.dress && <ellipse cx={R * 0.55} cy={cy + ry * 0.38} rx={R * 0.2} ry={ry * 0.1} fill="#e07a7a" opacity={0.18} />}
+    </g>
+  );
 
-  const arm = (side: 1 | -1, fill: string) => {
-    const x0 = side * sw * 0.9;
-    const elbowY = waistY - u * 0.1;
-    const handY = hipY + u * 0.2;
+  // hair
+  const shortHair = `M${-R * 1.04} ${cy - ry * 0.05} C${-R * 1.12} ${cy - ry * 0.75} ${-R * 0.7} ${cy - ry * 1.16} ${R * 0.05} ${cy - ry * 1.13}
+    C${R * 0.75} ${cy - ry * 1.12} ${R * 1.14} ${cy - ry * 0.72} ${R * 1.04} ${cy - ry * 0.05}
+    L${R * 0.96} ${cy - ry * 0.02} C${R * 0.92} ${cy - ry * 0.4} ${R * 0.7} ${cy - ry * 0.6} ${R * 0.1} ${cy - ry * 0.68}
+    C${-R * 0.35} ${cy - ry * 0.74} ${-R * 0.85} ${cy - ry * 0.5} ${-R * 0.96} ${cy - ry * 0.02} Z`;
+  const longHairBack = `M${-R * 1.1} ${cy - ry * 0.3} C${-R * 1.45} ${cy + ry * 0.6} ${-R * 1.3} ${shoulderY + u * 0.7} ${-R * 0.9} ${shoulderY + u * 1.05}
+    L${R * 0.9} ${shoulderY + u * 1.05} C${R * 1.3} ${shoulderY + u * 0.7} ${R * 1.45} ${cy + ry * 0.6} ${R * 1.1} ${cy - ry * 0.3} Z`;
+  const longHairFront = `M${-R * 1.08} ${cy + ry * 0.55} C${-R * 1.2} ${cy - ry * 0.6} ${-R * 0.8} ${cy - ry * 1.18} ${R * 0.05} ${cy - ry * 1.14}
+    C${R * 0.8} ${cy - ry * 1.12} ${R * 1.2} ${cy - ry * 0.6} ${R * 1.08} ${cy + ry * 0.55}
+    C${R * 0.98} ${cy - ry * 0.1} ${R * 0.75} ${cy - ry * 0.55} ${R * 0.05} ${cy - ry * 0.7}
+    C${-R * 0.55} ${cy - ry * 0.55} ${-R * 0.98} ${cy - ry * 0.1} ${-R * 1.08} ${cy + ry * 0.55} Z`;
+
+  const updo = `M${-R * 1.05} ${cy + ry * 0.15} C${-R * 1.15} ${cy - ry * 0.8} ${-R * 0.6} ${cy - ry * 1.15} 0 ${cy - ry * 1.12}
+    C${R * 0.6} ${cy - ry * 1.15} ${R * 1.15} ${cy - ry * 0.8} ${R * 1.05} ${cy + ry * 0.15}
+    C${R * 0.95} ${cy - ry * 0.3} ${R * 0.6} ${cy - ry * 0.62} ${R * 0.05} ${cy - ry * 0.66}
+    C${-R * 0.55} ${cy - ry * 0.6} ${-R * 0.95} ${cy - ry * 0.3} ${-R * 1.05} ${cy + ry * 0.15} Z`;
+
+  // ── suit
+  const jacket = `M${-u * 0.16} ${shoulderY - u * 0.08}
+    C${-sw * 0.7} ${shoulderY - u * 0.06} ${-sw * 0.98} ${shoulderY + u * 0.02} ${-sw} ${shoulderY + u * 0.35}
+    C${-sw * 0.98} ${shoulderY + u * 0.9} ${-sw * 0.82} ${waistY - u * 0.3} ${-sw * 0.78} ${waistY}
+    C${-sw * 0.8} ${waistY + u * 0.5} ${-sw * 0.84} ${hipY} ${-sw * 0.82} ${hipY + u * 0.38}
+    L${sw * 0.82} ${hipY + u * 0.38}
+    C${sw * 0.84} ${hipY} ${sw * 0.8} ${waistY + u * 0.5} ${sw * 0.78} ${waistY}
+    C${sw * 0.82} ${waistY - u * 0.3} ${sw * 0.98} ${shoulderY + u * 0.9} ${sw} ${shoulderY + u * 0.35}
+    C${sw * 0.98} ${shoulderY + u * 0.02} ${sw * 0.7} ${shoulderY - u * 0.06} ${u * 0.16} ${shoulderY - u * 0.08} Z`;
+  const vBottom = waistY - u * 0.15;
+  const legs = (
+    <>
+      <path d={`M${-sw * 0.74} ${hipY + u * 0.2} L${-u * 0.03} ${hipY + u * 0.2} L${-u * 0.07} ${-u * 0.1} L${-sw * 0.56} ${-u * 0.1} Z`} fill={f.tone} />
+      <path d={`M${sw * 0.74} ${hipY + u * 0.2} L${u * 0.03} ${hipY + u * 0.2} L${u * 0.07} ${-u * 0.1} L${sw * 0.56} ${-u * 0.1} Z`} fill={f.tone} />
+      <path d={`M${-sw * 0.36} ${hipY + u * 0.5} L${-sw * 0.33} ${-u * 0.12}`} stroke="rgba(255,255,255,0.1)" strokeWidth={u * 0.025} />
+      <path d={`M${sw * 0.36} ${hipY + u * 0.5} L${sw * 0.33} ${-u * 0.12}`} stroke="rgba(0,0,0,0.18)" strokeWidth={u * 0.025} />
+      <path d={`M${-sw * 0.6} ${-u * 0.12} h${sw * 0.56} c${u * 0.06} 0 ${u * 0.06} ${u * 0.12} 0 ${u * 0.12} h${-sw * 0.62} c${-u * 0.05} 0 ${-u * 0.05} ${-u * 0.12} ${u * 0.06} ${-u * 0.12} z`} fill={dark} />
+      <path d={`M${sw * 0.6} ${-u * 0.12} h${-sw * 0.56} c${-u * 0.06} 0 ${-u * 0.06} ${u * 0.12} 0 ${u * 0.12} h${sw * 0.62} c${u * 0.05} 0 ${u * 0.05} ${-u * 0.12} ${-u * 0.06} ${-u * 0.12} z`} fill={dark} />
+    </>
+  );
+
+  const hand = (x: number, y: number, side: 1 | -1) => (
+    <path
+      d={`M${x - u * 0.09} ${y - u * 0.06} C${x - u * 0.11} ${y + u * 0.12} ${x - u * 0.06} ${y + u * 0.26} ${x + side * u * 0.02} ${y + u * 0.27}
+          C${x + u * 0.09} ${y + u * 0.25} ${x + u * 0.11} ${y + u * 0.1} ${x + u * 0.09} ${y - u * 0.06} Z`}
+      fill={f.skin}
+    />
+  );
+
+  const sleeve = (side: 1 | -1) => {
+    const x0 = side * sw * 0.86;
+    const y0 = shoulderY + u * 0.25;
+    const wristX = side * sw * 0.98;
+    const wristY = hipY + u * 0.15;
+    const w = u * (f.dress ? 0.13 : 0.2);
     return (
       <g>
         <path
-          d={`M${x0} ${shoulderY + u * 0.3} C${x0 + side * u * 0.22} ${shoulderY + u * 0.9} ${x0 + side * u * 0.14} ${elbowY} ${x0 + side * u * 0.02} ${handY - u * 0.15}`}
-          stroke={fill}
-          strokeWidth={u * (f.dress ? 0.2 : 0.3)}
-          strokeLinecap="round"
-          fill="none"
+          d={`M${x0 - side * w} ${y0} C${x0 + side * u * 0.15} ${y0 + u * 0.8} ${wristX + side * u * 0.05} ${waistY} ${wristX - side * w * 0.5} ${wristY}
+              L${wristX + side * w * 0.5} ${wristY} C${wristX + side * u * 0.22} ${waistY} ${x0 + side * u * 0.38} ${y0 + u * 0.6} ${x0 + side * w} ${y0 - u * 0.05} Z`}
+          fill={f.dress ? f.skin : f.tone}
         />
-        <ellipse cx={x0 + side * u * 0.02} cy={handY} rx={u * 0.11} ry={u * 0.15} fill={f.skin} />
+        {!f.dress && <rect x={wristX - u * 0.1} y={wristY - u * 0.05} width={u * 0.2} height={u * 0.07} rx={u * 0.02} fill="#f2f0ec" />}
+        {hand(wristX, wristY + u * 0.03, side)}
       </g>
     );
   };
 
+  // ── dress
+  const bodiceTop = f.bride ? shoulderY + u * 0.5 : shoulderY - u * 0.04;
+  const bodice = f.bride
+    ? `M${-sw * 0.66} ${bodiceTop} Q${-sw * 0.33} ${bodiceTop - u * 0.12} 0 ${bodiceTop + u * 0.12} Q${sw * 0.33} ${bodiceTop - u * 0.12} ${sw * 0.66} ${bodiceTop}
+       C${sw * 0.68} ${bodiceTop + u * 0.5} ${sw * 0.56} ${waistY - u * 0.3} ${sw * 0.5} ${waistY} L${-sw * 0.5} ${waistY}
+       C${-sw * 0.56} ${waistY - u * 0.3} ${-sw * 0.68} ${bodiceTop + u * 0.5} ${-sw * 0.66} ${bodiceTop} Z`
+    : `M${-u * 0.16} ${bodiceTop} C${-sw * 0.7} ${bodiceTop} ${-sw} ${shoulderY + u * 0.1} ${-sw * 0.95} ${shoulderY + u * 0.45}
+       C${-sw * 0.8} ${shoulderY + u * 1.0} ${-sw * 0.56} ${waistY - u * 0.3} ${-sw * 0.5} ${waistY} L${sw * 0.5} ${waistY}
+       C${sw * 0.56} ${waistY - u * 0.3} ${sw * 0.8} ${shoulderY + u * 1.0} ${sw * 0.95} ${shoulderY + u * 0.45}
+       C${sw} ${shoulderY + u * 0.1} ${sw * 0.7} ${bodiceTop} ${u * 0.16} ${bodiceTop} Z`;
+  const skirtBottom = f.bride ? u * 0.02 : -u * 1.35;
+  const skirtW = f.bride ? u * 1.45 : u * 0.85;
+  const skirt = `M${-sw * 0.5} ${waistY} C${-sw * 0.75} ${hipY - u * 0.2} ${-skirtW * 0.85} ${(hipY + skirtBottom) / 2} ${-skirtW} ${skirtBottom}
+    C${-skirtW * 0.5} ${skirtBottom + u * 0.08} ${skirtW * 0.5} ${skirtBottom + u * 0.08} ${skirtW} ${skirtBottom}
+    C${skirtW * 0.85} ${(hipY + skirtBottom) / 2} ${sw * 0.75} ${hipY - u * 0.2} ${sw * 0.5} ${waistY} Z`;
+  const folds = [-0.55, -0.2, 0.15, 0.5].map((k) => `M${k * sw * 0.8} ${waistY + u * 0.2} Q${k * skirtW * 0.75} ${(waistY + skirtBottom) / 2} ${k * skirtW * 0.95} ${skirtBottom}`).join(" ");
+
   return (
     <g transform={`translate(${f.x} 0)`}>
       {/* long hair falls behind the shoulders */}
-      {f.longHair && (
-        <path
-          d={`M${-headRX * 1.1} ${headCY - headRY * 0.2} C${-headRX * 1.35} ${shoulderY + u * 0.4} ${-headRX * 0.9} ${shoulderY + u * 0.9} ${-headRX * 0.2} ${shoulderY + u * 0.85}
-              L${headRX * 0.2} ${shoulderY + u * 0.85} C${headRX * 0.9} ${shoulderY + u * 0.9} ${headRX * 1.35} ${shoulderY + u * 0.4} ${headRX * 1.1} ${headCY - headRY * 0.2} Z`}
-          fill={f.hair}
-        />
+      {f.longHair && !f.bride && <path d={longHairBack} fill={f.hair} />}
+      {/* bride: veil behind the body */}
+      {f.bride && (
+        <path d={`M${-R * 0.2} ${cy - ry * 0.7} C${-R * 1.6} ${cy} ${-sw * 1.5} ${waistY} ${-sw * 1.6} ${hipY + u * 1.2} L${sw * 1.6} ${hipY + u * 1.2} C${sw * 1.5} ${waistY} ${R * 1.6} ${cy} ${R * 0.2} ${cy - ry * 0.7} Z`} fill="#ffffff" opacity={0.28} />
       )}
 
       {/* legs */}
       {f.dress ? (
         !f.bride && (
           <>
-            <rect x={-u * 0.22} y={skirtBottom - u * 0.1} width={u * 0.16} height={-skirtBottom + u * 0.05} rx={u * 0.08} fill={f.skin} />
-            <rect x={u * 0.06} y={skirtBottom - u * 0.1} width={u * 0.16} height={-skirtBottom + u * 0.05} rx={u * 0.08} fill={f.skin} />
-            <ellipse cx={-u * 0.16} cy={-u * 0.04} rx={u * 0.16} ry={u * 0.06} fill={dark} />
-            <ellipse cx={u * 0.14} cy={-u * 0.04} rx={u * 0.16} ry={u * 0.06} fill={dark} />
+            <path d={`M${-u * 0.2} ${skirtBottom - u * 0.1} L${-u * 0.06} ${skirtBottom - u * 0.1} L${-u * 0.08} ${-u * 0.08} L${-u * 0.17} ${-u * 0.08} Z`} fill={f.skin} />
+            <path d={`M${u * 0.2} ${skirtBottom - u * 0.1} L${u * 0.06} ${skirtBottom - u * 0.1} L${u * 0.08} ${-u * 0.08} L${u * 0.17} ${-u * 0.08} Z`} fill={f.skin} />
+            <ellipse cx={-u * 0.14} cy={-u * 0.04} rx={u * 0.13} ry={u * 0.05} fill={dark} />
+            <ellipse cx={u * 0.14} cy={-u * 0.04} rx={u * 0.13} ry={u * 0.05} fill={dark} />
           </>
         )
       ) : (
-        <>
-          <path d={`M${-sw * 0.78} ${hipY} L${-u * 0.06} ${hipY} L${-u * 0.1} ${-u * 0.08} L${-sw * 0.62} ${-u * 0.08} Z`} fill={f.tone} />
-          <path d={`M${sw * 0.78} ${hipY} L${u * 0.06} ${hipY} L${u * 0.1} ${-u * 0.08} L${sw * 0.62} ${-u * 0.08} Z`} fill={f.tone} />
-          <path d={`M${-sw * 0.66} ${-u * 0.1} h${sw * 0.62} q${u * 0.08} ${u * 0.1} 0 ${u * 0.1} h${-sw * 0.66} z`} fill={dark} />
-          <path d={`M${sw * 0.66} ${-u * 0.1} h${-sw * 0.62} q${-u * 0.08} ${u * 0.1} 0 ${u * 0.1} h${sw * 0.66} z`} fill={dark} />
-        </>
+        legs
       )}
-
-      {/* arms behind the body */}
-      {arm(-1, f.dress ? f.skin : f.tone)}
-      {arm(1, f.dress ? f.skin : f.tone)}
-
-      {/* skirt / gown */}
-      {f.dress && <path d={skirt} fill={f.tone} />}
-      {f.dress && <path d={skirt} fill="url(#m-fold)" opacity={f.bride ? 0.55 : 0.35} />}
 
       {/* neck */}
-      <path d={`M${-u * 0.13} ${headCY + headRY * 0.6} L${-u * 0.15} ${shoulderY + u * 0.05} L${u * 0.15} ${shoulderY + u * 0.05} L${u * 0.13} ${headCY + headRY * 0.6} Z`} fill={f.skin} />
+      <path d={`M${-u * 0.12} ${cy + ry * 0.55} L${-u * 0.14} ${shoulderY + u * 0.05} L${u * 0.14} ${shoulderY + u * 0.05} L${u * 0.12} ${cy + ry * 0.55} Z`} fill={f.skin} />
+      <path d={`M${-u * 0.12} ${chinY - u * 0.02} Q0 ${chinY + u * 0.12} ${u * 0.12} ${chinY - u * 0.02} L${u * 0.13} ${chinY + u * 0.1} L${-u * 0.13} ${chinY + u * 0.1} Z`} fill={skinShadow} />
 
-      {/* torso */}
-      <path d={torso} fill={f.tone} />
-      {!f.dress && (
+      {f.dress ? (
         <>
-          <path d={`M${-u * 0.2} ${shoulderY - u * 0.04} L0 ${shoulderY + u * 1.05} L${u * 0.2} ${shoulderY - u * 0.04} Z`} fill="#f5f3ef" />
-          <path d={`M${-u * 0.045} ${shoulderY + u * 0.08} L${u * 0.045} ${shoulderY + u * 0.08} L${u * 0.06} ${shoulderY + u * 0.85} L0 ${shoulderY + u * 0.98} L${-u * 0.06} ${shoulderY + u * 0.85} Z`} fill={f.x < 0 ? "#3b3550" : "#5a2230"} />
-          <path d={`M${-u * 0.2} ${shoulderY - u * 0.04} L${-u * 0.42} ${shoulderY + u * 0.5} L${-u * 0.04} ${shoulderY + u * 1.2}`} stroke="rgba(255,255,255,0.14)" strokeWidth={u * 0.05} fill="none" />
-          <path d={`M${u * 0.2} ${shoulderY - u * 0.04} L${u * 0.42} ${shoulderY + u * 0.5} L${u * 0.04} ${shoulderY + u * 1.2}`} stroke="rgba(255,255,255,0.14)" strokeWidth={u * 0.05} fill="none" />
-        </>
-      )}
-      {f.dress && (
-        <path d={`M${-sw * 0.45} ${shoulderY - u * 0.02} Q0 ${shoulderY + u * 0.35} ${sw * 0.45} ${shoulderY - u * 0.02}`} fill={f.skin} />
-      )}
-      <path d={torso} fill="url(#m-shade)" />
-
-      {/* head */}
-      <ellipse cx={0} cy={headCY} rx={headRX} ry={headRY} fill={f.skin} />
-      <ellipse cx={-headRX * 0.08} cy={headCY} rx={headRX} ry={headRY} fill="url(#m-face)" />
-      {/* hair */}
-      {f.longHair ? (
-        <path
-          d={`M${-headRX * 1.06} ${headCY + headRY * 0.15} C${-headRX * 1.15} ${headCY - headRY * 1.25} ${headRX * 1.15} ${headCY - headRY * 1.25} ${headRX * 1.06} ${headCY + headRY * 0.15}
-              C${headRX * 0.85} ${headCY - headRY * 0.55} ${-headRX * 0.3} ${headCY - headRY * 0.75} ${-headRX * 1.06} ${headCY + headRY * 0.15} Z`}
-          fill={f.hair}
-        />
-      ) : f.dress ? (
-        <>
-          <circle cx={headRX * 0.15} cy={headCY - headRY * 1.05} r={headRX * 0.45} fill={f.hair} />
-          <path d={`M${-headRX * 1.02} ${headCY} C${-headRX * 1.1} ${headCY - headRY * 1.2} ${headRX * 1.1} ${headCY - headRY * 1.2} ${headRX * 1.02} ${headCY} C${headRX * 0.7} ${headCY - headRY * 0.6} ${-headRX * 0.7} ${headCY - headRY * 0.6} ${-headRX * 1.02} ${headCY} Z`} fill={f.hair} />
+          {/* bare shoulders / neckline */}
+          <path d={`M${-u * 0.16} ${shoulderY - u * 0.06} C${-sw * 0.75} ${shoulderY - u * 0.04} ${-sw} ${shoulderY + u * 0.12} ${-sw * 0.92} ${shoulderY + u * 0.5}
+              L${sw * 0.92} ${shoulderY + u * 0.5} C${sw} ${shoulderY + u * 0.12} ${sw * 0.75} ${shoulderY - u * 0.04} ${u * 0.16} ${shoulderY - u * 0.06} Z`} fill={f.skin} />
+          {sleeve(-1)}
+          {sleeve(1)}
+          <path d={skirt} fill={f.tone} />
+          <path d={skirt} fill="url(#m-fold)" opacity={f.bride ? 0.5 : 0.3} />
+          <path d={folds} stroke="rgba(0,0,0,0.12)" strokeWidth={u * 0.03} fill="none" />
+          <path d={bodice} fill={f.tone} />
+          {!f.bride && <path d={`M${-u * 0.16} ${bodiceTop} L0 ${shoulderY + u * 0.5} L${u * 0.16} ${bodiceTop} Z`} fill={f.skin} />}
+          <path d={bodice} fill="url(#m-shade)" />
+          {f.bride && <rect x={-sw * 0.52} y={waistY - u * 0.12} width={sw * 1.04} height={u * 0.14} rx={u * 0.04} fill="#e8dcc6" />}
+          {f.bride && (
+            <g>
+              {/* bouquet held at the waist */}
+              {hand(-u * 0.12, waistY + u * 0.05, 1)}
+              {hand(u * 0.12, waistY + u * 0.05, -1)}
+              <path d={`M${-u * 0.05} ${waistY + u * 0.2} L${-u * 0.02} ${hipY + u * 0.2} L${u * 0.02} ${hipY + u * 0.2} L${u * 0.05} ${waistY + u * 0.2} Z`} fill="#5a7a46" />
+              {[[-0.16, -0.02, "#ffffff"], [0.02, -0.12, "#f6d4dc"], [0.17, -0.01, "#ffffff"], [-0.06, 0.12, "#f2c6cf"], [0.11, 0.12, "#fff4e6"], [0.0, 0.02, "#e9a8b6"]].map(([dx, dy, c], i) => (
+                <circle key={i} cx={(dx as number) * u * 1.4} cy={waistY + u * 0.02 + (dy as number) * u * 1.4} r={u * 0.13} fill={c as string} />
+              ))}
+              <circle cx={-u * 0.3} cy={waistY + u * 0.14} r={u * 0.07} fill="#6f9a52" />
+              <circle cx={u * 0.3} cy={waistY + u * 0.12} r={u * 0.07} fill="#6f9a52" />
+            </g>
+          )}
         </>
       ) : (
-        <path
-          d={`M${-headRX * 1.03} ${headCY - headRY * 0.05} C${-headRX * 1.12} ${headCY - headRY * 1.22} ${headRX * 1.12} ${headCY - headRY * 1.22} ${headRX * 1.03} ${headCY - headRY * 0.05}
-              C${headRX * 0.9} ${headCY - headRY * 0.55} ${headRX * 0.2} ${headCY - headRY * 0.62} ${-headRX * 1.03} ${headCY - headRY * 0.05} Z`}
-          fill={f.hair}
-        />
+        <>
+          {sleeve(-1)}
+          {sleeve(1)}
+          <path d={jacket} fill={f.tone} />
+          {/* shirt, collar, tie */}
+          <path d={`M${-u * 0.18} ${shoulderY - u * 0.07} L0 ${vBottom} L${u * 0.18} ${shoulderY - u * 0.07} Z`} fill="#f5f3ef" />
+          <path d={`M${-u * 0.18} ${shoulderY - u * 0.07} L${-u * 0.02} ${shoulderY + u * 0.12} L${-u * 0.1} ${shoulderY + u * 0.2} Z`} fill="#e4e1db" />
+          <path d={`M${u * 0.18} ${shoulderY - u * 0.07} L${u * 0.02} ${shoulderY + u * 0.12} L${u * 0.1} ${shoulderY + u * 0.2} Z`} fill="#e4e1db" />
+          <path d={`M${-u * 0.045} ${shoulderY + u * 0.1} L${u * 0.045} ${shoulderY + u * 0.1} L${u * 0.065} ${vBottom - u * 0.2} L0 ${vBottom - u * 0.08} L${-u * 0.065} ${vBottom - u * 0.2} Z`} fill={f.groom ? "#c9b48a" : f.x < 0 ? "#3b3550" : "#5a2230"} />
+          {/* lapels */}
+          <path d={`M${-u * 0.18} ${shoulderY - u * 0.07} L${-u * 0.42} ${shoulderY + u * 0.45} L${-u * 0.3} ${shoulderY + u * 0.5} L${-u * 0.02} ${vBottom}`} fill="rgba(0,0,0,0.22)" />
+          <path d={`M${u * 0.18} ${shoulderY - u * 0.07} L${u * 0.42} ${shoulderY + u * 0.45} L${u * 0.3} ${shoulderY + u * 0.5} L${u * 0.02} ${vBottom}`} fill="rgba(0,0,0,0.22)" />
+          <path d={`M${-u * 0.18} ${shoulderY - u * 0.07} L${-u * 0.42} ${shoulderY + u * 0.45} L${-u * 0.02} ${vBottom}`} stroke="rgba(255,255,255,0.16)" strokeWidth={u * 0.025} fill="none" />
+          <path d={`M${u * 0.18} ${shoulderY - u * 0.07} L${u * 0.42} ${shoulderY + u * 0.45} L${u * 0.02} ${vBottom}`} stroke="rgba(255,255,255,0.1)" strokeWidth={u * 0.025} fill="none" />
+          {/* buttons and pocket square */}
+          <circle cx={0} cy={vBottom + u * 0.12} r={u * 0.035} fill="rgba(0,0,0,0.5)" />
+          <circle cx={0} cy={vBottom + u * 0.42} r={u * 0.035} fill="rgba(0,0,0,0.5)" />
+          <path d={`M${u * 0.42} ${shoulderY + u * 0.78} l${u * 0.1} ${-u * 0.1} l${u * 0.08} ${u * 0.1} z`} fill="#f2f0ec" />
+          <path d={`M${-sw * 0.7} ${waistY + u * 0.35} h${sw * 0.38}`} stroke="rgba(0,0,0,0.25)" strokeWidth={u * 0.03} />
+          <path d={`M${sw * 0.7} ${waistY + u * 0.35} h${-sw * 0.38}`} stroke="rgba(0,0,0,0.25)" strokeWidth={u * 0.03} />
+          {f.groom && (
+            <g>
+              <circle cx={-u * 0.36} cy={shoulderY + u * 0.42} r={u * 0.08} fill="#ffffff" />
+              <circle cx={-u * 0.3} cy={shoulderY + u * 0.36} r={u * 0.05} fill="#f3d5dc" />
+              <path d={`M${-u * 0.38} ${shoulderY + u * 0.48} l${-u * 0.04} ${u * 0.12}`} stroke="#5a7a46" strokeWidth={u * 0.025} />
+            </g>
+          )}
+          <path d={jacket} fill="url(#m-shade)" />
+        </>
       )}
+
+      {/* ears, head, face */}
+      <ellipse cx={-R * 0.98} cy={cy + ry * 0.08} rx={R * 0.15} ry={ry * 0.22} fill={f.skin} />
+      <ellipse cx={R * 0.98} cy={cy + ry * 0.08} rx={R * 0.15} ry={ry * 0.22} fill={f.skin} />
+      <path d={face} fill={f.skin} />
+      <path d={face} fill="url(#m-face)" />
+      {features}
+
+      {/* hair on top */}
+      {f.longHair && !f.bride ? (
+        <path d={longHairFront} fill={f.hair} />
+      ) : f.dress ? (
+        <>
+          {/* hair pinned up: bun and soft waves to the ears */}
+          <ellipse cx={R * 0.1} cy={cy - ry * 1.12} rx={R * 0.5} ry={ry * 0.28} fill={f.hair} />
+          <path d={updo} fill={f.hair} />
+        </>
+      ) : (
+        <path d={shortHair} fill={f.hair} />
+      )}
+      {/* soft hair highlight */}
+      <path d={`M${-R * 0.5} ${cy - ry * 0.95} Q0 ${cy - ry * 1.08} ${R * 0.45} ${cy - ry * 0.96}`} stroke="rgba(255,255,255,0.18)" strokeWidth={u * 0.04} fill="none" />
       {f.bride && (
-        <path d={`M${headRX * 0.3} ${headCY - headRY * 0.9} C${headRX * 1.9} ${headCY} ${headRX * 2.1} ${shoulderY + u * 2} ${headRX * 1.4} ${waistY + u * 0.8} L${headRX * 0.9} ${shoulderY} Z`} fill="#ffffff" opacity={0.35} />
+        <>
+          <path d={`M${-R * 0.75} ${cy - ry * 0.95} Q0 ${cy - ry * 1.3} ${R * 0.75} ${cy - ry * 0.95}`} stroke="#f6f1e6" strokeWidth={u * 0.05} fill="none" />
+          <path d={`M${R * 0.2} ${cy - ry * 0.85} C${R * 1.9} ${cy} ${R * 2.1} ${shoulderY + u * 2} ${R * 1.4} ${waistY + u * 0.8} L${R * 0.9} ${shoulderY} Z`} fill="#ffffff" opacity={0.3} />
+        </>
       )}
     </g>
   );

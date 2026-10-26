@@ -217,7 +217,7 @@ export default function App() {
   const scene = SCENES.find((s) => s.id === sceneId) ?? SCENES[0];
   const [boost, setBoost] = useState(0);
   const [lightK, setLightK] = useState(scene.kelvin);
-  const [backdropId, setBackdropId] = useState("auto");
+  const [backdropId, setBackdropId] = useState("garden");
   const bd = BACKDROPS[backdropId];
   const viewPalette = bd ? { ...scene.palette, ...bd.palette } : scene.palette;
   const backdropKind: BackdropKind = bd ? bd.kind : scene.palette.indoor ? "curtain" : "trees";
