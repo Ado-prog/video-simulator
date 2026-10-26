@@ -178,7 +178,7 @@ export default function App() {
   const [aperture, setAperture] = useState(2.8);
   const [focusM, setFocusM] = useState(3);
   const [subject, setSubject] = useState<SubjectKind>("couple");
-  const [peopleMode, setPeopleMode] = useState<"drawn" | "illu">("drawn");
+  const [peopleMode, setPeopleMode] = useState<"drawn" | "illu">("illu");
 
   const isPrime = !!lens && lens.minFocal === lens.maxFocal;
   const fMin = lens ? lens.minFocal : 3;
@@ -1289,6 +1289,7 @@ export default function App() {
           {isVideo && (
           <fieldset className="group">
             <legend>{t.audio}</legend>
+            <div className="audio-col">
             <label htmlFor="mic">{t.mic}</label>
             <select {...sel("mic")} value={micId} onChange={(e) => setMicId(e.target.value)}>
               <optgroup label={`★ ${t.myMics}`}>
@@ -1360,7 +1361,9 @@ export default function App() {
             )}
             {mic.float32 && <p className={f32On ? "ok" : "note"}>{f32On ? (mic.f32cam ? t.f32cam : t.float32) : t.f32off}</p>}
             {mic.onboard && onboard && <p className="note">{t.onboardOn}</p>}
+            </div>
 
+            <div className="audio-col">
             <label htmlFor="source">{t.source}</label>
             <select {...sel("source")} value={sourceId} onChange={(e) => setSourceId(e.target.value as SourceId)}>
               {(Object.keys(SOURCES) as SourceId[]).map((k) => (
@@ -1421,6 +1424,7 @@ export default function App() {
             {safetyPeak !== null && (
               <p className={safetyPeak < 0 ? "ok" : "warn"}>{fill(safetyPeak < 0 ? t.safetyOk : t.safetyBad, safetyPeak)}</p>
             )}
+          </div>
           </fieldset>
           )}
     </>

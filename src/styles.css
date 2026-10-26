@@ -514,6 +514,8 @@ body { font-size: 14px; }
 .card-audio { display: block; }
 .card-audio > .group { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 24px; row-gap: 4px; }
 .card-audio > .group > legend { grid-column: 1 / -1; }
+.audio-col { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.audio-col > label:not(.check) { margin-top: 4px; }
 @media (max-width: 700px) { .card-audio > .group { grid-template-columns: minmax(0, 1fr); } }
 
 .studio-side .col-title { font-size: 10px; }
