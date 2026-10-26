@@ -1,3 +1,4 @@
+import { EXTRA, EXTRA_FALLBACK, type Extra } from "./i18n-extra";
 // UI translations for 12 languages.
 export const LANGUAGES = [
   {
@@ -52,7 +53,7 @@ export const LANGUAGES = [
 
 export type Lang = (typeof LANGUAGES)[number]["code"];
 
-export const DICT = {
+const BASE = {
   "de": {
     "near": "Nahpunkt",
     "far": "Fernpunkt",
@@ -2026,6 +2027,9 @@ export const DICT = {
   }
 };
 
+export const DICT = Object.fromEntries(
+  Object.entries(BASE).map(([code, d]) => [code, { ...d, ...EXTRA_FALLBACK, ...(EXTRA[code] ?? {}) }])
+) as { [K in keyof typeof BASE]: (typeof BASE)["de"] & Extra };
 export type Dict = (typeof DICT)["de"];
 
 export function fill(template: string, x: string | number, y?: string | number) {

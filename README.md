@@ -1,6 +1,8 @@
 # Photo & Video Simulator · Mustafi Studio
 
-**▶ Try it live (free, no sign-up):** https://ado-prog.github.io/video-simulator/
+## ▶ [Live demo](https://ado-prog.github.io/video-simulator/)
+
+**[ado-prog.github.io/video-simulator](https://ado-prog.github.io/video-simulator/)** – runs in the browser, free, no sign-up, works on phone and desktop.
 
 ![Camera monitor preview: wedding couple in a garden with background blur, audio meter and exposure HUD](docs/monitor.jpg)
 
@@ -21,6 +23,11 @@ See on a simulated camera monitor how focus distance, focal length, aperture, li
 - **Video settings:** PAL/NTSC, frame rates, 180° shutter rule, Auto ISO, white balance, flicker warning under artificial light
 - **Log profiles:** V-Log, ARRI LogC3 (Lumix upgrade), S-Log2/3, C-Log2/3, N-Log, D-Log / D-Log M, I-Log, with a choice of monitoring LUT: none (flat Log), the manufacturer's Rec.709 LUTs (e.g. V-709, s709, LC-709, BT.709 Wide DR) or creative looks (warm film, teal & orange, cinema film, black & white)
 - **Picture styles (standard / photo):** each camera's own styles, e.g. Lumix Natural, Vivid, Cinelike D2/V2, L.ClassicNeo, Leica Monochrome; Sony Creative Looks and S-Cinetone; Canon Picture Styles; Nikon Picture Controls; DJI Normal/HLG
+- **Monitor assists (photo & video):** zebras (70–100 %), false color, waveform, histogram, focus peaking and frame guides (9:16 Reels, 4:5, 1:1, 2.39:1)
+- **Recording & movement (video):** camera movement and stabilisation (IBIS / E-stab crop) with a rolling-shutter warning from each camera's sensor readout time, slow motion up to 200/240p against a 24/25/30p timeline, dual native ISO, resolution (FHD to 8K, Open Gate) and codec with bitrate, GB per minute and the card you need
+- **DMW-DMS1E 4-channel mode:** CH1/CH2 main audio, CH3 omni, CH4 omni −20 dB with their levels
+- **Flash & shutter (photo):** TTL and HSS with each camera's sync speed, mechanical / electronic shutter with banding and skew warnings, dynamic range of scene vs. camera, exposure bracketing, 500 and NPF rules for stars, long-exposure and ND time calculator
+- **Sun planner:** golden and blue hour, sunrise and sunset for any date in Zürich, Basel, Bern, Sarajevo, Tuzla, Beograd, Wien and more, or your own location
 - **Filters:** ND2–ND64000, variable ND, CPL, UV, plus a one-click "expose correctly" that picks the ND you need
 - **Audio (video mode):** microphones (RØDE Wireless PRO, Panasonic DMW-DMS1E and DMW-MS2, plus RØDE, DJI, Sennheiser, Deity, Hollyland, Sony, Canon, Nikon and the camera's built-in mic), sound sources, gain, auto level, limiter, low cut, and each mic's own switches – 32-bit float on/off, pickup patterns, wind/noise cancelling, safety track, onboard backup recording – live level meter on the monitor, clipping and noise warnings, speech clarity
 - **Group photos in 1, 2 or 3 rows:** each row stands further back, so you can see which rows are still sharp

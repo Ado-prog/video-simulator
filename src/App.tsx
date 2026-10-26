@@ -2,6 +2,9 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerE
 import Monitor, { type SubjectKind, ROW_GAP, rowCount } from "./Monitor";
 import { MICS, MIC_BRANDS, INTERNAL_MIC, SOURCES, type SourceId, type PatternId, audioLevels, autoGain, effectiveMic } from "./audio";
 import { stylesFor, makerLutsFor, CREATIVE_LUTS, NEUTRAL_LOOK } from "./looks";
+import { factsFor, sensorDR, SCENE_DR, pixelPitch } from "./camdata";
+import { RESOLUTIONS, CODECS, GUIDES, bitrate, cardFor, type ResolutionId, type CodecId, type GuideId } from "./formats";
+import { sunDay, PLACES } from "./sun";
 import PhotoDiagram from "./PhotoDiagram";
 import { LensArt, IrisArt, CameraArt, cameraKind } from "./GearArt";
 import { DICT, LANGUAGES, fill, loadLang, saveLang, type Lang } from "./i18n";
@@ -157,6 +160,7 @@ export default function App() {
   const coc = cocOf(sensor);
   const crop = cropOf(sensor);
   const frameH = videoFrameHeight(sensor);
+  const facts = factsFor(camera);
 
   // ── Optics
   const [focal, setFocal] = useState(50);
@@ -258,7 +262,8 @@ export default function App() {
   const lutNone = lutId === "none";
   const lutValue = lutNone ? "none" : creativeLut ? creativeLut.id : makerLut?.id ?? "none";
   const minIso = logProfile?.minIso ?? 100;
-  const isoChoices = [...new Set([minIso, ...ISOS.filter((v) => v >= minIso)])];
+  const baseIsos = logProfile && factsFor(camera).dualIso ? factsFor(camera).dualIso! : [];
+  const isoChoices = [...new Set([minIso, ...baseIsos, ...ISOS.filter((v) => v >= minIso)])].sort((a, b) => a - b);
 
   const changeVideo = (sys: VideoSystem, rate: number) => {
     setVSystem(sys);
@@ -270,6 +275,60 @@ export default function App() {
   const [expMode, setExpMode] = useState<"M" | "A">("M");
   const [photoShutter, setPhotoShutter] = useState(1 / 250);
   const [photoIso, setPhotoIso] = useState(800);
+
+  // ── Monitor assists
+  const [zebra, setZebra] = useState(0);
+  const [falseColor, setFalseColor] = useState(false);
+  const [waveform, setWaveform] = useState(false);
+  const [histogram, setHistogram] = useState(false);
+  const [peaking, setPeaking] = useState(false);
+  const [guideId, setGuideId] = useState<GuideId>("none");
+
+  // ── Recording & movement (video)
+  const [motion, setMotion] = useState<"static" | "slow" | "fast" | "walk" | "car">("static");
+  const [stab, setStab] = useState<"off" | "ibis" | "eis" | "boost">("ibis");
+  const [timelineFps, setTimelineFps] = useState(25);
+  const [resId, setResId] = useState<ResolutionId>("uhd");
+  const [codecId, setCodecId] = useState<CodecId>("h265");
+  const stabCrop = isVideo ? (stab === "eis" ? 1.1 : stab === "boost" ? 1.25 : 1) : 1;
+  const hfov = 2 * Math.atan((sensor.width / stabCrop) / 2 / focal) * (180 / Math.PI);
+  const panSpeed = { static: 0, slow: 10, fast: 60, walk: 15, car: 90 }[motion]; // degrees per second
+  const leanDeg = isVideo && facts.readout > 0
+    ? (Math.atan(((panSpeed * facts.readout) / 1000 / hfov) * (16 / 9)) * 180) / Math.PI
+    : 0;
+  const resolutions = RESOLUTIONS.filter((r) => !("needs" in r) || facts[r.needs]);
+  const res = resolutions.find((r) => r.id === resId) ?? resolutions[1];
+  const mbps = bitrate(res.id, codecId, fps);
+
+  // ── Flash, shutter type, bracketing (photo)
+  const [flashMode, setFlashMode] = useState<"off" | "ttl" | "hss">("off");
+  const [shutterType, setShutterType] = useState<"mech" | "efc" | "e">("mech");
+  const [bracketId, setBracketId] = useState<"off" | "3x1" | "5x1" | "3x2" | "5x2">("off");
+
+  // ── Sun planner
+  const [placeId, setPlaceId] = useState("zrh");
+  const [geo, setGeo] = useState<{ lat: number; lon: number } | null>(null);
+  const [geoFail, setGeoFail] = useState(false);
+  const [sunDate, setSunDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const place = PLACES.find((x) => x.id === placeId) ?? PLACES[0];
+  const sunPos = placeId === "geo" && geo ? geo : place;
+  const sunTz = placeId === "geo" ? Intl.DateTimeFormat().resolvedOptions().timeZone : place.tz;
+  const [sy, sm, sdd] = sunDate.split("-").map(Number);
+  const sun = sunDay(Date.UTC(sy, (sm || 1) - 1, sdd || 1), sunPos.lat, sunPos.lon);
+  const hm = (ms?: number) =>
+    ms ? new Intl.DateTimeFormat(lang, { hour: "2-digit", minute: "2-digit", timeZone: sunTz }).format(ms) : "–";
+  const span = (r?: [number, number]) => (r ? `${hm(r[0])}–${hm(r[1])}` : "–");
+  const locate = () => {
+    if (!navigator.geolocation) return setGeoFail(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setGeo({ lat: pos.coords.latitude, lon: pos.coords.longitude });
+        setPlaceId("geo");
+        setGeoFail(false);
+      },
+      () => setGeoFail(true)
+    );
+  };
 
   const sceneEV = scene.ev + boost - filterStops;
   const activeLog = isVideo ? logProfile : undefined;
@@ -289,8 +348,28 @@ export default function App() {
   const shakeRisk = !isVideo && effShutter > 1 / shakeLimit;
   const camWbK = whiteBalanceKelvin(wbMode, lightK, wbK);
   const cast = colorCast(lightK, camWbK);
-  const grain = Math.min(0.45, Math.max(0, Math.log2(effIso / 100)) * 0.045 * Math.sqrt(crop));
+  const dualIso = isVideo && activeLog && facts.dualIso && facts.dualIso[0] !== facts.dualIso[1] ? facts.dualIso : null;
+  const onSecondBase = !!dualIso && effIso >= dualIso[1];
+  const noiseIso = onSecondBase ? (effIso * dualIso![0]) / dualIso![1] : effIso;
+  const grain = Math.min(0.45, Math.max(0, Math.log2(noiseIso / 100)) * 0.045 * Math.sqrt(crop));
+
+  // photo checks
   const mains = VIDEO_SYSTEMS[vSystem].mainsHz;
+  const syncLimit = facts.sync;
+  const syncBad = !isVideo && flashMode === "ttl" && !!syncLimit && effShutter < syncLimit - 1e-9;
+  const bandOk = 1 / (2 * mains);
+  const banding = !isVideo && shutterType === "e" && facts.readout > 0 && scene.palette.indoor && effShutter < bandOk - 1e-9;
+  const bands = Math.max(1, Math.round((facts.readout / 1000) * 2 * mains));
+  const camDR = sensorDR(sensorKey) - Math.max(0, Math.log2((isVideo ? effIso : photoIso) / 100)) * 0.6 + (activeLog ? 1 : 0);
+  const sceneDR = SCENE_DR[sceneId] ?? 12;
+  const brN = bracketId === "off" ? 1 : Number(bracketId[0]);
+  const brStep = bracketId === "off" ? 0 : Number(bracketId[2]);
+  const brGain = (brN - 1) * brStep;
+  const brTimes = Array.from({ length: brN }, (_, i) => formatShutter(effShutter * Math.pow(2, (i - (brN - 1) / 2) * brStep)));
+  const pitch = pixelPitch(sensor.width, sensor.height, facts.mp);
+  const rule500 = 500 / (focal * crop);
+  const npf = (35 * aperture + 30 * pitch) / focal;
+  const starScene = sceneId === "night" || sceneId === "blue";
   const flicker = isVideo && scene.palette.indoor && !isFlickerSafe(shutter, mains);
   const ideal = shutter180(vSystem, fps);
   const on180 = Math.abs(Math.log2(shutter / ideal)) < 0.2;
@@ -339,6 +418,9 @@ export default function App() {
   const quality = audio.snr === null ? null : audio.snr >= 15 ? "good" : audio.snr >= 6 ? "fair" : "poor";
   const tooNoisy = audio.avg - audio.noiseFloor < 18;
   const safetyPeak = !f32On && mic.safety && safetyOn && (audio.clip || audio.overdriven) ? Math.round(audio.rawPeak + mic.safety) : null;
+  const dmsBackup = mic.id === "pana-dms1" && safetyOn;
+  const ch3 = dmsBackup ? audioLevels({ ...audioBase, mic: effectiveMic(mic, "omni", false), gain: effGain, limiter }) : null;
+  const ch4 = dmsBackup ? audioLevels({ ...audioBase, mic: effectiveMic(mic, "omni", false), gain: effGain - 20, limiter }) : null;
   const typeLabel = { lav: t.t_lav, oncam: t.t_oncam, boom: t.t_boom, internal: t.t_internal }[mic.type];
 
   // ── Group rows: which rows are inside the sharp zone
@@ -495,6 +577,41 @@ export default function App() {
               <output htmlFor="lightK">{lightK} K</output>
             </div>
             <input id="lightK" className="kelvin" type="range" min={2000} max={10000} step={100} value={lightK} onChange={(e) => setLightK(Number(e.target.value))} />
+            <details className="sunplan">
+              <summary>{t.sunPlan}</summary>
+              <div className="grid2">
+                <div>
+                  <label htmlFor="place">{t.place}</label>
+                  <select {...sel("place")} value={placeId} onChange={(e) => (e.target.value === "geo" ? locate() : setPlaceId(e.target.value))}>
+                    {PLACES.map((x) => (
+                      <option key={x.id} value={x.id}>{x.name}</option>
+                    ))}
+                    <option value="geo">{t.myLocation}</option>
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="sundate">{t.date}</label>
+                  <input id="sundate" className="control" type="date" value={sunDate} onChange={(e) => e.target.value && setSunDate(e.target.value)} />
+                </div>
+              </div>
+              {geoFail && <p className="warn">{t.geoFail}</p>}
+              {!sun.sunrise && !sun.sunset ? (
+                <p className="note">{t.noSun}</p>
+              ) : (
+                <dl className="suntimes">
+                  <dt>{t.blueAm}</dt><dd>{span(sun.blueAm)}</dd>
+                  <dt>{t.goldenAm}</dt><dd>{span(sun.goldenAm)}</dd>
+                  <dt>{t.sunrise}</dt><dd>{hm(sun.sunrise)}</dd>
+                  <dt>{t.sunset}</dt><dd>{hm(sun.sunset)}</dd>
+                  <dt>{t.goldenPm}</dt><dd>{span(sun.goldenPm)}</dd>
+                  <dt>{t.bluePm}</dt><dd>{span(sun.bluePm)}</dd>
+                </dl>
+              )}
+              <div className="sun-btns">
+                <button type="button" className="btn-ghost" onClick={() => selectScene("golden")}>{t.toGolden}</button>
+                <button type="button" className="btn-ghost" onClick={() => selectScene("blue")}>{t.toBlue}</button>
+              </div>
+            </details>
           </fieldset>
     </>
   );
@@ -551,6 +668,218 @@ export default function App() {
               </>
             )}
             {shakeRisk && <p className="warn">{fill(t.shake, shakeLimit)}</p>}
+          </fieldset>
+          )}
+    </>
+  );
+
+  const g_assist = (
+    <>
+{/* Monitor assists */}
+          <fieldset className="group">
+            <legend>{t.assist}</legend>
+            <div className="grid2">
+              <div>
+                <label htmlFor="zebra">{t.zebra}</label>
+                <select {...sel("zebra")} value={String(zebra)} onChange={(e) => setZebra(Number(e.target.value))}>
+                  <option value="0">{t.zebraOff}</option>
+                  {[70, 80, 90, 95, 100].map((v) => (
+                    <option key={v} value={String(v / 100)}>{v} %</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="guide">{t.guide}</label>
+                <select {...sel("guide")} value={guideId} onChange={(e) => setGuideId(e.target.value as GuideId)}>
+                  {GUIDES.map((g) => (
+                    <option key={g.id} value={g.id}>{t.guides[g.id]}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="checks">
+              <label className="check">
+                <input type="checkbox" id="falsecolor" checked={falseColor} onChange={(e) => setFalseColor(e.target.checked)} />
+                {t.falseColor}
+              </label>
+              <label className="check">
+                <input type="checkbox" id="waveform" checked={waveform} onChange={(e) => setWaveform(e.target.checked)} />
+                {t.waveform}
+              </label>
+              <label className="check">
+                <input type="checkbox" id="histogram" checked={histogram} onChange={(e) => setHistogram(e.target.checked)} />
+                {t.histogram}
+              </label>
+              <label className="check">
+                <input type="checkbox" id="peaking" checked={peaking} onChange={(e) => setPeaking(e.target.checked)} />
+                {t.peaking}
+              </label>
+            </div>
+            {zebra > 0 && <p className="note">{t.zebraTip}</p>}
+            {falseColor && <p className="note">{t.fcLegend}</p>}
+            {peaking && <p className="note">{t.peakingTip}</p>}
+          </fieldset>
+    </>
+  );
+  const g_rec = (
+    <>
+{/* Recording & movement */}
+          {isVideo && (
+          <fieldset className="group">
+            <legend>{t.rec}</legend>
+            <div className="grid2">
+              <div>
+                <label htmlFor="motion">{t.motion}</label>
+                <select {...sel("motion")} value={motion} onChange={(e) => setMotion(e.target.value as typeof motion)}>
+                  {(["static", "slow", "fast", "walk", "car"] as const).map((k) => (
+                    <option key={k} value={k}>{t.motions[k]}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="stab">{t.stab}</label>
+                <select {...sel("stab")} value={stab} onChange={(e) => setStab(e.target.value as typeof stab)}>
+                  {(["off", "ibis", "eis", "boost"] as const).map((k) => (
+                    <option key={k} value={k}>{t.stabs[k]}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <p className="chip-row">
+              <span className="chip">{facts.readout === 0 ? t.globalShutter : fill(t.readout, facts.readout)}</span>
+            </p>
+            {stabCrop > 1 && <p className="note">{fill(t.stabCrop, stabCrop, Math.round(focal * crop * stabCrop))}</p>}
+            {motion === "walk" && stab === "off" ? (
+              <p className="warn">{t.shakeWalk}</p>
+            ) : leanDeg >= 1.5 ? (
+              <p className="warn">{fill(t.jello, leanDeg.toFixed(1))}</p>
+            ) : panSpeed > 0 ? (
+              <p className="ok">{t.jelloOk}</p>
+            ) : null}
+
+            <div className="grid2">
+              <div>
+                <label htmlFor="timeline">{t.timeline}</label>
+                <select {...sel("timeline")} value={String(timelineFps)} onChange={(e) => setTimelineFps(Number(e.target.value))}>
+                  {[24, 25, 30].map((f) => (
+                    <option key={f} value={String(f)}>{f}p</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="resolution">{t.resolution}</label>
+                <select {...sel("resolution")} value={res.id} onChange={(e) => setResId(e.target.value as ResolutionId)}>
+                  {resolutions.map((r) => (
+                    <option key={r.id} value={r.id}>{r.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            {fps > timelineFps * 1.5 && (
+              <p className="ok">{fill(t.slowmo, Math.round((timelineFps / fps) * 100), Math.round((fps / timelineFps) * 10) / 10)}</p>
+            )}
+            {fps > facts.maxFps && <p className="warn">{fill(t.fpsLimit, fps, facts.maxFps)}</p>}
+            {dualIso && (
+              <>
+                <p className="chip-row"><span className="chip">{fill(t.dualIso, dualIso[0], dualIso[1])}</span></p>
+                {onSecondBase ? (
+                  <p className="ok">{t.dualIsoHigh}</p>
+                ) : effIso >= dualIso[1] / 2.5 ? (
+                  <p className="note">{fill(t.dualIsoTip, dualIso[0], dualIso[1])}</p>
+                ) : null}
+              </>
+            )}
+
+            <label htmlFor="codec">{t.codec}</label>
+            <select {...sel("codec")} value={codecId} onChange={(e) => setCodecId(e.target.value as CodecId)}>
+              {CODECS.map((c) => (
+                <option key={c.id} value={c.id}>{c.label}</option>
+              ))}
+            </select>
+            <p className="levels">{fill(t.dataRate, mbps, ((mbps * 60) / 8 / 1000).toFixed(1))}</p>
+            <p className="note">{fill(t.cardTime, Math.round((256 * 1000 * 8) / (mbps * 60)), cardFor(mbps))}</p>
+            {res.id === "og" && <p className="note">{t.ogTip}</p>}
+          </fieldset>
+          )}
+    </>
+  );
+  const g_tech = (
+    <>
+{/* Flash, shutter, dynamic range (photo) */}
+          {!isVideo && (
+          <fieldset className="group">
+            <legend>{t.flashTech}</legend>
+            <div className="grid2">
+              <div>
+                <label htmlFor="flash">{t.flash}</label>
+                <select {...sel("flash")} value={syncLimit ? flashMode : "off"} disabled={!syncLimit} onChange={(e) => setFlashMode(e.target.value as typeof flashMode)}>
+                  {(["off", "ttl", "hss"] as const).map((k) => (
+                    <option key={k} value={k}>{t.flashModes[k]}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="shuttertype">{t.shutterType}</label>
+                <select {...sel("shuttertype")} value={shutterType} onChange={(e) => setShutterType(e.target.value as typeof shutterType)}>
+                  {(["mech", "efc", "e"] as const).map((k) => (
+                    <option key={k} value={k}>{t.shutterTypes[k]}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            {!syncLimit && <p className="note">{t.noFlash}</p>}
+            {syncLimit && flashMode !== "off" && (
+              <>
+                {syncBad ? (
+                  <p className="warn warn-strong">{fill(t.syncWarn, formatShutter(effShutter), formatShutter(syncLimit))}</p>
+                ) : flashMode === "ttl" ? (
+                  <p className="ok">{fill(t.syncOk, formatShutter(syncLimit))}</p>
+                ) : (
+                  <p className="note">{t.hssNote}</p>
+                )}
+                <p className="note">{t.fillTip}</p>
+                {shutterType === "e" && <p className="warn">{t.flashESh}</p>}
+              </>
+            )}
+            {shutterType === "e" &&
+              (facts.readout === 0 ? (
+                <p className="ok">{t.eGlobal}</p>
+              ) : banding ? (
+                <p className="warn">{fill(t.banding, bands, 2 * mains)}</p>
+              ) : (
+                <p className="note">{fill(t.eRolling, facts.readout)}</p>
+              ))}
+
+            <p className="levels">{fill(t.dr, sceneDR, camDR.toFixed(1))}</p>
+            {sceneDR <= camDR + brGain ? (
+              <p className="ok">{brGain > 0 ? fill(t.bracketGain, brGain) : t.drOk}</p>
+            ) : (
+              <p className="warn">{fill(t.drOver, (sceneDR - camDR - brGain).toFixed(1))}</p>
+            )}
+            <label htmlFor="bracket">{t.bracket}</label>
+            <select {...sel("bracket")} value={bracketId} onChange={(e) => setBracketId(e.target.value as typeof bracketId)}>
+              {(["off", "3x1", "5x1", "3x2", "5x2"] as const).map((k) => (
+                <option key={k} value={k}>{t.brackets[k]}</option>
+              ))}
+            </select>
+            {brN > 1 && <p className="note">{fill(t.bracketTimes, brTimes.join(" · "))}</p>}
+
+            {(starScene || effShutter >= 1) && (
+              <>
+                <p className="note">{fill(t.stars, formatShutter(rule500), formatShutter(npf))}</p>
+                {effShutter > npf && effShutter >= 1 && starScene && <p className="warn">{fill(t.starsWarn, formatShutter(effShutter))}</p>}
+              </>
+            )}
+            {effShutter >= 0.5 && <p className="note">{fill(t.longExp, formatShutter(effShutter))}</p>}
+            {ndStops > 0 && (
+              <p className="note">
+                {fill(
+                  t.ndCalc,
+                  formatShutter(correctShutter(scene.ev + boost - (cplOn ? CPL_LOSS : 0), aperture, photoIso)),
+                  formatShutter(correctShutter(sceneEV, aperture, photoIso))
+                )}
+              </p>
+            )}
           </fieldset>
           )}
     </>
@@ -754,6 +1083,16 @@ export default function App() {
             </div>
 
             <p className="levels">{fill(t.levelLine, Math.round(audio.avg), Math.round(audio.peak))}</p>
+            {ch3 && ch4 && (
+              <div className="channels">
+                <p className="eyebrow">{t.channels}</p>
+                {([[t.ch12, audio], [t.ch3, ch3], [t.ch4, ch4]] as const).map(([label, lv]) => (
+                  <p key={label} className={lv.clip || lv.overdriven ? "warn" : "levels-sm"}>
+                    {fill(t.chLine, label, Math.round(lv.avg))}{lv.clip || lv.overdriven ? ` · ${t.chClip}` : ""}
+                  </p>
+                ))}
+              </div>
+            )}
             {quality && (
               <p className={quality === "good" ? "ok" : quality === "fair" ? "note" : "warn"}>
                 {t.intelligibility}: {t[`q_${quality}` as const]}
@@ -957,7 +1296,7 @@ export default function App() {
             focal={focal}
             aperture={aperture}
             focusM={focusM}
-            frameHeightMM={isVideo ? frameH : sensor.height}
+            frameHeightMM={isVideo ? frameH / stabCrop : sensor.height}
             cocMM={coc}
             subject={subject}
             palette={viewPalette}
@@ -967,6 +1306,8 @@ export default function App() {
             grain={grain}
             logView={!!activeLog && lutNone}
             look={look}
+            assist={{ zebra, falseColor, waveform, histogram, peaking, guide: GUIDES.find((g) => g.id === guideId)?.ratio ?? 0 }}
+            skew={leanDeg}
             cpl={cplEffect}
             uv={uvOn}
             label={t.monitor}
@@ -991,7 +1332,10 @@ export default function App() {
           <div className="card">
             {g_light}
             {g_photo}
+            {g_tech}
             {g_video}
+            {g_rec}
+            {g_assist}
             {g_filters}
             {g_btn}
           </div>

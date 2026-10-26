@@ -92,11 +92,184 @@ type Props = {
   grain: number;
   logView: boolean;
   look: Look; // picture profile or monitoring LUT (Rec.709 view)
+  assist: Assist;
+  skew: number; // rolling-shutter lean in degrees
   cpl: number;
   uv: boolean;
   hud: { fps: string; shutter: string; iso: string; focus: string; profile: string; filters: string; wb: string };
   label: string;
 };
+
+/** Exposure and framing tools drawn on the monitor. */
+export type Assist = {
+  zebra: number; // 0 = off, else threshold 0–1 (IRE / 100)
+  falseColor: boolean;
+  waveform: boolean;
+  histogram: boolean;
+  peaking: boolean;
+  guide: number; // framing guide width / height, 0 = off
+};
+
+// False colour bands by IRE: [from %, r, g, b] – null = grey picture
+const FALSE_COLOR: [number, [number, number, number] | null][] = [
+  [0, [0.5, 0, 0.8]], [2, [0, 0.35, 1]], [8, null], [38, [0.15, 0.8, 0.2]], [45, null],
+  [52, [1, 0.5, 0.75]], [58, null], [93, [1, 0.9, 0]], [98, [1, 0, 0]],
+];
+const fcTables = (() => {
+  const out: [number[], number[], number[]] = [[], [], []];
+  for (let i = 0; i <= 100; i++) {
+    let band = FALSE_COLOR[0][1];
+    for (const [from, c] of FALSE_COLOR) if (i >= from) band = c;
+    for (let ch = 0; ch < 3; ch++) out[ch].push(band ? band[ch] : (i / 100) * 0.8);
+  }
+  return out.map((a) => a.map((v) => v.toFixed(3)).join(" "));
+})();
+const LUMA_RGB = "0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0 0 0 1 0";
+const LUMA_ALPHA = "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.2126 0.7152 0.0722 0 0";
+const ZEBRA_TILE =
+  "data:image/svg+xml," +
+  encodeURIComponent(
+    "<svg xmlns='http://www.w3.org/2000/svg' width='6' height='6'><rect width='6' height='6' fill='#111'/><path d='M-1.5 1.5l3-3M0 6L6 0M4.5 7.5l3-3' stroke='#fff' stroke-width='1.6'/></svg>"
+  );
+
+/** Rasterises the picture (without overlays) and draws waveform, histogram and focus peaking. */
+function useScopes(svgRef: React.RefObject<SVGSVGElement>, canvasRef: React.RefObject<HTMLCanvasElement>, a: Assist, H: number, key: string) {
+  const on = a.waveform || a.histogram || a.peaking;
+  useEffect(() => {
+    const cv = canvasRef.current;
+    const ctx = cv?.getContext("2d");
+    if (!cv || !ctx) return;
+    if (!on) {
+      ctx.clearRect(0, 0, cv.width, cv.height);
+      return;
+    }
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      const svg = svgRef.current;
+      if (!svg) return;
+      const SW = W * 2;
+      const SH = Math.round(H * 2);
+      const clone = svg.cloneNode(true) as SVGSVGElement;
+      clone.querySelectorAll("[data-noscan],[data-assist]").forEach((n) => n.remove());
+      clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+      clone.setAttribute("width", String(SW));
+      clone.setAttribute("height", String(SH));
+      const url = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(clone)], { type: "image/svg+xml" }));
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        if (cancelled) return;
+        try {
+          const off = document.createElement("canvas");
+          off.width = SW;
+          off.height = SH;
+          const octx = off.getContext("2d")!;
+          octx.drawImage(img, 0, 0, SW, SH);
+          const src = octx.getImageData(0, 0, SW, SH).data;
+          const lum = new Float32Array(SW * SH);
+          for (let i = 0; i < SW * SH; i++) lum[i] = (0.2126 * src[i * 4] + 0.7152 * src[i * 4 + 1] + 0.0722 * src[i * 4 + 2]) / 255;
+          cv.width = SW;
+          cv.height = SH;
+          ctx.clearRect(0, 0, SW, SH);
+          if (a.peaking) drawPeaking(ctx, lum, SW, SH);
+          if (a.waveform) drawWaveform(ctx, lum, SW, SH);
+          if (a.histogram) drawHistogram(ctx, lum, SW, SH);
+        } catch {
+          /* canvas blocked by the browser – scopes stay hidden */
+        }
+      };
+      img.onerror = () => URL.revokeObjectURL(url);
+      img.src = url;
+    }, 120);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [key, on, a.peaking, a.waveform, a.histogram, H, svgRef, canvasRef]);
+}
+
+function drawPeaking(ctx: CanvasRenderingContext2D, lum: Float32Array, SW: number, SH: number) {
+  const out = ctx.createImageData(SW, SH);
+  for (let y = 1; y < SH - 1; y++)
+    for (let x = 1; x < SW - 1; x++) {
+      const i = y * SW + x;
+      const gx = lum[i - SW + 1] + 2 * lum[i + 1] + lum[i + SW + 1] - lum[i - SW - 1] - 2 * lum[i - 1] - lum[i + SW - 1];
+      const gy = lum[i + SW - 1] + 2 * lum[i + SW] + lum[i + SW + 1] - lum[i - SW - 1] - 2 * lum[i - SW] - lum[i - SW + 1];
+      if (gx * gx + gy * gy > 0.25) {
+        out.data[i * 4] = 255;
+        out.data[i * 4 + 1] = 40;
+        out.data[i * 4 + 2] = 40;
+        out.data[i * 4 + 3] = 255;
+      }
+    }
+  ctx.putImageData(out, 0, 0);
+}
+
+function scopeBox(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  ctx.fillStyle = "rgba(0,0,0,0.6)";
+  ctx.fillRect(x, y, w, h);
+  ctx.strokeStyle = "rgba(255,255,255,0.35)";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+}
+
+function drawWaveform(ctx: CanvasRenderingContext2D, lum: Float32Array, SW: number, SH: number) {
+  const w = Math.round(SW * 0.36);
+  const h = Math.round(SH * 0.3);
+  const x0 = SW - w - 8;
+  const y0 = SH - h - 36;
+  scopeBox(ctx, x0, y0, w, h);
+  const cols = w - 4;
+  const rows = h - 4;
+  const bins = new Uint16Array(cols * rows);
+  for (let y = 0; y < SH; y += 2)
+    for (let x = 0; x < SW; x++) {
+      const c = Math.min(cols - 1, Math.floor((x / SW) * cols));
+      const r = Math.min(rows - 1, Math.floor((1 - lum[y * SW + x]) * (rows - 1)));
+      bins[r * cols + c]++;
+    }
+  const img = ctx.getImageData(x0 + 2, y0 + 2, cols, rows);
+  for (let i = 0; i < cols * rows; i++) {
+    if (!bins[i]) continue;
+    const v = Math.min(1, 0.25 + bins[i] / 12);
+    img.data[i * 4] = Math.round(img.data[i * 4] * (1 - v) + 140 * v);
+    img.data[i * 4 + 1] = Math.round(img.data[i * 4 + 1] * (1 - v) + 255 * v);
+    img.data[i * 4 + 2] = Math.round(img.data[i * 4 + 2] * (1 - v) + 160 * v);
+  }
+  ctx.putImageData(img, x0 + 2, y0 + 2);
+  ctx.fillStyle = "rgba(255,255,255,0.75)";
+  ctx.font = "9px ui-monospace, monospace";
+  for (const ire of [100, 70, 50, 0]) {
+    const yy = y0 + 2 + (1 - ire / 100) * (rows - 1);
+    ctx.fillRect(x0 + 2, yy, cols, 0.6);
+    ctx.fillText(String(ire), x0 + 4, Math.max(y0 + 10, Math.min(yy - 2, y0 + h - 4)));
+  }
+}
+
+function drawHistogram(ctx: CanvasRenderingContext2D, lum: Float32Array, SW: number, SH: number) {
+  const w = Math.round(SW * 0.3);
+  const h = Math.round(SH * 0.2);
+  const x0 = 8;
+  const y0 = 36;
+  scopeBox(ctx, x0, y0, w, h);
+  const n = w - 4;
+  const hist = new Float32Array(n);
+  for (let i = 0; i < lum.length; i += 3) hist[Math.min(n - 1, Math.floor(lum[i] * n))]++;
+  const max = Math.max(...hist.slice(1, n - 1), 1);
+  ctx.fillStyle = "rgba(235,235,235,0.85)";
+  for (let i = 0; i < n; i++) {
+    const v = Math.min(1, hist[i] / max) * (h - 6);
+    ctx.fillRect(x0 + 2 + i, y0 + h - 2 - v, 1, v);
+  }
+  if (hist[n - 1] > lum.length / 300) {
+    ctx.fillStyle = "#ff4040";
+    ctx.fillRect(x0 + w - 5, y0 + 2, 3, h - 4);
+  }
+  if (hist[0] > lum.length / 300) {
+    ctx.fillStyle = "#4080ff";
+    ctx.fillRect(x0 + 2, y0 + 2, 3, h - 4);
+  }
+}
 
 /** A standing figure, feet at y = 0, drawn upward (negative y). Proportions use an 8-head canon. */
 function FigureShape({ f }: { f: Figure }) {
@@ -299,6 +472,8 @@ function AudioMeter({ m, H }: { m: MeterInput; H: number }) {
 }
 
 export default function Monitor(p: Props) {
+  const svgRef = useRef<SVGSVGElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const P = p.palette;
   const H = Math.round(W / p.aspect);
   const isVideo = p.mode === "video";
@@ -368,11 +543,18 @@ export default function Monitor(p: Props) {
     h: tallest * 0.22 * scale(d) + 10,
   };
   const meter = Math.max(-3, Math.min(3, p.exposureDelta));
+  const { meter: _m, ...scanProps } = p;
+  useScopes(svgRef, canvasRef, p.assist, H, JSON.stringify(scanProps));
+  const zebraTable = Array.from({ length: 201 }, (_, i) => (i / 200 >= p.assist.zebra ? 1 : 0)).join(" ");
+  const g = p.assist.guide;
+  const guideW = g && g < W / H ? H * g : W;
+  const guideH = g && g > W / H ? W / g : H;
 
   return (
     <figure className="monitor">
       <div className="monitor-bezel">
-        <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={p.label} className="monitor-screen">
+        <div className="monitor-stack">
+        <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} role="img" aria-label={p.label} className="monitor-screen">
           <defs>
             <clipPath id="m-frame"><rect width={W} height={H} /></clipPath>
             <linearGradient id="m-sky" x1="0" y1="0" x2="0" y2="1">
@@ -458,6 +640,34 @@ export default function Monitor(p: Props) {
                   {lookTint && <feColorMatrix type="matrix" values={lookTint} />}
                 </>
               )}
+              {(p.assist.falseColor || p.assist.zebra > 0) && (
+                <feComponentTransfer data-assist="" result="base" />
+              )}
+              {p.assist.falseColor && (
+                <>
+                  <feColorMatrix data-assist="" in="base" type="matrix" values={LUMA_RGB} />
+                  <feComponentTransfer data-assist="" result="disp">
+                    <feFuncR type="table" tableValues={fcTables[0]} />
+                    <feFuncG type="table" tableValues={fcTables[1]} />
+                    <feFuncB type="table" tableValues={fcTables[2]} />
+                  </feComponentTransfer>
+                </>
+              )}
+              {p.assist.zebra > 0 && (
+                <>
+                  <feColorMatrix data-assist="" in="base" type="matrix" values={LUMA_ALPHA} />
+                  <feComponentTransfer data-assist="" result="zmask">
+                    <feFuncA type="discrete" tableValues={zebraTable} />
+                  </feComponentTransfer>
+                  <feImage data-assist="" href={ZEBRA_TILE} x={0} y={0} width={6} height={6} result="ztile" />
+                  <feTile data-assist="" in="ztile" result="zstripes" />
+                  <feComposite data-assist="" in="zstripes" in2="zmask" operator="in" result="zebra" />
+                  <feMerge data-assist="">
+                    <feMergeNode in={p.assist.falseColor ? "disp" : "base"} />
+                    <feMergeNode in="zebra" />
+                  </feMerge>
+                </>
+              )}
             </filter>
             <filter id="m-grain" filterUnits="userSpaceOnUse" x={0} y={0} width={W} height={H}>
               <feTurbulence type="fractalNoise" baseFrequency={1.5} numOctaves={1} seed={7} />
@@ -466,6 +676,8 @@ export default function Monitor(p: Props) {
           </defs>
 
           <g clipPath="url(#m-frame)">
+            <rect width={W} height={H} fill="#000" />
+            <g transform={p.skew ? `translate(${W / 2} ${H / 2}) skewX(${p.skew}) scale(1.04) translate(${-W / 2} ${-H / 2})` : undefined}>
             <g filter="url(#m-expose)">
               <rect width={W} height={H / 2 + 1} fill="url(#m-sky)" />
               <rect y={H / 2} width={W} height={H / 2} fill="url(#m-ground)" />
@@ -564,11 +776,31 @@ export default function Monitor(p: Props) {
               </g>
             </g>
 
+            </g>
+
             {p.grain > 0.01 && (
               <rect width={W} height={H} filter="url(#m-grain)" opacity={p.grain} style={{ mixBlendMode: "overlay" }} />
             )}
 
-            <g stroke="#fff" strokeOpacity={0.22} strokeWidth={0.4}>
+            {g > 0 && (
+              <g data-noscan="">
+                {guideW < W && (
+                  <>
+                    <rect width={(W - guideW) / 2} height={H} fill="#000" opacity={0.55} />
+                    <rect x={(W + guideW) / 2} width={(W - guideW) / 2} height={H} fill="#000" opacity={0.55} />
+                  </>
+                )}
+                {guideH < H && (
+                  <>
+                    <rect width={W} height={(H - guideH) / 2} fill="#000" opacity={0.55} />
+                    <rect y={(H + guideH) / 2} width={W} height={(H - guideH) / 2} fill="#000" opacity={0.55} />
+                  </>
+                )}
+                <rect x={(W - guideW) / 2} y={(H - guideH) / 2} width={guideW} height={guideH} fill="none" stroke="#fff" strokeOpacity={0.8} strokeWidth={0.7} strokeDasharray="3 2" />
+              </g>
+            )}
+
+            <g data-noscan="" stroke="#fff" strokeOpacity={0.22} strokeWidth={0.4}>
               <line x1={W / 3} y1={0} x2={W / 3} y2={H} />
               <line x1={(2 * W) / 3} y1={0} x2={(2 * W) / 3} y2={H} />
               <line x1={0} y1={H / 3} x2={W} y2={H / 3} />
@@ -576,14 +808,14 @@ export default function Monitor(p: Props) {
             </g>
 
             {af.w < W * 1.2 && (
-              <g stroke="#3ee07a" strokeWidth={1} fill="none">
+              <g data-noscan="" stroke="#3ee07a" strokeWidth={1} fill="none">
                 <path d={`M${af.x} ${af.y + 6} v-6 h6 M${af.x + af.w - 6} ${af.y} h6 v6 M${af.x + af.w} ${af.y + af.h - 6} v6 h-6 M${af.x + 6} ${af.y + af.h} h-6 v-6`} />
               </g>
             )}
 
-            {isVideo && p.meter && <AudioMeter m={p.meter} H={H} />}
+            {isVideo && p.meter && <g data-noscan=""><AudioMeter m={p.meter} H={H} /></g>}
 
-            <g className="hud" fontSize={7}>
+            <g data-noscan="" className="hud" fontSize={7}>
               {isVideo ? (
                 <>
                   <circle cx={10} cy={10} r={3} fill="#ff3b3b" />
@@ -614,6 +846,8 @@ export default function Monitor(p: Props) {
             </g>
           </g>
         </svg>
+        <canvas ref={canvasRef} className="monitor-scopes" width={W * 2} height={Math.round(H * 2)} aria-hidden="true" />
+        </div>
       </div>
     </figure>
   );
