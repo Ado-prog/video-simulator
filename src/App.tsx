@@ -3,7 +3,8 @@ import Monitor, { type SubjectKind, ROW_GAP, rowCount } from "./Monitor";
 import { MICS, MIC_BRANDS, INTERNAL_MIC, SOURCES, type SourceId, type PatternId, audioLevels, autoGain, effectiveMic } from "./audio";
 import { stylesFor, makerLutsFor, CREATIVE_LUTS, NEUTRAL_LOOK } from "./looks";
 import { factsFor, sensorDR, SCENE_DR, pixelPitch } from "./camdata";
-import { RESOLUTIONS, CODECS, GUIDES, bitrate, cardFor, type ResolutionId, type CodecId, type GuideId } from "./formats";
+import { RESOLUTIONS, CODECS, bitrate, cardFor, type ResolutionId, type CodecId } from "./formats";
+import { zebraSpecFor, zebraBands, FRAME_RATIOS, FRAME_COLORS, type ZebraMode, type FrameRatioId, type FrameColor } from "./zebra";
 import { sunDay, PLACES } from "./sun";
 import PhotoDiagram from "./PhotoDiagram";
 import { LensArt, IrisArt, CameraArt, cameraKind } from "./GearArt";
@@ -277,12 +278,22 @@ export default function App() {
   const [photoIso, setPhotoIso] = useState(800);
 
   // ── Monitor assists
-  const [zebra, setZebra] = useState(0);
+  const zSpec = zebraSpecFor(camera);
+  const [zebraMode, setZebraMode] = useState<ZebraMode>("off");
+  const [zebraLevels, setZebraLevels] = useState<Record<string, { z1: number; z2: number; w: number }>>({});
+  const zl = zebraLevels[zSpec.brand] ?? { z1: zSpec.z1.def, z2: zSpec.z2?.def ?? 100, w: zSpec.z2?.defWidth ?? zSpec.z1.defWidth ?? 5 };
+  const setZl = (patch: Partial<typeof zl>) => setZebraLevels((all) => ({ ...all, [zSpec.brand]: { ...zl, ...patch } }));
+  const zMode: ZebraMode = !zSpec.z2 && zebraMode !== "off" ? "z1" : !zSpec.both && zebraMode === "z12" ? "z1" : zebraMode;
+  const zWidth = zSpec.z1.kind === "band" ? zSpec.z1.defWidth ?? 5 : zl.w;
   const [falseColor, setFalseColor] = useState(false);
-  const [waveform, setWaveform] = useState(false);
+  const [wfmOn, setWfmOn] = useState(false);
+  const [wfmType, setWfmType] = useState<"wave" | "vector">("wave");
   const [histogram, setHistogram] = useState(false);
   const [peaking, setPeaking] = useState(false);
-  const [guideId, setGuideId] = useState<GuideId>("none");
+  const [frameOn, setFrameOn] = useState(false);
+  const [frameRatio, setFrameRatio] = useState<FrameRatioId>("2.39");
+  const [frameColor, setFrameColor] = useState<FrameColor>("white");
+  const [frameMask, setFrameMask] = useState(50);
 
   // ── Recording & movement (video)
   const [motion, setMotion] = useState<"static" | "slow" | "fast" | "walk" | "car">("static");
@@ -428,6 +439,79 @@ export default function App() {
     const dist = (focusM + i * ROW_GAP) * 1000;
     return dist >= dof.near - 1 && dist <= dof.far + 1;
   });
+
+  // ── Custom modes C1–C4 (like a camera's "save to custom mode"), stored in this browser
+  type CustomSlot = { name: string; saved: number; data: Record<string, unknown> };
+  const SLOTS = ["C1", "C2", "C3", "C4"] as const;
+  const [customs, setCustoms] = useState<Record<string, CustomSlot>>(() => {
+    try {
+      return JSON.parse(localStorage.getItem("video-sim-custom") ?? "{}");
+    } catch {
+      return {};
+    }
+  });
+  const [slot, setSlot] = useState<(typeof SLOTS)[number]>("C1");
+  const [slotName, setSlotName] = useState("");
+  const [customMsg, setCustomMsg] = useState("");
+  const storeCustoms = (next: Record<string, CustomSlot>) => {
+    setCustoms(next);
+    try {
+      localStorage.setItem("video-sim-custom", JSON.stringify(next));
+    } catch {
+      /* storage unavailable – kept for this visit only */
+    }
+  };
+  const snapshot = () => ({
+    shootMode, cameraId, lensId, manualSensor, focal, aperture, focusM,
+    vSystem, fps, shutter, isoAuto, iso, wbMode, wbK, profileId, lutId, styleId,
+    expMode, photoShutter, photoIso, ndId, vnd, cplOn, cplRot, uvOn,
+    zebraMode, zebraLevels, falseColor, wfmOn, wfmType, histogram, peaking, frameOn, frameRatio, frameColor, frameMask,
+    motion, stab, timelineFps, resId, codecId, flashMode, shutterType, bracketId,
+    micId, sourceId, gain, autoLevel, limiter, lowCut, float32, patternId, noiseCancel, safetyOn, onboard,
+  });
+  const setters = {
+    shootMode: setShootMode, cameraId: setCameraId, lensId: setLensId, manualSensor: setManualSensor, focal: setFocal,
+    aperture: setAperture, focusM: setFocusM, vSystem: setVSystem, fps: setFps, shutter: setShutter, isoAuto: setIsoAuto,
+    iso: setIso, wbMode: setWbMode, wbK: setWbK, profileId: setProfileId, lutId: setLutId, styleId: setStyleId,
+    expMode: setExpMode, photoShutter: setPhotoShutter, photoIso: setPhotoIso, ndId: setNdId, vnd: setVnd, cplOn: setCplOn,
+    cplRot: setCplRot, uvOn: setUvOn, zebraMode: setZebraMode, zebraLevels: setZebraLevels, falseColor: setFalseColor,
+    wfmOn: setWfmOn, wfmType: setWfmType, histogram: setHistogram, peaking: setPeaking, frameOn: setFrameOn,
+    frameRatio: setFrameRatio, frameColor: setFrameColor, frameMask: setFrameMask, motion: setMotion, stab: setStab,
+    timelineFps: setTimelineFps, resId: setResId, codecId: setCodecId, flashMode: setFlashMode, shutterType: setShutterType,
+    bracketId: setBracketId, micId: setMicId, sourceId: setSourceId, gain: setGain, autoLevel: setAutoLevel,
+    limiter: setLimiter, lowCut: setLowCut, float32: setFloat32, patternId: setPatternId, noiseCancel: setNoiseCancel,
+    safetyOn: setSafetyOn, onboard: setOnboard,
+  } as unknown as Record<string, (v: unknown) => void>;
+  const current = customs[slot];
+  const pickSlot = (id: (typeof SLOTS)[number]) => {
+    setSlot(id);
+    setSlotName(customs[id]?.name ?? "");
+    setCustomMsg("");
+  };
+  const saveCustom = () => {
+    const name = slotName.trim() || current?.name || slot;
+    storeCustoms({ ...customs, [slot]: { name, saved: Date.now(), data: snapshot() } });
+    setSlotName(name);
+    setCustomMsg(fill(t.customSaved, slot, name));
+  };
+  const renameCustom = () => {
+    if (!current) return;
+    const name = slotName.trim() || slot;
+    storeCustoms({ ...customs, [slot]: { ...current, name } });
+    setCustomMsg(fill(t.customRenamed, slot, name));
+  };
+  const loadCustom = () => {
+    if (!current) return;
+    for (const [k, v] of Object.entries(current.data)) setters[k]?.(v);
+    setCustomMsg(fill(t.customLoaded, slot, current.name));
+  };
+  const clearCustom = () => {
+    const next = { ...customs };
+    delete next[slot];
+    storeCustoms(next);
+    setSlotName("");
+    setCustomMsg(fill(t.customCleared, slot));
+  };
 
   const sel = (id: string) => ({ id, className: "control" });
   const styleSelect = (id: string) => (
@@ -673,51 +757,150 @@ export default function App() {
     </>
   );
 
+  const zebraValue = (v: number) =>
+    zSpec.scale === 255 ? String(v) : v > 100 && zSpec.brand === "sony" ? "100+" : `${v} %`;
+  const zebraLevelSelect = (slot: "z1" | "z2") => {
+    const spec = slot === "z1" ? zSpec.z1 : zSpec.z2!;
+    return (
+      <div>
+        <label htmlFor={`zebra-${slot}`}>{t.zebraNames[zSpec.brand][slot]}</label>
+        <select {...sel(`zebra-${slot}`)} value={String(zl[slot])} onChange={(e) => setZl({ [slot]: Number(e.target.value) })}>
+          {spec.levels.map((v) => (
+            <option key={v} value={String(v)}>{zebraValue(v)}</option>
+          ))}
+        </select>
+      </div>
+    );
+  };
+  const g_custom = (
+    <>
+{/* Custom modes */}
+          <fieldset className="group">
+            <legend>{t.customMode}</legend>
+            <div className="grid2">
+              <div>
+                <label htmlFor="slot">{t.customSlot}</label>
+                <select {...sel("slot")} value={slot} onChange={(e) => pickSlot(e.target.value as (typeof SLOTS)[number])}>
+                  {SLOTS.map((id) => (
+                    <option key={id} value={id}>{customs[id] ? `${id} – ${customs[id].name}` : `${id} – ${t.customEmpty}`}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="slotname">{t.customName}</label>
+                <input id="slotname" className="control" type="text" maxLength={24} value={slotName} placeholder={current?.name ?? slot} onChange={(e) => setSlotName(e.target.value)} />
+              </div>
+            </div>
+            <div className="custom-row">
+              <button type="button" className="btn-ghost" onClick={saveCustom}>{t.customSave}</button>
+              <button type="button" className="btn-ghost" disabled={!current} onClick={loadCustom}>{t.customLoad}</button>
+              <button type="button" className="btn-ghost" disabled={!current} onClick={renameCustom}>{t.customRename}</button>
+              <button type="button" className="btn-ghost" disabled={!current} onClick={clearCustom}>{t.customClear}</button>
+            </div>
+            {customMsg ? (
+              <p className="ok">{customMsg}</p>
+            ) : current ? (
+              <p className="note">{fill(t.customInfo, new Date(current.saved).toLocaleString(lang))}</p>
+            ) : (
+              <p className="note">{t.customTip}</p>
+            )}
+          </fieldset>
+    </>
+  );
   const g_assist = (
     <>
 {/* Monitor assists */}
           <fieldset className="group">
             <legend>{t.assist}</legend>
-            <div className="grid2">
-              <div>
-                <label htmlFor="zebra">{t.zebra}</label>
-                <select {...sel("zebra")} value={String(zebra)} onChange={(e) => setZebra(Number(e.target.value))}>
-                  <option value="0">{t.zebraOff}</option>
-                  {[70, 80, 90, 95, 100].map((v) => (
-                    <option key={v} value={String(v / 100)}>{v} %</option>
-                  ))}
-                </select>
+            <label htmlFor="zebra">{t.zebra}</label>
+            <select {...sel("zebra")} value={zMode} onChange={(e) => setZebraMode(e.target.value as ZebraMode)}>
+              <option value="off">{t.zebraOff}</option>
+              <option value="z1">{t.zebraNames[zSpec.brand].z1}</option>
+              {zSpec.z2 && <option value="z2">{t.zebraNames[zSpec.brand].z2}</option>}
+              {zSpec.both && <option value="z12">{t.zebraNames[zSpec.brand].z1} + {t.zebraNames[zSpec.brand].z2}</option>}
+            </select>
+            {zMode !== "off" && (
+              <div className="grid2">
+                {(zMode === "z1" || zMode === "z12") && zebraLevelSelect("z1")}
+                {(zMode === "z2" || zMode === "z12") && zSpec.z2 && zebraLevelSelect("z2")}
+                {zMode === "z2" && zSpec.z2?.widths && zSpec.z2.widths.length > 1 && (
+                  <div>
+                    <label htmlFor="zebra-w">{t.zebraRange}</label>
+                    <select {...sel("zebra-w")} value={String(zl.w)} onChange={(e) => setZl({ w: Number(e.target.value) })}>
+                      {zSpec.z2.widths.map((v) => (
+                        <option key={v} value={String(v)}>±{v}{zSpec.scale === 100 ? " %" : ""}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
-              <div>
-                <label htmlFor="guide">{t.guide}</label>
-                <select {...sel("guide")} value={guideId} onChange={(e) => setGuideId(e.target.value as GuideId)}>
-                  {GUIDES.map((g) => (
-                    <option key={g.id} value={g.id}>{t.guides[g.id]}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
+            )}
+            {zMode !== "off" && <p className="note">{t.zebraTips[zSpec.brand]}</p>}
+
             <div className="checks">
               <label className="check">
-                <input type="checkbox" id="falsecolor" checked={falseColor} onChange={(e) => setFalseColor(e.target.checked)} />
-                {t.falseColor}
-              </label>
-              <label className="check">
-                <input type="checkbox" id="waveform" checked={waveform} onChange={(e) => setWaveform(e.target.checked)} />
-                {t.waveform}
+                <input type="checkbox" id="wfm" checked={wfmOn} onChange={(e) => setWfmOn(e.target.checked)} />
+                WFM
               </label>
               <label className="check">
                 <input type="checkbox" id="histogram" checked={histogram} onChange={(e) => setHistogram(e.target.checked)} />
                 {t.histogram}
               </label>
               <label className="check">
+                <input type="checkbox" id="falsecolor" checked={falseColor} onChange={(e) => setFalseColor(e.target.checked)} />
+                {t.falseColor}
+              </label>
+              <label className="check">
                 <input type="checkbox" id="peaking" checked={peaking} onChange={(e) => setPeaking(e.target.checked)} />
                 {t.peaking}
               </label>
             </div>
-            {zebra > 0 && <p className="note">{t.zebraTip}</p>}
+            {wfmOn && (
+              <div className="seg" role="radiogroup" aria-label="WFM">
+                {(["wave", "vector"] as const).map((k) => (
+                  <label key={k} className={`seg-item ${wfmType === k ? "is-on" : ""}`}>
+                    <input type="radio" name="wfmtype" id={`wfm-${k}`} checked={wfmType === k} onChange={() => setWfmType(k)} />
+                    {k === "wave" ? "WAVE" : "VECTOR"}
+                  </label>
+                ))}
+              </div>
+            )}
+            {wfmOn && <p className="note">{wfmType === "wave" ? t.wfmWaveTip : t.wfmVectorTip}</p>}
             {falseColor && <p className="note">{t.fcLegend}</p>}
             {peaking && <p className="note">{t.peakingTip}</p>}
+
+            <label className="check">
+              <input type="checkbox" id="frameon" checked={frameOn} onChange={(e) => setFrameOn(e.target.checked)} />
+              {t.frameMarker}
+            </label>
+            {frameOn && (
+              <div className="grid3">
+                <div>
+                  <label htmlFor="frameratio">{t.frameAspect}</label>
+                  <select {...sel("frameratio")} value={frameRatio} onChange={(e) => setFrameRatio(e.target.value as FrameRatioId)}>
+                    {FRAME_RATIOS.map((r) => (
+                      <option key={r.id} value={r.id}>{r.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="framecolor">{t.frameColor}</label>
+                  <select {...sel("framecolor")} value={frameColor} onChange={(e) => setFrameColor(e.target.value as FrameColor)}>
+                    {(Object.keys(FRAME_COLORS) as FrameColor[]).map((c) => (
+                      <option key={c} value={c}>{t.colors[c]}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="framemask">{t.frameMask}</label>
+                  <select {...sel("framemask")} value={String(frameMask)} onChange={(e) => setFrameMask(Number(e.target.value))}>
+                    {[0, 25, 50, 75, 100].map((v) => (
+                      <option key={v} value={String(v)}>{v} %</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
           </fieldset>
     </>
   );
@@ -1306,7 +1489,16 @@ export default function App() {
             grain={grain}
             logView={!!activeLog && lutNone}
             look={look}
-            assist={{ zebra, falseColor, waveform, histogram, peaking, guide: GUIDES.find((g) => g.id === guideId)?.ratio ?? 0 }}
+            assist={{
+              zebras: zebraBands(zSpec, zMode, zl.z1, zl.z2, zWidth),
+              falseColor,
+              wfm: wfmOn ? wfmType : "off",
+              histogram,
+              peaking,
+              frame: frameOn
+                ? { ratio: FRAME_RATIOS.find((r) => r.id === frameRatio)!.r, color: FRAME_COLORS[frameColor], mask: frameMask / 100 }
+                : null,
+            }}
             skew={leanDeg}
             cpl={cplEffect}
             uv={uvOn}
@@ -1330,6 +1522,7 @@ export default function App() {
             </select>
           </div>
           <div className="card">
+            {g_custom}
             {g_light}
             {g_photo}
             {g_tech}
