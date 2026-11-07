@@ -10,6 +10,9 @@ import type { Illu, IlluSet } from "./illustrations";
 const W = 320;
 const EYE = 1.5; // camera height
 
+/** A click on the monitor: the row and figure hit (-1 = background) and the AF box in screen units. */
+export type AfHit = { row: number; fig: number; x: number; y: number; w: number; h: number; distM?: number };
+
 export type SubjectKind = "person" | "couple" | "group1" | "group2" | "group3";
 
 /** Distance between rows in a group photo, metres. */
@@ -90,9 +93,12 @@ type Props = {
   focusM: number; // where the lens is focused, in metres
   subjectM: number; // where the (front row of the) subject stands, in metres
   af?: {
-    frame: "off" | "hunt" | "ok"; // AF frame: hidden, searching (white) or in focus (green)
+    frame: "off" | "hunt" | "ok" | "mf"; // AF frame: hidden, searching (white), in focus (green), MF point (orange)
     target: number; // row index the AF point sits on, -1 = background
-    onPick?: (row: number) => void; // click on the monitor: row hit, or -1 for the background
+    point?: AfHit | null; // where the user clicked (touch AF)
+    follow: boolean; // AF-C: the frame tracks the person; AF-S/MF: it stays where it was set
+    manual: boolean; // MF/DMF: clicking or turning the ring opens the magnifier (MF assist)
+    onPick?: (hit: AfHit) => void; // click on the monitor
     onWheel?: (dy: number) => void; // mouse wheel on the monitor = focus ring
   };
   frameHeightMM: number; // height of the frame on the sensor
@@ -816,7 +822,29 @@ export default function Monitor(p: Props) {
 
   const subjRows = rows(p.subject);
   const afRow = p.af ? Math.min(p.af.target, subjRows.length - 1) : 0;
+  // where a figure's face is (metres): the illustrated couple is one picture, so its faces come from the image
+  const facePos = (f: Figure, i: number) =>
+    p.illu && p.subject === "couple" ? (i === 0 ? { x: -0.3, y: 1.71 } : { x: 0.093, y: 1.61 }) : { x: f.x, y: f.h - 0.14 };
+  // face box of one figure, like the camera's face/eye detection
+  const faceBox = (r: number, i: number) => {
+    const row = subjRows[r];
+    const f = row?.figures[i];
+    if (!f) return null;
+    const s = scale(d + row.offset);
+    const c = facePos(f, i);
+    const w = Math.max(14, 0.3 * s);
+    const h = Math.max(16, 0.34 * s);
+    return { x: W / 2 + c.x * s - w / 2, y: H / 2 + (EYE - c.y) * s - h / 2, w, h };
+  };
   const af = (() => {
+    const pt = p.af?.point;
+    if (pt) {
+      if (pt.fig >= 0 && p.af?.follow) {
+        const b = faceBox(pt.row, pt.fig);
+        if (b) return b;
+      }
+      return { x: pt.x - pt.w / 2, y: pt.y - pt.h / 2, w: pt.w, h: pt.h };
+    }
     if (afRow < 0) return { x: W * 0.41, y: H * 0.18, w: W * 0.18, h: H * 0.16 };
     const row = subjRows[afRow];
     const dr = d + row.offset;
@@ -830,17 +858,42 @@ export default function Monitor(p: Props) {
     };
   })();
   // which row (front first) or the background (-1) is under a point of the screen
-  const pickAt = (x: number, y: number) => {
+  const pickAt = (x: number, y: number): AfHit => {
     for (let r = 0; r < subjRows.length; r++) {
       const row = subjRows[r];
       const s = scale(d + row.offset);
-      for (const f of row.figures) {
-        const fx = W / 2 + f.x * s;
-        if (Math.abs(x - fx) <= 0.28 * s && y >= H / 2 + (EYE - f.h) * s && y <= H / 2 + EYE * s) return r;
+      for (let i = 0; i < row.figures.length; i++) {
+        const f = row.figures[i];
+        const fx = W / 2 + facePos(f, i).x * s;
+        if (Math.abs(x - fx) <= 0.28 * s && y >= H / 2 + (EYE - f.h - 0.05) * s && y <= H / 2 + EYE * s) {
+          const b = faceBox(r, i)!;
+          return { row: r, fig: i, x: b.x + b.w / 2, y: b.y + b.h / 2, w: b.w, h: b.h };
+        }
       }
     }
-    return -1;
+    // the floor below the horizon: its distance follows from the camera height; above it is the background
+    const groundM = y > H / 2 + 1 ? (H * EYE) / ((y - H / 2) * 2 * Math.tan(vfov / 2)) : Infinity;
+    return {
+      row: -1, fig: -1, x: Math.min(Math.max(x, 18), W - 18), y: Math.min(Math.max(y, 14), H - 14), w: 30, h: 24,
+      distM: groundM < d + backgroundOffset(false) ? Math.max(0.3, groundM) : undefined,
+    };
   };
+  // MF assist: magnified window around the focus point while focusing by hand
+  const [loupe, setLoupe] = useState<{ x: number; y: number } | null>(null);
+  const loupeTimer = useRef(0);
+  const openLoupe = (x: number, y: number) => {
+    setLoupe({ x, y });
+    window.clearTimeout(loupeTimer.current);
+    loupeTimer.current = window.setTimeout(() => setLoupe(null), 2500);
+  };
+  const manualOn = !!p.af?.manual;
+  useEffect(() => {
+    if (!manualOn) setLoupe(null);
+  }, [manualOn]);
+  const loupeAt = useRef({ x: W / 2, y: H / 2 });
+  loupeAt.current = { x: af.x + af.w / 2, y: af.y + af.h / 2 };
+  const openLoupeRef = useRef(openLoupe);
+  openLoupeRef.current = openLoupe;
   const onWheelRef = useRef(p.af?.onWheel);
   onWheelRef.current = p.af?.onWheel;
   const wheelOn = !!p.af?.onWheel;
@@ -850,6 +903,7 @@ export default function Monitor(p: Props) {
     const h = (e: WheelEvent) => {
       e.preventDefault();
       onWheelRef.current?.(e.deltaY);
+      openLoupeRef.current(loupeAt.current.x, loupeAt.current.y);
     };
     el.addEventListener("wheel", h, { passive: false });
     return () => el.removeEventListener("wheel", h);
@@ -877,7 +931,9 @@ export default function Monitor(p: Props) {
           onClick={(e) => {
             if (!p.af?.onPick) return;
             const r = e.currentTarget.getBoundingClientRect();
-            p.af.onPick(pickAt(((e.clientX - r.left) / r.width) * W, ((e.clientY - r.top) / r.height) * H));
+            const hit = pickAt(((e.clientX - r.left) / r.width) * W, ((e.clientY - r.top) / r.height) * H);
+            p.af.onPick(hit);
+            if (p.af.manual) openLoupe(hit.x, hit.y);
           }}
         >
           <defs>
@@ -1050,7 +1106,7 @@ export default function Monitor(p: Props) {
 
           <g clipPath="url(#m-frame)">
             <rect width={W} height={H} fill="#000" />
-            <g transform={p.skew ? `translate(${W / 2} ${H / 2}) skewX(${p.skew}) scale(1.04) translate(${-W / 2} ${-H / 2})` : undefined}>
+            <g id="m-pic" transform={p.skew ? `translate(${W / 2} ${H / 2}) skewX(${p.skew}) scale(1.04) translate(${-W / 2} ${-H / 2})` : undefined}>
             <g filter="url(#m-expose)">
               <rect width={W} height={H / 2 + 1} fill="url(#m-sky)" />
               <rect y={H / 2} width={W} height={H / 2} fill="url(#m-ground)" />
@@ -1206,8 +1262,27 @@ export default function Monitor(p: Props) {
               <line x1={0} y1={(2 * H) / 3} x2={W} y2={(2 * H) / 3} />
             </g>
 
+            {loupe && p.af?.manual && (() => {
+              const Z = 3;
+              const lw = W * 0.46;
+              const lh = H * 0.46;
+              const lx = Math.min(Math.max(loupe.x - lw / 2, 4), W - lw - 4);
+              const ly = Math.min(Math.max(loupe.y - lh / 2, 4), H - lh - 4);
+              return (
+                <g data-noscan="">
+                  <clipPath id="m-loupe"><rect x={lx} y={ly} width={lw} height={lh} /></clipPath>
+                  <g clipPath="url(#m-loupe)">
+                    <rect x={lx} y={ly} width={lw} height={lh} fill="#000" />
+                    <use href="#m-pic" transform={`translate(${lx + lw / 2} ${ly + lh / 2}) scale(${Z}) translate(${-loupe.x} ${-loupe.y})`} />
+                  </g>
+                  <rect x={lx} y={ly} width={lw} height={lh} fill="none" stroke="#fff" strokeWidth={0.8} />
+                  <text x={lx + 4} y={ly + 9} fontSize={6} fill="#fff" className="hud">MF ×{Z}</text>
+                </g>
+              );
+            })()}
+
             {af.w < W * 1.2 && p.af && p.af.frame !== "off" && (
-              <g data-noscan="" stroke={p.af.frame === "ok" ? "#3ee07a" : "#ffffff"} strokeWidth={p.af.frame === "ok" ? 1.2 : 0.9} fill="none">
+              <g data-noscan="" stroke={p.af.frame === "ok" ? "#3ee07a" : p.af.frame === "mf" ? "#ffb02e" : "#ffffff"} strokeWidth={p.af.frame === "hunt" ? 0.9 : 1.2} fill="none">
                 <path d={`M${af.x} ${af.y + 6} v-6 h6 M${af.x + af.w - 6} ${af.y} h6 v6 M${af.x + af.w} ${af.y + af.h - 6} v6 h-6 M${af.x + 6} ${af.y + af.h} h-6 v-6`} />
               </g>
             )}

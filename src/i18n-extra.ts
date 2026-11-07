@@ -2,10 +2,10 @@
 // Languages without their own entry fall back to English.
 
 const de = {
-  afHowS: "Klick auf den Monitor = AF-Punkt setzen und scharfstellen (wie Auslöser halb drücken). Der Fokus bleibt dann gespeichert.",
-  afHowC: "Klick auf eine Person oder Reihe – der Fokus bleibt an ihr dran, auch wenn sie sich bewegt.",
-  afHowMf: "Mausrad auf dem Monitor oder Fokusring-Regler = am Fokusring drehen.",
-  afHowDmf: "Klick auf den Monitor = Autofokus, danach mit dem Mausrad fein nachstellen.",
+  afHowS: "Klick irgendwo auf den Monitor (wie Touch-AF) = AF-Punkt genau dort setzen und scharfstellen. Der Fokus bleibt dann gespeichert, auch wenn sich das Motiv bewegt.",
+  afHowC: "Klick irgendwo auf den Monitor = AF-Punkt dort setzen. Auf einer Person erkennt die Kamera das Gesicht und bleibt dran, auch wenn sie sich bewegt.",
+  afHowMf: "Klick auf den Monitor = Fokuslupe (MF-Assist) an dieser Stelle; Mausrad oder Fokusring-Regler = am Fokusring drehen.",
+  afHowDmf: "Klick auf den Monitor = Autofokus dort, danach mit dem Mausrad fein nachstellen (mit Fokuslupe).",
   afButton: "AF (Auslöser halb drücken)",
   walkStart: "▶ Paar läuft auf die Kamera zu",
   walkStop: "■ Stopp",
@@ -181,10 +181,10 @@ const de = {
 type Extra = typeof de;
 
 const bs: Extra = {
-  afHowS: "Klik na monitor = postavi AF tačku i izoštri (kao okidač do pola). Fokus onda ostaje zaključan.",
-  afHowC: "Klikni na osobu ili red – fokus je prati i kad se kreće.",
-  afHowMf: "Točkić miša na monitoru ili klizač prstena = okrećeš prsten za fokus.",
-  afHowDmf: "Klik na monitor = autofokus, pa točkićem miša fino doteraš.",
+  afHowS: "Klik bilo gdje na monitor (kao touch AF) = AF tačka tačno tu i izoštravanje. Fokus onda ostaje zaključan, i kad se motiv pomjeri.",
+  afHowC: "Klik bilo gdje na monitor = AF tačka tu. Na osobi kamera prepozna lice i prati ga i kad se kreće.",
+  afHowMf: "Klik na monitor = lupa za fokus (MF asistent) na tom mjestu; točkić miša ili klizač = okrećeš prsten za fokus.",
+  afHowDmf: "Klik na monitor = autofokus tu, pa točkićem miša fino doteraš (sa lupom).",
   afButton: "AF (okidač do pola)",
   walkStart: "▶ Par ide prema kameri",
   walkStop: "■ Stop",
@@ -431,10 +431,10 @@ const sr: Extra = {
 };
 
 const en: Extra = {
-  afHowS: "Click the monitor = set the AF point and focus (like a half-press). Focus then stays locked.",
-  afHowC: "Click a person or row – focus stays on them, even when they move.",
-  afHowMf: "Mouse wheel on the monitor or the focus ring slider = turning the focus ring.",
-  afHowDmf: "Click the monitor = autofocus, then fine-tune with the mouse wheel.",
+  afHowS: "Click anywhere on the monitor (like touch AF) = AF point exactly there, and focus. Focus then stays locked, even if the subject moves.",
+  afHowC: "Click anywhere on the monitor = AF point there. On a person the camera detects the face and stays on it, even when they move.",
+  afHowMf: "Click the monitor = focus magnifier (MF assist) at that spot; mouse wheel or the slider = turning the focus ring.",
+  afHowDmf: "Click the monitor = autofocus there, then fine-tune with the mouse wheel (with magnifier).",
   afButton: "AF (half-press)",
   walkStart: "▶ Couple walks towards the camera",
   walkStop: "■ Stop",

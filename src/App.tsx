@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
-import Monitor, { type SubjectKind, ROW_GAP, rowCount, backgroundOffset } from "./Monitor";
+import Monitor, { type SubjectKind, type AfHit, ROW_GAP, rowCount, backgroundOffset } from "./Monitor";
 import { MICS, MIC_BRANDS, INTERNAL_MIC, SOURCES, STEREO_PATTERNS, type SourceId, type PatternId, audioLevels, autoGain, effectiveMic } from "./audio";
 import { stylesFor, makerLutsFor, CREATIVE_LUTS, NEUTRAL_LOOK } from "./looks";
 import { ILLU } from "./illustrations";
@@ -591,11 +591,13 @@ export default function App() {
 
   // ── Autofocus engine: AF-S locks, AF-C follows, MF/DMF = focus ring (mouse wheel / slider)
   const [afTarget, setAfTarget] = useState(0); // row the AF point sits on, -1 = background
+  const [afPoint, setAfPoint] = useState<AfHit | null>(null); // where the AF point was set with the mouse
   const [afPhase, setAfPhase] = useState<"hunt" | "locked">("locked");
   const [walking, setWalking] = useState(false); // demo: the couple walks towards the camera
   const rowsN = rowCount(subject);
   const bgM = subjectM + backgroundOffset(!!BACKDROPS[backdropId]?.photo);
-  const targetM = afTarget < 0 ? bgM : subjectM + Math.min(afTarget, rowsN - 1) * ROW_GAP;
+  const pointM = (row: number, hit: AfHit | null) => (row < 0 ? hit?.distM ?? bgM : subjectM + Math.min(row, rowsN - 1) * ROW_GAP);
+  const targetM = pointM(afTarget, afPoint);
   const tracking = !afFixed && (afKind === "c" || afKind === "f" || (afKind === "a" && (walking || afMoving)));
   const manualRing = !afFixed && (afKind === "mf" || afKind === "dmf");
   const afRef = useRef({ targetM, tracking, lensM, walking });
@@ -640,10 +642,10 @@ export default function App() {
   useEffect(() => {
     if (afFixed) setLensM(Math.min(dof.hyperfocal / 1000, D_MAX));
   }, [afFixed, dof.hyperfocal]);
-  const runAf = (row: number) => {
+  const runAf = (row: number, hit: AfHit | null = afPoint) => {
     setAfTarget(row);
     if (afFixed || afKind === "mf" || tracking) return;
-    const to = row < 0 ? bgM : subjectM + Math.min(row, rowsN - 1) * ROW_GAP;
+    const to = pointM(row, hit);
     driveRef.current = { from: lensM, to, t0: performance.now() };
     setAfPhase("hunt");
   };
@@ -655,10 +657,18 @@ export default function App() {
     (isVideo ? setFocusVideo : setFocusPhoto)("mf");
     setLensM(dof.hyperfocal / 1000);
   };
+  const pickAf = (hit: AfHit) => {
+    setAfPoint(hit);
+    runAf(hit.row, hit);
+  };
+  useEffect(() => setAfPoint(null), [subject]);
   const afMonitor = {
-    frame: (afFixed || afKind === "mf" ? "off" : tracking || afPhase === "locked" ? "ok" : "hunt") as "off" | "hunt" | "ok",
+    frame: (afFixed ? "off" : afKind === "mf" ? (afPoint ? "mf" : "off") : tracking || afPhase === "locked" ? "ok" : "hunt") as "off" | "hunt" | "ok" | "mf",
     target: afTarget,
-    onPick: afFixed || afKind === "mf" ? undefined : runAf,
+    point: afPoint,
+    follow: tracking,
+    manual: manualRing,
+    onPick: afFixed ? undefined : pickAf,
     onWheel: manualRing ? turnRing : undefined,
   };
   const g_focus = (
