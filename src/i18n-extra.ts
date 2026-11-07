@@ -2,6 +2,20 @@
 // Languages without their own entry fall back to English.
 
 const de = {
+  focusMode: "Fokusmodus",
+  afModes: { s: "Einzel-AF", c: "Kontinuierlicher AF", a: "Automatisch S/C", f: "Permanent-AF (Video)", dmf: "AF + manuell nachstellen", mf: "Manuell" },
+  afSPhoto: "Fokus wird einmal gespeichert – ideal für ruhige Porträts, Brautpaar- und Gruppenfotos.",
+  afCPhoto: "Fokus folgt dem Motiv – ideal für Einzug, ersten Tanz und Kinder.",
+  afSVideo: "Fokus wird einmal gespeichert und bleibt – gut für Stativ-Aufnahmen, wenn sich niemand bewegt.",
+  afSVideoMove: "⚠ AF-S stellt nur einmal scharf – bewegt sich das Paar oder die Kamera, wird das Bild unscharf. Für Video meist AF-C.",
+  afCVideo: "✓ Fokus folgt dem Motiv – mit Gesichts-/Augenerkennung am sichersten fürs Video.",
+  afA: "Die Kamera wechselt selbst zwischen Einzel-AF und kontinuierlichem AF, je nachdem ob sich das Motiv bewegt.",
+  afF: "✓ AF-F stellt im Video dauernd scharf, ohne dass du den Auslöser drücken musst.",
+  afDmf: "Erst stellt der Autofokus scharf, dann kannst du am Fokusring von Hand nachstellen.",
+  afMfPeak: "✓ Manueller Fokus mit Focus Peaking – die farbigen Kanten zeigen, was scharf ist.",
+  afMfNoPeak: "Manueller Fokus: schalte Focus Peaking ein (Monitor-Hilfen), sonst siehst du kaum, was scharf ist.",
+  afMfMove: "⚠ Offene Blende und Bewegung: manueller Fokus ist hier sehr schwer zu halten – AF-C oder abblenden.",
+  afFixed: "Diese Kamera hat Fixfokus – du kannst den Fokus nicht verstellen, ab ca. 1 m ist fast alles scharf.",
   people: "Personen",
   peopleDrawn: "Gezeichnet",
   peopleIllu: "Illustration (Animationsfilm-Stil)",
@@ -158,6 +172,20 @@ const de = {
 type Extra = typeof de;
 
 const bs: Extra = {
+  focusMode: "Način fokusa",
+  afModes: { s: "Pojedinačni AF", c: "Kontinuirani AF", a: "Automatski S/C", f: "Stalni AF (video)", dmf: "AF + ručna korekcija", mf: "Ručno" },
+  afSPhoto: "Fokus se zaključa jednom – idealno za mirne portrete, mladence i grupne slike.",
+  afCPhoto: "Fokus prati motiv – idealno za ulazak mladenaca, prvi ples i djecu.",
+  afSVideo: "Fokus se zaključa jednom i ostaje – dobro za snimanje sa stativa kad se niko ne pomjera.",
+  afSVideoMove: "⚠ AF-S izoštri samo jednom – ako se par ili kamera pomjeri, slika postaje mutna. Za video uglavnom AF-C.",
+  afCVideo: "✓ Fokus prati motiv – sa prepoznavanjem lica/očiju najsigurnije za video.",
+  afA: "Kamera sama prelazi između pojedinačnog i kontinuiranog AF, zavisno da li se motiv kreće.",
+  afF: "✓ AF-F u videu stalno izoštrava, bez pritiskanja okidača.",
+  afDmf: "Prvo izoštri autofokus, a onda možeš ručno doterati na prstenu za fokus.",
+  afMfPeak: "✓ Ručni fokus sa Focus Peakingom – obojene ivice pokazuju šta je oštro.",
+  afMfNoPeak: "Ručni fokus: uključi Focus Peaking (pomoć na monitoru), inače teško vidiš šta je oštro.",
+  afMfMove: "⚠ Otvorena blenda i kretanje: ručni fokus je ovdje jako teško držati – AF-C ili zatvori blendu.",
+  afFixed: "Ova kamera ima fiksni fokus – ne može se mijenjati, od oko 1 m je skoro sve oštro.",
   people: "Osobe",
   peopleDrawn: "Nacrtano",
   peopleIllu: "Ilustracija (stil animiranog filma)",
@@ -314,6 +342,12 @@ const bs: Extra = {
 
 const sr: Extra = {
   ...bs,
+  afSPhoto: "Fokus se zaključa jednom – idealno za mirne portrete, mladence i grupne slike.",
+  afCPhoto: "Fokus prati motiv – idealno za ulazak mladenaca, prvi ples i decu.",
+  afSVideo: "Fokus se zaključa jednom i ostaje – dobro za snimanje sa stativa kad se niko ne pomera.",
+  afSVideoMove: "⚠ AF-S izoštri samo jednom – ako se par ili kamera pomeri, slika postaje mutna. Za video uglavnom AF-C.",
+  afMfMove: "⚠ Otvorena blenda i kretanje: ručni fokus je ovde jako teško držati – AF-C ili zatvori blendu.",
+  afFixed: "Ova kamera ima fiksni fokus – ne može se menjati, od oko 1 m je skoro sve oštro.",
   photoBackdrops: { "p-garden-sea": "Bašta uz more (venčanje)", "p-garden-chairs": "Bašta sa stolicama", "p-lake-sunset": "Jezero u zalazak sunca", "p-hill-aisle": "Brdo sa stazom", "p-beach-arch": "Plaža sa lukom od cveća", "p-hall": "Svadbena sala sa lusterima" },
   recTime: "Vreme snimanja",
   roninTip: "Gimbal: mirni kadrovi u hodu. IBIS ostavi normalno, E-stabilizaciju isključi – inače rade jedna protiv druge",
@@ -379,6 +413,20 @@ const sr: Extra = {
 };
 
 const en: Extra = {
+  focusMode: "Focus mode",
+  afModes: { s: "Single AF", c: "Continuous AF", a: "Automatic S/C", f: "Full-time AF (video)", dmf: "AF + manual touch-up", mf: "Manual" },
+  afSPhoto: "Focus locks once – ideal for calm portraits, couple and group photos.",
+  afCPhoto: "Focus follows the subject – ideal for the entrance, first dance and kids.",
+  afSVideo: "Focus locks once and stays – fine on a tripod when nobody moves.",
+  afSVideoMove: "⚠ AF-S only focuses once – if the couple or the camera moves, the shot goes soft. For video, usually use AF-C.",
+  afCVideo: "✓ Focus follows the subject – with face/eye detection the safest choice for video.",
+  afA: "The camera switches between single and continuous AF by itself, depending on whether the subject moves.",
+  afF: "✓ AF-F keeps focusing during video without pressing the shutter button.",
+  afDmf: "Autofocus focuses first, then you can fine-tune by hand on the focus ring.",
+  afMfPeak: "✓ Manual focus with focus peaking – the coloured edges show what's sharp.",
+  afMfNoPeak: "Manual focus: turn on focus peaking (monitor assists), otherwise it's hard to see what's sharp.",
+  afMfMove: "⚠ Wide aperture and movement: manual focus is very hard to hold here – use AF-C or stop down.",
+  afFixed: "This camera has fixed focus – you can't change it, from about 1 m almost everything is sharp.",
   people: "People",
   peopleDrawn: "Drawn",
   peopleIllu: "Illustration (animated-film style)",

@@ -102,7 +102,7 @@ type Props = {
   skew: number; // rolling-shutter lean in degrees
   cpl: number;
   uv: boolean;
-  hud: { fps: string; shutter: string; iso: string; focus: string; profile: string; filters: string; wb: string };
+  hud: { fps: string; shutter: string; iso: string; focus: string; af: string; profile: string; filters: string; wb: string };
   label: string;
 };
 
@@ -1156,7 +1156,7 @@ export default function Monitor(p: Props) {
               <line x1={0} y1={(2 * H) / 3} x2={W} y2={(2 * H) / 3} />
             </g>
 
-            {af.w < W * 1.2 && (
+            {af.w < W * 1.2 && p.hud.af !== "MF" && p.hud.af !== "FF" && (
               <g data-noscan="" stroke="#3ee07a" strokeWidth={1} fill="none">
                 <path d={`M${af.x} ${af.y + 6} v-6 h6 M${af.x + af.w - 6} ${af.y} h6 v6 M${af.x + af.w} ${af.y + af.h - 6} v6 h-6 M${af.x + 6} ${af.y + af.h} h-6 v-6`} />
               </g>
@@ -1185,7 +1185,7 @@ export default function Monitor(p: Props) {
                 <line x1={-18} y1={0} x2={18} y2={0} stroke="#fff" strokeWidth={0.5} />
                 <path d={`M${meter * 6} 1 l-2 3 h4 z`} fill={Math.abs(p.exposureDelta) > 3 ? "#ff5a5a" : "#ffd34d"} />
               </g>
-              <text x={W - 6} y={H - 5} textAnchor="end">AF {p.hud.focus}</text>
+              <text x={W - 6} y={H - 5} textAnchor="end">{p.hud.af} {p.hud.focus}</text>
               {Math.abs(p.exposureDelta) >= 0.15 && (
                 <text x={W - 6} y={p.hud.filters ? 31.5 : 22} textAnchor="end" fill={Math.abs(p.exposureDelta) > 3 ? "#ff7a7a" : "#fff"}>
                   {p.exposureDelta > 0 ? "+" : ""}

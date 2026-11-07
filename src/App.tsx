@@ -7,6 +7,7 @@ import { shoeFits, NO_AUDIO, factsFor, slotsFor, sensorDR, SCENE_DR, pixelPitch,
 import { RESOLUTIONS, CODECS, MEDIA, bitrate, containersFor, mediaClass, minutesOn, type ResolutionId, type CodecId } from "./formats";
 import { zebraSpecFor, zebraBands, FRAME_RATIOS, FRAME_COLORS, type ZebraMode, type FrameRatioId, type FrameColor } from "./zebra";
 import { sunDay, PLACES } from "./sun";
+import { focusModes, focusLabel, focusTag, fixedFocus, validFocus, type FocusKind } from "./focus";
 import PhotoDiagram from "./PhotoDiagram";
 import { LensArt, IrisArt, CameraArt, cameraKind } from "./GearArt";
 import { DICT, LANGUAGES, fill, loadLang, saveLang, type Lang } from "./i18n";
@@ -305,6 +306,8 @@ export default function App() {
   const [wfmType, setWfmType] = useState<"wave" | "vector">("wave");
   const [histogram, setHistogram] = useState(false);
   const [peaking, setPeaking] = useState(false);
+  const [focusPhoto, setFocusPhoto] = useState<FocusKind>("s");
+  const [focusVideo, setFocusVideo] = useState<FocusKind>("c");
   const [frameOn, setFrameOn] = useState(false);
   type Marker = { on: boolean; ratio: FrameRatioId; color: FrameColor };
   const [frameMarkers, setFrameMarkers] = useState<Marker[]>([
@@ -513,7 +516,7 @@ export default function App() {
   const snapshot = () => ({
     shootMode, cameraId, lensId, manualSensor, focal, aperture, focusM,
     vSystem, fps, shutter, isoAuto, iso, wbMode, wbK, profileId, lutId, styleId,
-    expMode, photoShutter, photoIso, ndId, vnd, cplOn, cplRot, uvOn,
+    expMode, focusPhoto, focusVideo, photoShutter, photoIso, ndId, vnd, cplOn, cplRot, uvOn,
     subject,
     zebraMode, zebraLevels, falseColor, wfmOn, wfmType, histogram, peaking, frameOn, frameMarkers, frameMask,
     motion, roninId, roninMode, stab, timelineFps, resId, codecId, containerId, flashMode, shutterType, bracketId,
@@ -523,7 +526,7 @@ export default function App() {
     shootMode: setShootMode, cameraId: setCameraId, lensId: setLensId, manualSensor: setManualSensor, focal: setFocal,
     aperture: setAperture, focusM: setFocusM, vSystem: setVSystem, fps: setFps, shutter: setShutter, isoAuto: setIsoAuto,
     iso: setIso, wbMode: setWbMode, wbK: setWbK, profileId: setProfileId, lutId: setLutId, styleId: setStyleId,
-    expMode: setExpMode, photoShutter: setPhotoShutter, photoIso: setPhotoIso, ndId: setNdId, vnd: setVnd, cplOn: setCplOn,
+    expMode: setExpMode, focusPhoto: setFocusPhoto, focusVideo: setFocusVideo, photoShutter: setPhotoShutter, photoIso: setPhotoIso, ndId: setNdId, vnd: setVnd, cplOn: setCplOn,
     cplRot: setCplRot, uvOn: setUvOn,
     subject: setSubject, zebraMode: setZebraMode, zebraLevels: setZebraLevels, falseColor: setFalseColor,
     wfmOn: setWfmOn, wfmType: setWfmType, histogram: setHistogram, peaking: setPeaking, frameOn: setFrameOn,
@@ -576,6 +579,41 @@ export default function App() {
     </>
   );
 
+  const afList = focusModes(camera, isVideo);
+  const afFixed = fixedFocus(camera);
+  const afKind = validFocus(isVideo ? focusVideo : focusPhoto, camera, isVideo);
+  const afMoving = isVideo && motion !== "static";
+  const g_focus = (
+    <>
+            <label htmlFor="afmode">{t.focusMode}</label>
+            {afFixed ? (
+              <p className="note">{t.afFixed}</p>
+            ) : (
+              <>
+                <select {...sel("afmode")} value={afKind} onChange={(e) => (isVideo ? setFocusVideo : setFocusPhoto)(e.target.value as FocusKind)}>
+                  {afList.map((k) => (
+                    <option key={k} value={k}>{focusLabel(camera, k, isVideo)} – {t.afModes[k]}</option>
+                  ))}
+                </select>
+                {afKind === "s" && (isVideo ? (
+                  afMoving ? <p className="warn">{t.afSVideoMove}</p> : <p className="note">{t.afSVideo}</p>
+                ) : (
+                  <p className="note">{t.afSPhoto}</p>
+                ))}
+                {afKind === "c" && <p className="ok">{isVideo ? t.afCVideo : t.afCPhoto}</p>}
+                {afKind === "a" && <p className="note">{t.afA}</p>}
+                {afKind === "f" && <p className="ok">{t.afF}</p>}
+                {afKind === "dmf" && <p className="note">{t.afDmf}</p>}
+                {afKind === "mf" && (
+                  <>
+                    {peaking ? <p className="ok">{t.afMfPeak}</p> : <p className="warn">{t.afMfNoPeak}</p>}
+                    {afMoving && aperture < 2.8 && <p className="warn">{t.afMfMove}</p>}
+                  </>
+                )}
+              </>
+            )}
+    </>
+  );
   const g_cam = (
     <>
 {/* Camera & lens */}
@@ -688,6 +726,7 @@ export default function App() {
                 <option key={k} value={k}>{t.subjects[k]}</option>
               ))}
             </select>
+            {g_focus}
           </fieldset>
     </>
   );
@@ -1638,6 +1677,7 @@ export default function App() {
               shutter: formatShutter(effShutter),
               iso: useAuto ? `AUTO ${auto.display}` : String(effIso),
               focus: formatMeters(focusM * 1000),
+              af: afFixed ? "FF" : focusTag(camera, afKind, isVideo),
               profile: activeLog ? `${activeLog.name}${lutTag}` : style === styles[0] ? "" : style.name,
               filters: filterTag,
               wb: `${wbMode === "auto" ? "AWB " : ""}${Math.round(camWbK / 100) * 100}K`,
