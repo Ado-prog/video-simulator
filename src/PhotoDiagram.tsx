@@ -7,7 +7,8 @@ import { ROW_GAP, rowCount, type SubjectKind } from "./Monitor";
 type Props = {
   focal: number;
   aperture: number;
-  focusM: number;
+  focusM: number; // where the lens is focused
+  subjectM: number; // where the (front row of the) subject stands
   nearMM: number;
   farMM: number;
   hyperfocalMM: number;
@@ -60,9 +61,9 @@ export default function PhotoDiagram(p: Props) {
   const groundY = H - 34;
   const vs = (groundY - 26) / TOP_M; // px per metre, vertical
   const rows = rowCount(p.subject);
-  const lastRow = p.focusM + (rows - 1) * ROW_GAP;
+  const lastRow = p.subjectM + (rows - 1) * ROW_GAP;
   const farM = isFinite(p.farMM) ? p.farMM / 1000 : Infinity;
-  const want = Math.max(lastRow * 1.6, p.focusM * 2.2, isFinite(farM) ? farM * 1.12 : 0, 2);
+  const want = Math.max(lastRow * 1.6, p.subjectM * 2.2, p.focusM * 1.15, isFinite(farM) ? farM * 1.12 : 0, 2);
   const max = NICE.find((n) => n >= want) ?? 50;
   const hs = (W - padL - padR) / max; // px per metre, horizontal
   const x = (m: number) => padL + Math.min(Math.max(m, 0), max) * hs;
@@ -83,11 +84,11 @@ export default function PhotoDiagram(p: Props) {
   // one silhouette per row (two for a couple), side view
   const people: { m: number; h: number; dx: number; dress?: boolean }[] = [];
   if (p.subject === "couple") {
-    people.push({ m: p.focusM, h: 1.82, dx: -6 }, { m: p.focusM, h: 1.66, dx: 8, dress: true });
+    people.push({ m: p.subjectM, h: 1.82, dx: -6 }, { m: p.subjectM, h: 1.66, dx: 8, dress: true });
   } else if (p.subject === "person") {
-    people.push({ m: p.focusM, h: 1.78, dx: 0 });
+    people.push({ m: p.subjectM, h: 1.78, dx: 0 });
   } else {
-    for (let r = 0; r < rows; r++) people.push({ m: p.focusM + r * ROW_GAP, h: r % 2 ? 1.66 : 1.8, dx: 0, dress: r % 2 === 1 });
+    for (let r = 0; r < rows; r++) people.push({ m: p.subjectM + r * ROW_GAP, h: r % 2 ? 1.66 : 1.8, dx: 0, dress: r % 2 === 1 });
   }
 
   return (
@@ -125,9 +126,9 @@ export default function PhotoDiagram(p: Props) {
             // one picture per row; the couple is a single picture
             const list =
               p.subject === "couple"
-                ? [{ m: p.focusM, h: 1.84, pic: SIDE.couple }]
+                ? [{ m: p.subjectM, h: 1.84, pic: SIDE.couple }]
                 : p.subject === "person"
-                ? [{ m: p.focusM, h: 1.82, pic: SIDE.groom }]
+                ? [{ m: p.subjectM, h: 1.82, pic: SIDE.groom }]
                 : people.map((pp) => ({ m: pp.m, h: pp.h + 0.03, pic: pp.dress ? SIDE.woman : SIDE.man }));
             return list.map((it, i) => {
               const hPx = it.h * vs;

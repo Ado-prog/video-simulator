@@ -2,6 +2,15 @@
 // Languages without their own entry fall back to English.
 
 const de = {
+  afHowS: "Klick auf den Monitor = AF-Punkt setzen und scharfstellen (wie Auslöser halb drücken). Der Fokus bleibt dann gespeichert.",
+  afHowC: "Klick auf eine Person oder Reihe – der Fokus bleibt an ihr dran, auch wenn sie sich bewegt.",
+  afHowMf: "Mausrad auf dem Monitor oder Fokusring-Regler = am Fokusring drehen.",
+  afHowDmf: "Klick auf den Monitor = Autofokus, danach mit dem Mausrad fein nachstellen.",
+  afButton: "AF (Auslöser halb drücken)",
+  walkStart: "▶ Paar läuft auf die Kamera zu",
+  walkStop: "■ Stopp",
+  focusRing: "Fokusring",
+  afStale: "⚠ Fokus gespeichert bei {x}, das Motiv steht bei {y} – neu scharfstellen (Klick auf den Monitor).",
   focusMode: "Fokusmodus",
   afModes: { s: "Einzel-AF", c: "Kontinuierlicher AF", a: "Automatisch S/C", f: "Permanent-AF (Video)", dmf: "AF + manuell nachstellen", mf: "Manuell" },
   afSPhoto: "Fokus wird einmal gespeichert – ideal für ruhige Porträts, Brautpaar- und Gruppenfotos.",
@@ -172,6 +181,15 @@ const de = {
 type Extra = typeof de;
 
 const bs: Extra = {
+  afHowS: "Klik na monitor = postavi AF tačku i izoštri (kao okidač do pola). Fokus onda ostaje zaključan.",
+  afHowC: "Klikni na osobu ili red – fokus je prati i kad se kreće.",
+  afHowMf: "Točkić miša na monitoru ili klizač prstena = okrećeš prsten za fokus.",
+  afHowDmf: "Klik na monitor = autofokus, pa točkićem miša fino doteraš.",
+  afButton: "AF (okidač do pola)",
+  walkStart: "▶ Par ide prema kameri",
+  walkStop: "■ Stop",
+  focusRing: "Prsten za fokus",
+  afStale: "⚠ Fokus zaključan na {x}, motiv je na {y} – izoštri ponovo (klik na monitor).",
   focusMode: "Način fokusa",
   afModes: { s: "Pojedinačni AF", c: "Kontinuirani AF", a: "Automatski S/C", f: "Stalni AF (video)", dmf: "AF + ručna korekcija", mf: "Ručno" },
   afSPhoto: "Fokus se zaključa jednom – idealno za mirne portrete, mladence i grupne slike.",
@@ -413,6 +431,15 @@ const sr: Extra = {
 };
 
 const en: Extra = {
+  afHowS: "Click the monitor = set the AF point and focus (like a half-press). Focus then stays locked.",
+  afHowC: "Click a person or row – focus stays on them, even when they move.",
+  afHowMf: "Mouse wheel on the monitor or the focus ring slider = turning the focus ring.",
+  afHowDmf: "Click the monitor = autofocus, then fine-tune with the mouse wheel.",
+  afButton: "AF (half-press)",
+  walkStart: "▶ Couple walks towards the camera",
+  walkStop: "■ Stop",
+  focusRing: "Focus ring",
+  afStale: "⚠ Focus locked at {x}, the subject is at {y} – refocus (click the monitor).",
   focusMode: "Focus mode",
   afModes: { s: "Single AF", c: "Continuous AF", a: "Automatic S/C", f: "Full-time AF (video)", dmf: "AF + manual touch-up", mf: "Manual" },
   afSPhoto: "Focus locks once – ideal for calm portraits, couple and group photos.",

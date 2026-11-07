@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
-import Monitor, { type SubjectKind, ROW_GAP, rowCount } from "./Monitor";
+import Monitor, { type SubjectKind, ROW_GAP, rowCount, backgroundOffset } from "./Monitor";
 import { MICS, MIC_BRANDS, INTERNAL_MIC, SOURCES, STEREO_PATTERNS, type SourceId, type PatternId, audioLevels, autoGain, effectiveMic } from "./audio";
 import { stylesFor, makerLutsFor, CREATIVE_LUTS, NEUTRAL_LOOK } from "./looks";
 import { ILLU } from "./illustrations";
@@ -177,7 +177,8 @@ export default function App() {
   // ── Optics
   const [focal, setFocal] = useState(50);
   const [aperture, setAperture] = useState(2.8);
-  const [focusM, setFocusM] = useState(3);
+  const [subjectM, setSubjectM] = useState(3); // where the subject stands ("Abstand")
+  const [lensM, setLensM] = useState(3); // where the lens is focused (AF / focus ring)
   const [subject, setSubject] = useState<SubjectKind>("couple");
 
   const isPrime = !!lens && lens.minFocal === lens.maxFocal;
@@ -222,7 +223,7 @@ export default function App() {
     if (lens) setAperture((a) => Math.max(a, maxApertureAt(lens, f)));
   };
 
-  const dof = depthOfField(focal, aperture, focusM * 1000, coc);
+  const dof = depthOfField(focal, aperture, lensM * 1000, coc);
   const totalMM = dof.far - dof.near;
   const eqFocal = Math.round(focal * crop);
   const diffractionAt = coc / 0.001342; // Airy disk ≈ 2.44 · 550 nm · N
@@ -478,7 +479,7 @@ export default function App() {
   const shoeBad = !noAudio && !!mic.shoe && !shoeFits(camera, mic.shoe);
   const audioBase = {
     mic: effectiveMic(mic, pattern, noiseCancel), source: sourceId, sceneId, outdoor: !scene.palette.indoor,
-    cameraDistanceM: focusM, lowCut, float32: f32On,
+    cameraDistanceM: subjectM, lowCut, float32: f32On,
   };
   const effGain = autoLevel ? autoGain(audioBase) : gain;
   const audio = audioLevels({ ...audioBase, gain: effGain, limiter });
@@ -492,7 +493,7 @@ export default function App() {
 
   // ── Group rows: which rows are inside the sharp zone
   const rowsSharp = Array.from({ length: rowCount(subject) }, (_, i) => {
-    const dist = (focusM + i * ROW_GAP) * 1000;
+    const dist = (subjectM + i * ROW_GAP) * 1000;
     return dist >= dof.near - 1 && dist <= dof.far + 1;
   });
 
@@ -518,7 +519,7 @@ export default function App() {
     }
   };
   const snapshot = () => ({
-    shootMode, cameraId, lensId, manualSensor, focal, aperture, focusM,
+    shootMode, cameraId, lensId, manualSensor, focal, aperture, focusM: subjectM, lensM,
     vSystem, fps, shutter, isoAuto, iso, wbMode, wbK, profileId, lutId, styleId,
     expMode, focusPhoto, focusVideo, photoShutter, photoIso, ndId, vnd, cplOn, cplRot, uvOn,
     subject,
@@ -528,7 +529,7 @@ export default function App() {
   });
   const setters = {
     shootMode: setShootMode, cameraId: setCameraId, lensId: setLensId, manualSensor: setManualSensor, focal: setFocal,
-    aperture: setAperture, focusM: setFocusM, vSystem: setVSystem, fps: setFps, shutter: setShutter, isoAuto: setIsoAuto,
+    aperture: setAperture, focusM: setSubjectM, lensM: setLensM, vSystem: setVSystem, fps: setFps, shutter: setShutter, isoAuto: setIsoAuto,
     iso: setIso, wbMode: setWbMode, wbK: setWbK, profileId: setProfileId, lutId: setLutId, styleId: setStyleId,
     expMode: setExpMode, focusPhoto: setFocusPhoto, focusVideo: setFocusVideo, photoShutter: setPhotoShutter, photoIso: setPhotoIso, ndId: setNdId, vnd: setVnd, cplOn: setCplOn,
     cplRot: setCplRot, uvOn: setUvOn,
@@ -587,6 +588,79 @@ export default function App() {
   const afFixed = fixedFocus(camera);
   const afKind = validFocus(isVideo ? focusVideo : focusPhoto, camera, isVideo);
   const afMoving = isVideo && motion !== "static";
+
+  // ── Autofocus engine: AF-S locks, AF-C follows, MF/DMF = focus ring (mouse wheel / slider)
+  const [afTarget, setAfTarget] = useState(0); // row the AF point sits on, -1 = background
+  const [afPhase, setAfPhase] = useState<"hunt" | "locked">("locked");
+  const [walking, setWalking] = useState(false); // demo: the couple walks towards the camera
+  const rowsN = rowCount(subject);
+  const bgM = subjectM + backgroundOffset(!!BACKDROPS[backdropId]?.photo);
+  const targetM = afTarget < 0 ? bgM : subjectM + Math.min(afTarget, rowsN - 1) * ROW_GAP;
+  const tracking = !afFixed && (afKind === "c" || afKind === "f" || (afKind === "a" && (walking || afMoving)));
+  const manualRing = !afFixed && (afKind === "mf" || afKind === "dmf");
+  const afRef = useRef({ targetM, tracking, lensM, walking });
+  afRef.current = { targetM, tracking, lensM, walking };
+  const driveRef = useRef<{ from: number; to: number; t0: number } | null>(null);
+  const walkRef = useRef({ dir: -1, last: 0 });
+  useEffect(() => {
+    let raf = 0;
+    const tick = (now: number) => {
+      const a = afRef.current;
+      // demo walk: 6 m -> 1.8 m and back, about 1.2 m/s
+      if (a.walking) {
+        const w = walkRef.current;
+        const dt = w.last ? Math.min(0.05, (now - w.last) / 1000) : 0;
+        w.last = now;
+        setSubjectM((m) => {
+          let n = m + w.dir * 1.2 * dt;
+          if (n <= 1.8) { n = 1.8; w.dir = 1; }
+          if (n >= 6) { n = 6; w.dir = -1; }
+          return n;
+        });
+      } else walkRef.current.last = 0;
+      const d = driveRef.current;
+      if (d) {
+        // single AF: quick drive with a small overshoot, then lock
+        const u = Math.min(1, (now - d.t0) / 420);
+        const e = u < 1 ? 1 + 2.2 * Math.pow(u - 1, 3) + 1.2 * Math.pow(u - 1, 2) : 1;
+        setLensM(Math.exp(Math.log(d.from) + (Math.log(d.to) - Math.log(d.from)) * e));
+        if (u >= 1) {
+          driveRef.current = null;
+          setAfPhase("locked");
+        }
+      } else if (a.tracking && Math.abs(Math.log(a.targetM / a.lensM)) > 0.002) {
+        setLensM(Math.exp(Math.log(a.lensM) + Math.log(a.targetM / a.lensM) * 0.2));
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+  // fixed-focus cameras sit at their hyperfocal distance
+  useEffect(() => {
+    if (afFixed) setLensM(Math.min(dof.hyperfocal / 1000, D_MAX));
+  }, [afFixed, dof.hyperfocal]);
+  const runAf = (row: number) => {
+    setAfTarget(row);
+    if (afFixed || afKind === "mf" || tracking) return;
+    const to = row < 0 ? bgM : subjectM + Math.min(row, rowsN - 1) * ROW_GAP;
+    driveRef.current = { from: lensM, to, t0: performance.now() };
+    setAfPhase("hunt");
+  };
+  const turnRing = (dy: number) => {
+    driveRef.current = null;
+    setLensM((m) => clamp(m * Math.exp(-dy * 0.0015), D_MIN, D_MAX));
+  };
+  const setHyperfocal = () => {
+    (isVideo ? setFocusVideo : setFocusPhoto)("mf");
+    setLensM(dof.hyperfocal / 1000);
+  };
+  const afMonitor = {
+    frame: (afFixed || afKind === "mf" ? "off" : tracking || afPhase === "locked" ? "ok" : "hunt") as "off" | "hunt" | "ok",
+    target: afTarget,
+    onPick: afFixed || afKind === "mf" ? undefined : runAf,
+    onWheel: manualRing ? turnRing : undefined,
+  };
   const g_focus = (
     <>
             <label htmlFor="afmode">{t.focusMode}</label>
@@ -599,6 +673,27 @@ export default function App() {
                     <option key={k} value={k}>{focusLabel(camera, k, isVideo)} – {t.afModes[k]}</option>
                   ))}
                 </select>
+                <p className="note">{afKind === "mf" ? t.afHowMf : afKind === "dmf" ? t.afHowDmf : tracking ? t.afHowC : t.afHowS}</p>
+                <div className="row-tools">
+                  {afKind !== "mf" && (
+                    <button type="button" className="btn-ghost" onClick={() => runAf(afTarget)}>{t.afButton}</button>
+                  )}
+                  <button type="button" className={`btn-ghost${walking ? " is-on" : ""}`} onClick={() => setWalking((w) => !w)}>
+                    {walking ? t.walkStop : t.walkStart}
+                  </button>
+                </div>
+                {manualRing && (
+                  <>
+                    <div className="row-label">
+                      <label htmlFor="focusring">{t.focusRing}</label>
+                      <output htmlFor="focusring">{formatMeters(lensM * 1000)}</output>
+                    </div>
+                    <input id="focusring" type="range" min={0} max={1000} value={toSlider(lensM)} onChange={(e) => { driveRef.current = null; setLensM(fromSlider(Number(e.target.value))); }} />
+                  </>
+                )}
+                {!tracking && afKind !== "mf" && Math.abs(Math.log(lensM / targetM)) > 0.08 && afPhase === "locked" && (
+                  <p className="warn">{fill(t.afStale, formatMeters(lensM * 1000), formatMeters(targetM * 1000))}</p>
+                )}
                 {afKind === "s" && (isVideo ? (
                   afMoving ? <p className="warn">{t.afSVideoMove}</p> : <p className="note">{t.afSVideo}</p>
                 ) : (
@@ -682,9 +777,9 @@ export default function App() {
             <legend>{t.optics}</legend>
             <div className="row-label">
               <label htmlFor="focus">{t.distance}</label>
-              <output htmlFor="focus">{formatMeters(focusM * 1000)}</output>
+              <output htmlFor="focus">{formatMeters(subjectM * 1000)}</output>
             </div>
-            <input id="focus" type="range" min={0} max={1000} value={toSlider(focusM)} onChange={(e) => setFocusM(fromSlider(Number(e.target.value)))} />
+            <input id="focus" type="range" min={0} max={1000} value={toSlider(subjectM)} onChange={(e) => { setWalking(false); setSubjectM(fromSlider(Number(e.target.value))); }} />
 
             <div className="art-wrap art-wrap-lens">
               <LensArt focal={focal} minF={lens ? lens.minFocal : Math.round(focal)} maxF={lens ? lens.maxFocal : Math.round(focal)} maxAperture={apMin} />
@@ -1581,7 +1676,8 @@ export default function App() {
             <PhotoDiagram
               focal={focal}
               aperture={aperture}
-              focusM={focusM}
+              focusM={lensM}
+              subjectM={subjectM}
               nearMM={dof.near}
               farMM={dof.far}
               hyperfocalMM={dof.hyperfocal}
@@ -1609,7 +1705,7 @@ export default function App() {
                 ))}
               </span>
             )}
-            <button type="button" className="btn-ghost" disabled={!canHyperfocal} onClick={() => setFocusM(dof.hyperfocal / 1000)}>
+            <button type="button" className="btn-ghost" disabled={!canHyperfocal} onClick={setHyperfocal}>
               {t.setHyperfocal}
             </button>
           </div>
@@ -1648,7 +1744,9 @@ export default function App() {
             meter={{ avg: audio.avg, peak: audio.peak, clip: audio.clip, limiting: audio.limiting, stereo: isStereo }}
             focal={focal}
             aperture={aperture}
-            focusM={focusM}
+            focusM={lensM}
+            subjectM={subjectM}
+            af={afMonitor}
             frameHeightMM={isVideo ? frameH / stabCrop : sensor.height}
             cocMM={coc}
             subject={subject}
@@ -1680,7 +1778,7 @@ export default function App() {
               fps: isVideo ? `${fps}p ${vSystem}` : expMode === "A" ? "A" : "M",
               shutter: formatShutter(effShutter),
               iso: useAuto ? `AUTO ${auto.display}` : String(effIso),
-              focus: formatMeters(focusM * 1000),
+              focus: formatMeters(lensM * 1000),
               af: afFixed ? "FF" : focusTag(camera, afKind, isVideo),
               profile: activeLog ? `${activeLog.name}${lutTag}` : style === styles[0] ? "" : style.name,
               filters: filterTag,

@@ -14,6 +14,8 @@ export type SubjectKind = "person" | "couple" | "group1" | "group2" | "group3";
 
 /** Distance between rows in a group photo, metres. */
 export const ROW_GAP = 0.8;
+// how far the background sits behind the subject (drawn backdrop / background photo)
+export const backgroundOffset = (photo: boolean) => (photo ? 15 : 4.5);
 
 export function rowCount(kind: SubjectKind) {
   return kind === "group3" ? 3 : kind === "group2" ? 2 : 1;
@@ -85,7 +87,14 @@ type Props = {
   meter?: MeterInput;
   focal: number; // mm
   aperture: number;
-  focusM: number; // focus distance (front row) in metres
+  focusM: number; // where the lens is focused, in metres
+  subjectM: number; // where the (front row of the) subject stands, in metres
+  af?: {
+    frame: "off" | "hunt" | "ok"; // AF frame: hidden, searching (white) or in focus (green)
+    target: number; // row index the AF point sits on, -1 = background
+    onPick?: (row: number) => void; // click on the monitor: row hit, or -1 for the background
+    onWheel?: (dy: number) => void; // mouse wheel on the monitor = focus ring
+  };
   frameHeightMM: number; // height of the frame on the sensor
   cocMM: number;
   subject: SubjectKind;
@@ -760,11 +769,11 @@ export default function Monitor(p: Props) {
   };
   const sd = (d: number) => blur(d) / 2.5;
 
-  const d = p.focusM;
+  const d = p.subjectM;
   const lightsD = d + 2;
-  const backD = d + 4.5;
+  const backD = d + backgroundOffset(false);
   const hillsD = 120;
-  const photoD = d + 15; // background photos: the venue about 15 m behind the subject
+  const photoD = d + backgroundOffset(true); // background photos: the venue about 15 m behind the subject
   // photos are framed like a ~28 mm (full-frame) shot; longer lenses crop into them
   const refHalfV = Math.atan(10.125 / 28);
   const photoZoom = Math.max(1, Math.tan(refHalfV) / Math.tan(vfov / 2));
@@ -806,15 +815,45 @@ export default function Monitor(p: Props) {
   const lBlur = blur(lightsD);
 
   const subjRows = rows(p.subject);
-  const figs = subjRows[0].figures;
-  const tallest = Math.max(...figs.map((f) => f.h));
-  const groupHalf = Math.max(...figs.map((f) => Math.abs(f.x))) + 0.3;
-  const af = {
-    x: W / 2 - groupHalf * scale(d),
-    y: H / 2 + (EYE - tallest) * scale(d) - 6,
-    w: groupHalf * 2 * scale(d),
-    h: tallest * 0.22 * scale(d) + 10,
+  const afRow = p.af ? Math.min(p.af.target, subjRows.length - 1) : 0;
+  const af = (() => {
+    if (afRow < 0) return { x: W * 0.41, y: H * 0.18, w: W * 0.18, h: H * 0.16 };
+    const row = subjRows[afRow];
+    const dr = d + row.offset;
+    const rTall = Math.max(...row.figures.map((f) => f.h));
+    const rHalf = Math.max(...row.figures.map((f) => Math.abs(f.x))) + 0.3;
+    return {
+      x: W / 2 - rHalf * scale(dr),
+      y: H / 2 + (EYE - rTall) * scale(dr) - 6,
+      w: rHalf * 2 * scale(dr),
+      h: rTall * 0.22 * scale(dr) + 10,
+    };
+  })();
+  // which row (front first) or the background (-1) is under a point of the screen
+  const pickAt = (x: number, y: number) => {
+    for (let r = 0; r < subjRows.length; r++) {
+      const row = subjRows[r];
+      const s = scale(d + row.offset);
+      for (const f of row.figures) {
+        const fx = W / 2 + f.x * s;
+        if (Math.abs(x - fx) <= 0.28 * s && y >= H / 2 + (EYE - f.h) * s && y <= H / 2 + EYE * s) return r;
+      }
+    }
+    return -1;
   };
+  const onWheelRef = useRef(p.af?.onWheel);
+  onWheelRef.current = p.af?.onWheel;
+  const wheelOn = !!p.af?.onWheel;
+  useEffect(() => {
+    const el = svgRef.current;
+    if (!el || !wheelOn) return;
+    const h = (e: WheelEvent) => {
+      e.preventDefault();
+      onWheelRef.current?.(e.deltaY);
+    };
+    el.addEventListener("wheel", h, { passive: false });
+    return () => el.removeEventListener("wheel", h);
+  }, [wheelOn]);
   const meter = Math.max(-3, Math.min(3, p.exposureDelta));
   const { meter: _m, ...scanProps } = p;
   useScopes(svgRef, canvasRef, p.assist, H, JSON.stringify(scanProps));
@@ -829,7 +868,18 @@ export default function Monitor(p: Props) {
     <figure className="monitor">
       <div className="monitor-bezel">
         <div className="monitor-stack">
-        <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} role="img" aria-label={p.label} className="monitor-screen">
+        <svg
+          ref={svgRef}
+          viewBox={`0 0 ${W} ${H}`}
+          role="img"
+          aria-label={p.label}
+          className={`monitor-screen${p.af?.onPick ? " is-pickable" : ""}`}
+          onClick={(e) => {
+            if (!p.af?.onPick) return;
+            const r = e.currentTarget.getBoundingClientRect();
+            p.af.onPick(pickAt(((e.clientX - r.left) / r.width) * W, ((e.clientY - r.top) / r.height) * H));
+          }}
+        >
           <defs>
             <clipPath id="m-frame"><rect width={W} height={H} /></clipPath>
             <linearGradient id="m-sky" x1="0" y1="0" x2="0" y2="1">
@@ -1156,8 +1206,8 @@ export default function Monitor(p: Props) {
               <line x1={0} y1={(2 * H) / 3} x2={W} y2={(2 * H) / 3} />
             </g>
 
-            {af.w < W * 1.2 && p.hud.af !== "MF" && p.hud.af !== "FF" && (
-              <g data-noscan="" stroke="#3ee07a" strokeWidth={1} fill="none">
+            {af.w < W * 1.2 && p.af && p.af.frame !== "off" && (
+              <g data-noscan="" stroke={p.af.frame === "ok" ? "#3ee07a" : "#ffffff"} strokeWidth={p.af.frame === "ok" ? 1.2 : 0.9} fill="none">
                 <path d={`M${af.x} ${af.y + 6} v-6 h6 M${af.x + af.w - 6} ${af.y} h6 v6 M${af.x + af.w} ${af.y + af.h - 6} v6 h-6 M${af.x + 6} ${af.y + af.h} h-6 v-6`} />
               </g>
             )}
