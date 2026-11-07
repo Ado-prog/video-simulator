@@ -204,6 +204,10 @@ export default function App() {
     if (cam?.fixedLens) {
       const first = lensesForCamera(cam)[0];
       if (first) applyLens(first);
+    } else if (camera?.fixedLens) {
+      // leaving a fixed-lens camera (e.g. DJI 6.7 mm): its tiny focal length makes no sense here
+      setFocal(50);
+      setAperture(2.8);
     }
     const logs = logProfilesFor(cam);
     if (!logs.some((x) => x.id === profileId)) setProfileId("standard");
