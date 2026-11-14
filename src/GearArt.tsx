@@ -69,7 +69,7 @@ export function LensArt({ focal, minF, maxF, maxAperture, lens }: { focal: numbe
   const W = Math.max(124, Math.round(x0 + L * (internal ? 1 : 1.3) + 22));
   const collar = !fixed && maxF >= 200 && (look.white || apW <= 2.8 || maxF >= 400);
   const ap = (v: number) => (Number.isInteger(v) ? String(v) : v.toFixed(1));
-  const label = `${minF === maxF ? minF : `${minF}–${maxF}`} mm  f/${apW === apT ? ap(apW) : `${ap(apW)}–${ap(apT)}`}`;
+  const label = `${minF === maxF ? minF : `${minF}–${maxF}`} mm` + (lens ? `  f/${apW === apT ? ap(apW) : `${ap(apW)}–${ap(apT)}`}` : "");
   const bodyFill = look.white ? "url(#lens-white)" : "url(#lens-body)";
   const ringFill = look.white ? "#c9ccd0" : "#25292f";
   const rib = look.white ? "#a9adb3" : "#3c424a";
@@ -544,5 +544,17 @@ export function MicArt({ mic }: { mic: MicInfo }) {
         </g>
       )}
     </svg>
+  );
+}
+
+/** A real photograph of the gear with the credit its licence asks for. */
+export function GearPhotoView({ photo, label }: { photo: { src: string; author: string; license: string; page: string; w: number; h: number }; label: string }) {
+  return (
+    <figure className="gear-photo">
+      <img src={photo.src} alt={label} width={photo.w} height={photo.h} loading="lazy" />
+      <figcaption>
+        <a href={photo.page} target="_blank" rel="noreferrer">Foto: {photo.author} · {photo.license}</a>
+      </figcaption>
+    </figure>
   );
 }
