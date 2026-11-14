@@ -133,5 +133,6 @@ The gear photographs in `public/gear/` come from Wikimedia Commons and are used 
 | Nikon:Nikkor Z 35mm f/1.4 | [Nikon NIKKOR Z 35mm f 1.4 (53868344792).jpg](https://commons.wikimedia.org/wiki/File:Nikon_NIKKOR_Z_35mm_f_1.4_(53868344792).jpg) | Henry Söderlund from Helsinki, Finland, Finland | CC BY 2.0 |
 | Nikon:Nikkor Z 50mm f/1.2 S | [Nikon NIKKOR Z 50mm f 1.2 S (51602295538).jpg](https://commons.wikimedia.org/wiki/File:Nikon_NIKKOR_Z_50mm_f_1.2_S_(51602295538).jpg) | Henry Söderlund from Helsinki, Finland | CC BY 2.0 |
 | Nikon:Nikkor Z DX 16-50mm f/3.5-6.3 VR | [Nikon Z 50 Nikkor Z DX 16-50 VR.jpg](https://commons.wikimedia.org/wiki/File:Nikon_Z_50_Nikkor_Z_DX_16-50_VR.jpg) | Thilo Parg | CC BY-SA 4.0 |
-| rode-wpro | [ORTF - setup for Rode Wireless Pro with furry.jpg](https://commons.wikimedia.org/wiki/File:ORTF_-_setup_for_Rode_Wireless_Pro_with_furry.jpg) | Klankbeeld | CC0 |
 | dji-micmini | [DJI Mic Mini 2S Mikro Windschutz.jpg](https://commons.wikimedia.org/wiki/File:DJI_Mic_Mini_2S_Mikro_Windschutz.jpg) | Linie29 | CC BY 4.0 |
+| rode-wpro | product image supplied by the project owner | © RØDE | all rights reserved by RØDE, not freely licensed |
+| pana-dms1 | product image supplied by the project owner | © Panasonic | all rights reserved by Panasonic, not freely licensed |

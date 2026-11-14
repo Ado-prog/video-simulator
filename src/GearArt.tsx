@@ -551,9 +551,9 @@ export function MicArt({ mic }: { mic: MicInfo }) {
 export function GearPhotoView({ photo, label }: { photo: { src: string; author: string; license: string; page: string; w: number; h: number }; label: string }) {
   return (
     <figure className="gear-photo">
-      <img src={photo.src} alt={label} width={photo.w} height={photo.h} loading="lazy" />
+      <img src={photo.src} alt={label} width={photo.w} height={photo.h} loading="lazy" className={photo.license === "©" ? "on-white" : undefined} />
       <figcaption>
-        <a href={photo.page} target="_blank" rel="noreferrer">Foto: {photo.author} · {photo.license}</a>
+        <a href={photo.page} target="_blank" rel="noreferrer">Foto: {photo.license === "©" ? `© ${photo.author}` : `${photo.author} · ${photo.license}`}</a>
       </figcaption>
     </figure>
   );

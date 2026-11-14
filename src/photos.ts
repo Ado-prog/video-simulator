@@ -141,6 +141,7 @@ export const MIC_PHOTOS: Record<string, GearPhoto> = {
   "senn-mke600": P("mic-senn-mke600", "ParsecAU", "CC0", "https://commons.wikimedia.org/wiki/File:Sennheiser_MKE_600_NoFilter.jpg", 440, 314),
   "nikon-me1": P("mic-nikon-me1", "Jakub T. Jankiewicz", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Nikon_ME-1_Microphone.jpg", 440, 293),
   "shure-movemic": P("mic-shure-movemic", "TaurusEmerald", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Shure_MoveMic_Two_Kit_Wireless_System.jpg", 440, 330),
-  "rode-wpro": P("mic-rode-wpro", "Klankbeeld", "CC0", "https://commons.wikimedia.org/wiki/File:ORTF_-_setup_for_Rode_Wireless_Pro_with_furry.jpg", 440, 247),
+  "rode-wpro": P("mic-rode-wpro", "RØDE", "\u00a9", "https://rode.com/", 281, 330),
   "dji-micmini": P("mic-dji-micmini", "Linie29", "CC BY 4.0", "https://commons.wikimedia.org/wiki/File:DJI_Mic_Mini_2S_Mikro_Windschutz.jpg", 440, 294),
+  "pana-dms1": P("mic-pana-dms1", "Panasonic", "\u00a9", "https://www.panasonic.com/", 440, 326),
 };
