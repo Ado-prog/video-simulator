@@ -106,3 +106,32 @@ The gear photographs in `public/gear/` come from Wikimedia Commons and are used 
 | senn-mke600 | [Sennheiser MKE 600 NoFilter.jpg](https://commons.wikimedia.org/wiki/File:Sennheiser_MKE_600_NoFilter.jpg) | ParsecAU | CC0 |
 | nikon-me1 | [Nikon ME-1 Microphone.jpg](https://commons.wikimedia.org/wiki/File:Nikon_ME-1_Microphone.jpg) | Jakub T. Jankiewicz | CC BY-SA 4.0 |
 | shure-movemic | [Shure MoveMic Two Kit Wireless System.jpg](https://commons.wikimedia.org/wiki/File:Shure_MoveMic_Two_Kit_Wireless_System.jpg) | TaurusEmerald | CC BY-SA 4.0 |
+| pana-s1h | [Panasonic Lumix DC-S1H 26 oct 2019b.jpg](https://commons.wikimedia.org/wiki/File:Panasonic_Lumix_DC-S1H_26_oct_2019b.jpg) | 昼落ち | CC BY-SA 4.0 |
+| pana-s5 | [Panasonic Lumix DC-S5 21 Oct 2020a.jpg](https://commons.wikimedia.org/wiki/File:Panasonic_Lumix_DC-S5_21_Oct_2020a.jpg) | 昼落ち | CC BY-SA 4.0 |
+| pana-s9 | [Panasonic Lumix DC-S9 25 may 2024a.jpg](https://commons.wikimedia.org/wiki/File:Panasonic_Lumix_DC-S9_25_may_2024a.jpg) | 昼落ち | CC0 |
+| sony-a6700 | [Sony A6700 by Henry Söderlund.jpg](https://commons.wikimedia.org/wiki/File:Sony_A6700_by_Henry_S%C3%B6derlund.jpg) | Henry Söderlund | CC BY 2.0 |
+| sony-zve10ii | [Sony ZV-E10 Mark II.tiff](https://commons.wikimedia.org/wiki/File:Sony_ZV-E10_Mark_II.tiff) | PJ | CC BY 4.0 |
+| canon-r5ii | [Canon EOS R5 Mark II (front, no body cap).jpg](https://commons.wikimedia.org/wiki/File:Canon_EOS_R5_Mark_II_(front,_no_body_cap).jpg) | D. Benjamin Miller | CC0 |
+| nikon-z9 | [Nikon Z 9 - front view - by Henry Söderlund (51946495569).jpg](https://commons.wikimedia.org/wiki/File:Nikon_Z_9_-_front_view_-_by_Henry_S%C3%B6derlund_(51946495569).jpg) | Henry Söderlund from Helsinki, Finland | CC BY 2.0 |
+| nikon-z6iii | [Nikon Z6III (by Henry Söderlund).jpg](https://commons.wikimedia.org/wiki/File:Nikon_Z6III_(by_Henry_S%C3%B6derlund).jpg) | Henry Söderlund | CC BY 2.0 |
+| dji-avata360 | [DJI Avata 360 in Store 2026-05-15-1.jpg](https://commons.wikimedia.org/wiki/File:DJI_Avata_360_in_Store_2026-05-15-1.jpg) | NDG | CC BY-SA 4.0 |
+| insta-x3 | [Insta360 X3 - 1.jpg](https://commons.wikimedia.org/wiki/File:Insta360_X3_-_1.jpg) | Kyu3a | CC BY-SA 4.0 |
+| Sigma:28-70mm F2.8 DG DN Contemporary | [Sigma 28-70 mm F2.8 DG DN Contemporary.jpg](https://commons.wikimedia.org/wiki/File:Sigma_28-70_mm_F2.8_DG_DN_Contemporary.jpg) | Henry Söderlund | CC BY 2.0 |
+| Panasonic:Leica DG Vario-Elmarit 12-60mm F2.8-4 | [Panasonic.Lumix.DC-GH5.Leica.12-60.perspective view.jpg](https://commons.wikimedia.org/wiki/File:Panasonic.Lumix.DC-GH5.Leica.12-60.perspective_view.jpg) | Bautsch | CC0 |
+| Panasonic:Leica DG Vario-Summilux 10-25mm F1.7 | [Leica.DG.10-25.jpg](https://commons.wikimedia.org/wiki/File:Leica.DG.10-25.jpg) | Bautsch | CC0 |
+| Sony:FE 70-200mm F2.8 GM OSS II | [Sony FE 70-200mm F2.8 GM OSS II - by Henry Söderlund (51707233845).jpg](https://commons.wikimedia.org/wiki/File:Sony_FE_70-200mm_F2.8_GM_OSS_II_-_by_Henry_S%C3%B6derlund_(51707233845).jpg) | Henry Söderlund from Helsinki, Finland, Finland | CC BY 2.0 |
+| Sony:FE 35mm F1.4 GM | [Sony FE 35mm F1.4 GM - by Henry Söderlund (51090047026).jpg](https://commons.wikimedia.org/wiki/File:Sony_FE_35mm_F1.4_GM_-_by_Henry_S%C3%B6derlund_(51090047026).jpg) | Henry Söderlund from Helsinki, Finland | CC BY 2.0 |
+| Sony:FE 50mm F1.2 GM | [Sony FE 50mm F1.2 GM - by Henry Söderlund (51170539376).jpg](https://commons.wikimedia.org/wiki/File:Sony_FE_50mm_F1.2_GM_-_by_Henry_S%C3%B6derlund_(51170539376).jpg) | Henry Söderlund from Helsinki, Finland | CC BY 2.0 |
+| Sony:FE 50mm F1.4 GM | [Sony FE 50mm F1.4 GM - by Henry Söderlund (52792513251).jpg](https://commons.wikimedia.org/wiki/File:Sony_FE_50mm_F1.4_GM_-_by_Henry_S%C3%B6derlund_(52792513251).jpg) | Henry Söderlund from Helsinki, Finland | CC BY 2.0 |
+| Sigma:30mm F1.4 DC DN Contemporary | [Sigma 30mm F1.4 DC DN Contemporary.jpg](https://commons.wikimedia.org/wiki/File:Sigma_30mm_F1.4_DC_DN_Contemporary.jpg) | Henry Söderlund | CC BY 2.0 |
+| Canon:RF 24-70mm F2.8 L IS USM | [Canon EOS R5 with Canon RF 24-70mm F2.8L IS USM (50170662581).jpg](https://commons.wikimedia.org/wiki/File:Canon_EOS_R5_with_Canon_RF_24-70mm_F2.8L_IS_USM_(50170662581).jpg) | Henry Söderlund from Helsinki, Finland | CC BY 2.0 |
+| Canon:RF 24-105mm F4 L IS USM | [Canon EOS R5 Mark II+RF 24-105mm F4L IS USM.jpg](https://commons.wikimedia.org/wiki/File:Canon_EOS_R5_Mark_II%2BRF_24-105mm_F4L_IS_USM.jpg) | Dinkun Chen | CC BY-SA 4.0 |
+| Canon:RF 24-105mm F4-7.1 IS STM | [Canon RF 24-105mm f4-7.1 IS STM.jpg](https://commons.wikimedia.org/wiki/File:Canon_RF_24-105mm_f4-7.1_IS_STM.jpg) | Bernatargentona | CC BY-SA 4.0 |
+| Canon:RF 24-240mm F4-6.3 IS USM | [Canon RF 24–240mm.jpg](https://commons.wikimedia.org/wiki/File:Canon_RF_24%E2%80%93240mm.jpg) | GodeNehler | CC BY-SA 4.0 |
+| Canon:RF 85mm F1.2 L USM | [Canon R5 mit RF 85 1.2-8049.jpg](https://commons.wikimedia.org/wiki/File:Canon_R5_mit_RF_85_1.2-8049.jpg) | GodeNehler | CC BY-SA 4.0 |
+| Canon:RF 100mm F2.8 L Macro IS USM | [Canon RF 100mm F2.8L Macro IS USM.jpg](https://commons.wikimedia.org/wiki/File:Canon_RF_100mm_F2.8L_Macro_IS_USM.jpg) | Christoffer Hjeltnes Støle | CC BY-SA 4.0 |
+| Nikon:Nikkor Z 35mm f/1.4 | [Nikon NIKKOR Z 35mm f 1.4 (53868344792).jpg](https://commons.wikimedia.org/wiki/File:Nikon_NIKKOR_Z_35mm_f_1.4_(53868344792).jpg) | Henry Söderlund from Helsinki, Finland, Finland | CC BY 2.0 |
+| Nikon:Nikkor Z 50mm f/1.2 S | [Nikon NIKKOR Z 50mm f 1.2 S (51602295538).jpg](https://commons.wikimedia.org/wiki/File:Nikon_NIKKOR_Z_50mm_f_1.2_S_(51602295538).jpg) | Henry Söderlund from Helsinki, Finland | CC BY 2.0 |
+| Nikon:Nikkor Z DX 16-50mm f/3.5-6.3 VR | [Nikon Z 50 Nikkor Z DX 16-50 VR.jpg](https://commons.wikimedia.org/wiki/File:Nikon_Z_50_Nikkor_Z_DX_16-50_VR.jpg) | Thilo Parg | CC BY-SA 4.0 |
+| rode-wpro | [ORTF - setup for Rode Wireless Pro with furry.jpg](https://commons.wikimedia.org/wiki/File:ORTF_-_setup_for_Rode_Wireless_Pro_with_furry.jpg) | Klankbeeld | CC0 |
+| dji-micmini | [DJI Mic Mini 2S Mikro Windschutz.jpg](https://commons.wikimedia.org/wiki/File:DJI_Mic_Mini_2S_Mikro_Windschutz.jpg) | Linie29 | CC BY 4.0 |

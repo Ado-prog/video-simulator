@@ -46,6 +46,16 @@ export const CAMERA_PHOTOS: Record<string, GearPhoto> = {
   "insta-x6": P("cam-insta-x6", "PantheraLeo1359531", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:2026-10-04_Frontalaufnahme_Insta360_X6_HOF9321-HDR_RAW-Export_-Staub.png", 178, 330),
   "insta-x5": P("cam-insta-x5", "VlaDexa", "CC BY 4.0", "https://commons.wikimedia.org/wiki/File:Insta360_X5.webp", 220, 330),
   "insta-x4": P("cam-insta-x4", "ItzANormalFioko", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Insta360_X4_senza_protezione_lenti_ma_cover_termica.jpg", 247, 330),
+  "pana-s1h": P("cam-pana-s1h", "昼落ち", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Panasonic_Lumix_DC-S1H_26_oct_2019b.jpg", 309, 330),
+  "pana-s5": P("cam-pana-s5", "昼落ち", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Panasonic_Lumix_DC-S5_21_Oct_2020a.jpg", 297, 330),
+  "pana-s9": P("cam-pana-s9", "昼落ち", "CC0", "https://commons.wikimedia.org/wiki/File:Panasonic_Lumix_DC-S9_25_may_2024a.jpg", 360, 330),
+  "sony-a6700": P("cam-sony-a6700", "Henry Söderlund", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Sony_A6700_by_Henry_S%C3%B6derlund.jpg", 440, 293),
+  "sony-zve10ii": P("cam-sony-zve10ii", "PJ", "CC BY 4.0", "https://commons.wikimedia.org/wiki/File:Sony_ZV-E10_Mark_II.tiff", 330, 227),
+  "canon-r5ii": P("cam-canon-r5ii", "D. Benjamin Miller", "CC0", "https://commons.wikimedia.org/wiki/File:Canon_EOS_R5_Mark_II_(front,_no_body_cap).jpg", 440, 330),
+  "nikon-z9": P("cam-nikon-z9", "Henry Söderlund from Helsinki, Finland", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Nikon_Z_9_-_front_view_-_by_Henry_S%C3%B6derlund_(51946495569).jpg", 440, 330),
+  "nikon-z6iii": P("cam-nikon-z6iii", "Henry Söderlund", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Nikon_Z6III_(by_Henry_S%C3%B6derlund).jpg", 440, 293),
+  "dji-avata360": P("cam-dji-avata360", "NDG", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:DJI_Avata_360_in_Store_2026-05-15-1.jpg", 440, 330),
+  "insta-x3": P("cam-insta-x3", "Kyu3a", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Insta360_X3_-_1.jpg", 247, 330),
 };
 
 export const LENS_PHOTOS: Record<string, GearPhoto> = {
@@ -107,6 +117,23 @@ export const LENS_PHOTOS: Record<string, GearPhoto> = {
   "Nikon:Nikkor Z 85mm f/1.8 S": P("lens-nikon-nikkor-z-85mm-f-1-8-s", "Henry Söderlund from Helsinki, Finland, Finland", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Nikon_NIKKOR_Z_85mm_f_1.8_S_(48706710723).jpg", 412, 330),
   "Nikon:Nikkor Z MC 105mm f/2.8 VR S": P("lens-nikon-nikkor-z-mc-105mm-f-2-8-vr-s", "TTTNIS", "CC0", "https://commons.wikimedia.org/wiki/File:Nikon_Nikkor_Z_MC_105mm_f2.8_VR_01.jpg", 226, 330),
   "Nikon:Nikkor Z 135mm f/1.8 S Plena": P("lens-nikon-nikkor-z-135mm-f-1-8-s-plena", "Henry Söderlund", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Nikon_Nikkor_Z_135mm_F1.8_S_Plena_by_Henry_S%C3%B6derlund.jpg", 412, 330),
+  "Sigma:28-70mm F2.8 DG DN Contemporary": P("lens-sigma-28-70mm-f2-8-dg-dn-contemporary", "Henry Söderlund", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Sigma_28-70_mm_F2.8_DG_DN_Contemporary.jpg", 440, 293),
+  "Panasonic:Leica DG Vario-Elmarit 12-60mm F2.8-4": P("lens-panasonic-leica-dg-vario-elmarit-12-60mm-f2-8-4", "Bautsch", "CC0", "https://commons.wikimedia.org/wiki/File:Panasonic.Lumix.DC-GH5.Leica.12-60.perspective_view.jpg", 440, 303),
+  "Panasonic:Leica DG Vario-Summilux 10-25mm F1.7": P("lens-panasonic-leica-dg-vario-summilux-10-25mm-f1-7", "Bautsch", "CC0", "https://commons.wikimedia.org/wiki/File:Leica.DG.10-25.jpg", 220, 330),
+  "Sony:FE 70-200mm F2.8 GM OSS II": P("lens-sony-fe-70-200mm-f2-8-gm-oss-ii", "Henry Söderlund from Helsinki, Finland, Finland", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Sony_FE_70-200mm_F2.8_GM_OSS_II_-_by_Henry_S%C3%B6derlund_(51707233845).jpg", 220, 330),
+  "Sony:FE 35mm F1.4 GM": P("lens-sony-fe-35mm-f1-4-gm", "Henry Söderlund from Helsinki, Finland", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Sony_FE_35mm_F1.4_GM_-_by_Henry_S%C3%B6derlund_(51090047026).jpg", 440, 293),
+  "Sony:FE 50mm F1.2 GM": P("lens-sony-fe-50mm-f1-2-gm", "Henry Söderlund from Helsinki, Finland", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Sony_FE_50mm_F1.2_GM_-_by_Henry_S%C3%B6derlund_(51170539376).jpg", 440, 330),
+  "Sony:FE 50mm F1.4 GM": P("lens-sony-fe-50mm-f1-4-gm", "Henry Söderlund from Helsinki, Finland", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Sony_FE_50mm_F1.4_GM_-_by_Henry_S%C3%B6derlund_(52792513251).jpg", 440, 293),
+  "Sigma:30mm F1.4 DC DN Contemporary": P("lens-sigma-30mm-f1-4-dc-dn-contemporary", "Henry Söderlund", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Sigma_30mm_F1.4_DC_DN_Contemporary.jpg", 440, 293),
+  "Canon:RF 24-70mm F2.8 L IS USM": P("lens-canon-rf-24-70mm-f2-8-l-is-usm", "Henry Söderlund from Helsinki, Finland", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Canon_EOS_R5_with_Canon_RF_24-70mm_F2.8L_IS_USM_(50170662581).jpg", 412, 330),
+  "Canon:RF 24-105mm F4 L IS USM": P("lens-canon-rf-24-105mm-f4-l-is-usm", "Dinkun Chen", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Canon_EOS_R5_Mark_II%2BRF_24-105mm_F4L_IS_USM.jpg", 383, 330),
+  "Canon:RF 24-105mm F4-7.1 IS STM": P("lens-canon-rf-24-105mm-f4-7-1-is-stm", "Bernatargentona", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Canon_RF_24-105mm_f4-7.1_IS_STM.jpg", 251, 330),
+  "Canon:RF 24-240mm F4-6.3 IS USM": P("lens-canon-rf-24-240mm-f4-6-3-is-usm", "GodeNehler", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Canon_RF_24%E2%80%93240mm.jpg", 242, 330),
+  "Canon:RF 85mm F1.2 L USM": P("lens-canon-rf-85mm-f1-2-l-usm", "GodeNehler", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Canon_R5_mit_RF_85_1.2-8049.jpg", 390, 330),
+  "Canon:RF 100mm F2.8 L Macro IS USM": P("lens-canon-rf-100mm-f2-8-l-macro-is-usm", "Christoffer Hjeltnes Støle", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Canon_RF_100mm_F2.8L_Macro_IS_USM.jpg", 297, 330),
+  "Nikon:Nikkor Z 35mm f/1.4": P("lens-nikon-nikkor-z-35mm-f-1-4", "Henry Söderlund from Helsinki, Finland, Finland", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Nikon_NIKKOR_Z_35mm_f_1.4_(53868344792).jpg", 440, 293),
+  "Nikon:Nikkor Z 50mm f/1.2 S": P("lens-nikon-nikkor-z-50mm-f-1-2-s", "Henry Söderlund from Helsinki, Finland", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Nikon_NIKKOR_Z_50mm_f_1.2_S_(51602295538).jpg", 412, 330),
+  "Nikon:Nikkor Z DX 16-50mm f/3.5-6.3 VR": P("lens-nikon-nikkor-z-dx-16-50mm-f-3-5-6-3-vr", "Thilo Parg", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Nikon_Z_50_Nikkor_Z_DX_16-50_VR.jpg", 440, 330),
 };
 
 export const MIC_PHOTOS: Record<string, GearPhoto> = {
@@ -114,4 +141,6 @@ export const MIC_PHOTOS: Record<string, GearPhoto> = {
   "senn-mke600": P("mic-senn-mke600", "ParsecAU", "CC0", "https://commons.wikimedia.org/wiki/File:Sennheiser_MKE_600_NoFilter.jpg", 440, 314),
   "nikon-me1": P("mic-nikon-me1", "Jakub T. Jankiewicz", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Nikon_ME-1_Microphone.jpg", 440, 293),
   "shure-movemic": P("mic-shure-movemic", "TaurusEmerald", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Shure_MoveMic_Two_Kit_Wireless_System.jpg", 440, 330),
+  "rode-wpro": P("mic-rode-wpro", "Klankbeeld", "CC0", "https://commons.wikimedia.org/wiki/File:ORTF_-_setup_for_Rode_Wireless_Pro_with_furry.jpg", 440, 247),
+  "dji-micmini": P("mic-dji-micmini", "Linie29", "CC BY 4.0", "https://commons.wikimedia.org/wiki/File:DJI_Mic_Mini_2S_Mikro_Windschutz.jpg", 440, 294),
 };
