@@ -3,7 +3,7 @@ import Monitor, { type SubjectKind, type AfHit, ROW_GAP, rowCount, backgroundOff
 import { MICS, MIC_BRANDS, INTERNAL_MIC, SOURCES, STEREO_PATTERNS, type SourceId, type PatternId, audioLevels, autoGain, effectiveMic } from "./audio";
 import { stylesFor, makerLutsFor, CREATIVE_LUTS, NEUTRAL_LOOK } from "./looks";
 import { ILLU } from "./illustrations";
-import { shoeFits, NO_AUDIO, factsFor, slotsFor, sensorDR, SCENE_DR, pixelPitch, RONINS, RONIN_MODES, type RoninId, type RoninMode } from "./camdata";
+import { shoeFits, NO_AUDIO, maxIsoFor, factsFor, slotsFor, sensorDR, SCENE_DR, pixelPitch, RONINS, RONIN_MODES, type RoninId, type RoninMode } from "./camdata";
 import { RESOLUTIONS, CODECS, MEDIA, bitrate, containersFor, mediaClass, minutesOn, type ResolutionId, type CodecId } from "./formats";
 import { zebraSpecFor, zebraBands, FRAME_RATIOS, FRAME_COLORS, type ZebraMode, type FrameRatioId, type FrameColor } from "./zebra";
 import { sunDay, PLACES } from "./sun";
@@ -264,6 +264,7 @@ export default function App() {
   const [fps, setFps] = useState(25);
   const [shutter, setShutter] = useState(1 / 50);
   const [isoAuto, setIsoAuto] = useState(true);
+  const [isoCap, setIsoCap] = useState(0); // Auto-ISO upper limit, 0 = the camera's own maximum
   const [iso, setIso] = useState(800);
   const [wbMode, setWbMode] = useState<WbMode>("auto");
   const [wbK, setWbK] = useState(5600);
@@ -281,7 +282,10 @@ export default function App() {
   const lutValue = lutNone ? "none" : creativeLut ? creativeLut.id : makerLut?.id ?? "none";
   const minIso = logProfile?.minIso ?? 100;
   const baseIsos = logProfile && factsFor(camera).dualIso ? factsFor(camera).dualIso! : [];
-  const isoChoices = [...new Set([minIso, ...baseIsos, ...ISOS.filter((v) => v >= minIso)])].sort((a, b) => a - b);
+  const camMaxIso = maxIsoFor(camera);
+  const isoChoices = [...new Set([minIso, ...baseIsos, ...ISOS.filter((v) => v >= minIso && v <= camMaxIso), camMaxIso])].sort((a, b) => a - b);
+  const capChoices = isoChoices.filter((v) => v >= Math.max(400, minIso * 2) && v < camMaxIso);
+  const autoMax = isoCap && isoCap < camMaxIso ? Math.max(isoCap, minIso) : camMaxIso;
 
   const changeVideo = (sys: VideoSystem, rate: number) => {
     // a new system resets the timeline; a normal frame rate (≤ 30p) puts the timeline on the same rate,
@@ -391,7 +395,7 @@ export default function App() {
     : expMode === "A"
     ? clamp(correctShutter(sceneEV, aperture, photoIso), 1 / 8000, 30)
     : photoShutter;
-  const auto = autoIso(sceneEV, aperture, effShutter, activeMinIso);
+  const auto = autoIso(sceneEV, aperture, effShutter, activeMinIso, autoMax);
   const useAuto = isVideo && isoAuto;
   const effIso = isVideo ? (isoAuto ? auto.iso : Math.max(iso, minIso)) : photoIso;
   const exposureDelta = sceneEV - cameraEV(aperture, effShutter, effIso);
@@ -520,7 +524,7 @@ export default function App() {
   };
   const snapshot = () => ({
     shootMode, cameraId, lensId, manualSensor, focal, aperture, focusM: subjectM, lensM,
-    vSystem, fps, shutter, isoAuto, iso, wbMode, wbK, profileId, lutId, styleId,
+    vSystem, fps, shutter, isoAuto, isoCap, iso, wbMode, wbK, profileId, lutId, styleId,
     expMode, focusPhoto, focusVideo, photoShutter, photoIso, ndId, vnd, cplOn, cplRot, uvOn,
     subject,
     zebraMode, zebraLevels, falseColor, wfmOn, wfmType, histogram, peaking, frameOn, frameMarkers, frameMask,
@@ -529,7 +533,7 @@ export default function App() {
   });
   const setters = {
     shootMode: setShootMode, cameraId: setCameraId, lensId: setLensId, manualSensor: setManualSensor, focal: setFocal,
-    aperture: setAperture, focusM: setSubjectM, lensM: setLensM, vSystem: setVSystem, fps: setFps, shutter: setShutter, isoAuto: setIsoAuto,
+    aperture: setAperture, focusM: setSubjectM, lensM: setLensM, vSystem: setVSystem, fps: setFps, shutter: setShutter, isoAuto: setIsoAuto, isoCap: setIsoCap,
     iso: setIso, wbMode: setWbMode, wbK: setWbK, profileId: setProfileId, lutId: setLutId, styleId: setStyleId,
     expMode: setExpMode, focusPhoto: setFocusPhoto, focusVideo: setFocusVideo, photoShutter: setPhotoShutter, photoIso: setPhotoIso, ndId: setNdId, vnd: setVnd, cplOn: setCplOn,
     cplRot: setCplRot, uvOn: setUvOn,
@@ -928,7 +932,7 @@ export default function App() {
               <div>
                 <label htmlFor="piso">ISO</label>
                 <select {...sel("piso")} value={String(photoIso)} onChange={(e) => setPhotoIso(Number(e.target.value))}>
-                  {ISOS.map((v) => (
+                  {ISOS.filter((v) => v <= Math.max(51200, camMaxIso)).map((v) => (
                     <option key={v} value={String(v)}>{v}</option>
                   ))}
                 </select>
@@ -1425,7 +1429,23 @@ export default function App() {
             )}
 
             {flicker && <p className="warn">{fill(t.flicker, vSystem === "PAL" ? "1/50, 1/100" : "1/60, 1/120", mains)}</p>}
-            {isoAuto && auto.atLimit && <p className="warn warn-strong">{fill(t.isoLimit, auto.display)}</p>}
+            {isoAuto && (
+              <>
+                <label htmlFor="isocap">{t.isoCap}</label>
+                <select {...sel("isocap")} value={String(autoMax === camMaxIso ? 0 : autoMax)} onChange={(e) => setIsoCap(Number(e.target.value))}>
+                  <option value="0">{fill(t.isoCapAuto, camMaxIso)}</option>
+                  {capChoices.map((v) => (
+                    <option key={v} value={String(v)}>{v}</option>
+                  ))}
+                </select>
+                <p className="note">{t.isoCapNote}</p>
+              </>
+            )}
+            {isoAuto && auto.atLimit && (
+              <p className="warn warn-strong">
+                {auto.iso >= autoMax && autoMax < camMaxIso ? fill(t.isoCapHit, autoMax) : fill(t.isoLimit, auto.iso >= autoMax ? autoMax : auto.display)}
+              </p>
+            )}
           </fieldset>
           )}
     </>

@@ -142,3 +142,21 @@ export const shoeFits = (cam: { id: string } | undefined, brand: string) => !cam
 
 /** Drones record no sound. */
 export const NO_AUDIO = ["dji-avata2", "dji-mini4pro", "dji-mini5pro", "dji-air3s", "dji-mavic4pro", "dji-mavic3pro"];
+
+/** Highest ISO in video (normal range, not extended). Approximate, from the makers' specs. */
+const VIDEO_MAX_ISO: Record<string, number> = {
+  "pana-s1ii": 51200, "pana-s1rii": 51200, "pana-s1h": 51200, "pana-s5ii": 51200, "pana-s5iix": 51200, "pana-s5": 51200,
+  "pana-s9": 51200, "pana-gh7": 25600, "pana-gh6": 25600, "pana-g9ii": 25600,
+  "sony-a1ii": 32000, "sony-a9iii": 25600, "sony-a7rv": 32000, "sony-a7iv": 51200, "sony-a7siii": 409600, "sony-a7cii": 51200,
+  "sony-fx5": 409600, "sony-fx3": 409600, "sony-fx2": 51200, "sony-zve1": 409600, "sony-a6700": 32000, "sony-fx30": 32000,
+  "sony-zve10ii": 32000,
+  "canon-r1": 25600, "canon-r3": 25600, "canon-r5ii": 25600, "canon-r6ii": 25600, "canon-r8": 25600, "canon-r7": 25600,
+  "canon-r10": 12800, "canon-r50": 12800,
+  "nikon-z9": 25600, "nikon-z8": 25600, "nikon-z6iii": 51200, "nikon-zf": 51200, "nikon-z5ii": 51200, "nikon-z50ii": 25600,
+  "nikon-zfc": 25600,
+  "dji-pocket3": 16000, "dji-action5": 25600, "dji-action4": 12800, "dji-nano": 6400, "dji-osmo360": 12800,
+  "dji-avata360": 12800, "dji-avata2": 12800, "dji-neo": 6400, "dji-mini4pro": 6400, "dji-mini5pro": 12800,
+  "dji-air3s": 12800, "dji-mavic4pro": 25600, "dji-mavic3pro": 12800,
+  "insta-x6": 6400, "insta-x5": 6400, "insta-x4": 6400, "insta-x3": 6400,
+};
+export const maxIsoFor = (cam: { id: string } | undefined) => (cam && VIDEO_MAX_ISO[cam.id]) || 25600;

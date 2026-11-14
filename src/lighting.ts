@@ -168,7 +168,7 @@ export const SHUTTER_SPEEDS = [
   1 / 30, 1 / 15, 1 / 8, 1 / 4, 1 / 2, 1, 2, 4, 8, 15, 30,
 ];
 
-export const ISOS = [50, 100, 200, 400, 800, 1600, 3200, 6400, 12800, 25600, 51200];
+export const ISOS = [50, 100, 200, 400, 800, 1600, 3200, 6400, 12800, 25600, 51200, 102400, 204800, 409600];
 
 export const WB_MODES = ["auto", "daylight", "cloudy", "tungsten", "kelvin"] as const;
 export type WbMode = (typeof WB_MODES)[number];
@@ -265,9 +265,9 @@ export function isFlickerSafe(shutter: number, mainsHz: number) {
 export const AUTO_ISO_MIN = 100;
 export const AUTO_ISO_MAX = 25600;
 
-export function autoIso(sceneEV: number, aperture: number, shutter: number, minIso = AUTO_ISO_MIN) {
+export function autoIso(sceneEV: number, aperture: number, shutter: number, minIso = AUTO_ISO_MIN, maxIso = AUTO_ISO_MAX) {
   const exact = 100 * Math.pow(2, cameraEV(aperture, shutter, 100) - sceneEV);
-  const iso = Math.min(AUTO_ISO_MAX, Math.max(minIso, exact));
+  const iso = Math.min(maxIso, Math.max(minIso, exact));
   // round to nearest 1/3 stop for display
   const stops = Math.round(Math.log2(iso / 100) * 3) / 3;
   return { iso, display: Math.round((100 * Math.pow(2, stops)) / 10) * 10, atLimit: iso !== exact };
