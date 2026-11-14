@@ -144,4 +144,6 @@ export const MIC_PHOTOS: Record<string, GearPhoto> = {
   "rode-wpro": P("mic-rode-wpro", "RØDE", "\u00a9", "https://rode.com/", 281, 330),
   "dji-micmini": P("mic-dji-micmini", "Linie29", "CC BY 4.0", "https://commons.wikimedia.org/wiki/File:DJI_Mic_Mini_2S_Mikro_Windschutz.jpg", 440, 294),
   "pana-dms1": P("mic-pana-dms1", "Panasonic", "\u00a9", "https://www.panasonic.com/", 440, 326),
+  "pana-ms2": P("mic-pana-ms2", "Panasonic", "\u00a9", "https://www.panasonic.com/", 330, 330),
+  "rode-vmicro2": P("mic-rode-vmicro2", "RØDE", "\u00a9", "https://rode.com/", 330, 330),
 };

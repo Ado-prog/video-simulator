@@ -136,3 +136,5 @@ The gear photographs in `public/gear/` come from Wikimedia Commons and are used 
 | dji-micmini | [DJI Mic Mini 2S Mikro Windschutz.jpg](https://commons.wikimedia.org/wiki/File:DJI_Mic_Mini_2S_Mikro_Windschutz.jpg) | Linie29 | CC BY 4.0 |
 | rode-wpro | product image supplied by the project owner | © RØDE | all rights reserved by RØDE, not freely licensed |
 | pana-dms1 | product image supplied by the project owner | © Panasonic | all rights reserved by Panasonic, not freely licensed |
+| pana-ms2 | product image supplied by the project owner | © Panasonic | all rights reserved by Panasonic, not freely licensed |
+| rode-vmicro2 | product image supplied by the project owner | © RØDE | all rights reserved by RØDE, not freely licensed |
