@@ -11,6 +11,7 @@ import { focusModes, focusLabel, focusTag, fixedFocus, validFocus, type FocusKin
 import PhotoDiagram from "./PhotoDiagram";
 import { LensArt, IrisArt, CameraArt, MicArt, GearPhotoView, cameraKind } from "./GearArt";
 import { CAMERA_PHOTOS, LENS_PHOTOS, MIC_PHOTOS } from "./photos";
+import { lensFx, micFx, lowCutDb, fxText } from "./features";
 import { DICT, LANGUAGES, fill, loadLang, saveLang, type Lang } from "./i18n";
 import { BRANDS, CAMERAS, lensesForCamera, maxApertureAt, logProfilesFor, type Lens } from "./gear";
 import {
@@ -168,6 +169,10 @@ export default function App() {
   const camera = CAMERAS.find((c) => c.id === cameraId);
   const lenses = lensesForCamera(camera);
   const lens = lenses.find((l) => l.id === lensId);
+  const lfx = lens ? lensFx(lens) : null;
+  const [lensOis, setLensOis] = useState(true); // OIS switch on the barrel
+  const [lensMfSw, setLensMfSw] = useState(false); // AF/MF switch set to MF
+  const [lensLim, setLensLim] = useState(false); // focus limiter on (near limit .. ∞)
   const sensorKey = lens?.sensor ?? camera?.sensor ?? manualSensor;
   const sensor = SENSORS[sensorKey] ?? SENSORS["35mm (full frame)"];
   const coc = cocOf(sensor);
@@ -419,7 +424,7 @@ export default function App() {
   const useAuto = isVideo && isoAuto;
   const effIso = isVideo ? (isoAuto ? auto.iso : Math.max(iso, minIso)) : pIso;
   const exposureDelta = sceneEV - cameraEV(aperture, effShutter, effIso);
-  const shakeLimit = Math.round(focal * crop);
+  const shakeLimit = Math.max(1, Math.round((focal * crop) / (lfx?.ois && lensOis ? 4 : 1))); // lens OIS ≈ 2 stops
   const shakeRisk = !isVideo && effShutter > 1 / shakeLimit;
   const camWbK = whiteBalanceKelvin(wbMode, lightK, wbK);
   const cast = colorCast(lightK, camWbK);
@@ -501,9 +506,18 @@ export default function App() {
   };
   const noAudio = !!camera && NO_AUDIO.includes(camera.id);
   const shoeBad = !noAudio && !!mic.shoe && !shoeFits(camera, mic.shoe);
+  const fx = fxText(lang);
+  const mfx = micFx(mic);
+  const [micLc, setMicLc] = useState(0); // Hz, 0 = off
+  const [micPad, setMicPad] = useState(0); // dB, 0 = off
+  const [micStep, setMicStep] = useState(0); // dB on the level switch
+  const [micBoost, setMicBoost] = useState(false);
+  const mLc = mfx?.lowCut?.includes(micLc) ? micLc : 0;
+  const mPad = mfx?.pad?.includes(micPad) ? micPad : 0;
+  const mStep = mfx?.steps?.includes(micStep) ? micStep : 0;
   const audioBase = {
     mic: effectiveMic(mic, pattern, noiseCancel), source: sourceId, sceneId, outdoor: !scene.palette.indoor,
-    cameraDistanceM: subjectM, lowCut, float32: f32On,
+    cameraDistanceM: subjectM, lowCut, float32: f32On, micTrim: mPad + mStep, micCut: lowCutDb(mLc),
   };
   const effGain = autoLevel ? autoGain(audioBase) : gain;
   const audio = audioLevels({ ...audioBase, gain: effGain, limiter });
@@ -549,7 +563,7 @@ export default function App() {
     subject,
     zebraMode, zebraLevels, falseColor, wfmOn, wfmType, histogram, peaking, frameOn, frameMarkers, frameMask,
     motion, roninId, roninMode, stab, timelineFps, resId, codecId, containerId, flashMode, shutterType, bracketId,
-    micId, channelMode, sourceId, gain, autoLevel, limiter, lowCut, float32, patternId, noiseCancel, safetyOn, onboard,
+    micId, channelMode, sourceId, gain, autoLevel, limiter, lowCut, float32, patternId, noiseCancel, safetyOn, onboard, micLc, micPad, micStep, micBoost, lensOis, lensMfSw, lensLim,
   });
   const setters = {
     shootMode: setShootMode, cameraId: setCameraId, lensId: setLensId, manualSensor: setManualSensor, focal: setFocal,
@@ -561,7 +575,7 @@ export default function App() {
     wfmOn: setWfmOn, wfmType: setWfmType, histogram: setHistogram, peaking: setPeaking, frameOn: setFrameOn,
     frameMarkers: setFrameMarkers, frameMask: setFrameMask, motion: setMotion, roninId: setRoninId, roninMode: setRoninMode, stab: setStab, containerId: setContainerId,
     timelineFps: setTimelineFps, resId: setResId, codecId: setCodecId, flashMode: setFlashMode, shutterType: setShutterType,
-    bracketId: setBracketId, micId: setMicId, channelMode: setChannelMode, sourceId: setSourceId, gain: setGain, autoLevel: setAutoLevel,
+    bracketId: setBracketId, micId: setMicId, micLc: setMicLc, micPad: setMicPad, micStep: setMicStep, micBoost: setMicBoost, lensOis: setLensOis, lensMfSw: setLensMfSw, lensLim: setLensLim, channelMode: setChannelMode, sourceId: setSourceId, gain: setGain, autoLevel: setAutoLevel,
     limiter: setLimiter, lowCut: setLowCut, float32: setFloat32, patternId: setPatternId, noiseCancel: setNoiseCancel,
     safetyOn: setSafetyOn, onboard: setOnboard,
   } as unknown as Record<string, (v: unknown) => void>;
@@ -610,7 +624,11 @@ export default function App() {
 
   const afList = focusModes(camera, isVideo);
   const afFixed = fixedFocus(camera);
-  const afKind = validFocus(isVideo ? focusVideo : focusPhoto, camera, isVideo);
+  const mfBySwitch = !!lfx?.afmf && lensMfSw && !fixedFocus(camera);
+  const afKind: FocusKind = mfBySwitch ? "mf" : validFocus(isVideo ? focusVideo : focusPhoto, camera, isVideo);
+  const limOn = !!lfx?.limiter && lensLim;
+  const lensMfd = lfx?.mfd ?? 0.05;
+  const afNear = limOn ? Math.max(lfx!.limiter!, lensMfd) : lensMfd; // AF cannot focus closer than this
   const afMoving = isVideo && motion !== "static";
 
   // ── Autofocus engine: AF-S locks, AF-C follows, MF/DMF = focus ring (mouse wheel / slider)
@@ -621,7 +639,8 @@ export default function App() {
   const rowsN = rowCount(subject);
   const bgM = subjectM + backgroundOffset(!!BACKDROPS[backdropId]?.photo);
   const pointM = (row: number, hit: AfHit | null) => (row < 0 ? hit?.distM ?? bgM : subjectM + Math.min(row, rowsN - 1) * ROW_GAP);
-  const targetM = pointM(afTarget, afPoint);
+  const targetRaw = pointM(afTarget, afPoint);
+  const targetM = Math.max(targetRaw, afNear);
   const tracking = !afFixed && (afKind === "c" || afKind === "f" || (afKind === "a" && (walking || afMoving)));
   const manualRing = !afFixed && (afKind === "mf" || afKind === "dmf");
   const afRef = useRef({ targetM, tracking, lensM, walking });
@@ -675,7 +694,7 @@ export default function App() {
   };
   const turnRing = (dy: number) => {
     driveRef.current = null;
-    setLensM((m) => clamp(m * Math.exp(-dy * 0.0015), D_MIN, D_MAX));
+    setLensM((m) => clamp(m * Math.exp(-dy * 0.0015), Math.max(D_MIN, lensMfd), D_MAX));
   };
   const setHyperfocal = () => {
     (isVideo ? setFocusVideo : setFocusPhoto)("mf");
@@ -722,7 +741,7 @@ export default function App() {
                       <label htmlFor="focusring">{t.focusRing}</label>
                       <output htmlFor="focusring">{formatMeters(lensM * 1000)}</output>
                     </div>
-                    <input id="focusring" type="range" min={0} max={1000} value={toSlider(lensM)} onChange={(e) => { driveRef.current = null; setLensM(fromSlider(Number(e.target.value))); }} />
+                    <input id="focusring" type="range" min={0} max={1000} value={toSlider(lensM)} onChange={(e) => { driveRef.current = null; setLensM(Math.max(lensMfd, fromSlider(Number(e.target.value)))); }} />
                   </>
                 )}
                 {!tracking && afKind !== "mf" && Math.abs(Math.log(lensM / targetM)) > 0.08 && afPhase === "locked" && (
@@ -827,6 +846,52 @@ export default function App() {
             <div className="art-wrap art-wrap-lens">
               <LensArt focal={focal} minF={lens ? lens.minFocal : Math.round(focal)} maxF={lens ? lens.maxFocal : Math.round(focal)} maxAperture={apMin} lens={lens} />
             </div>
+            {lfx && lens && (
+              <div className="fx-box">
+                <p className="eyebrow">{fx.lensFx}</p>
+                <p className="chip-row">
+                  <span className="chip">{fill(fx.mfd, formatMeters(lfx.mfd * 1000))}</span>
+                  {lfx.weight && <span className="chip">{fill(fx.weight, lfx.weight)}</span>}
+                  {lfx.sealed && <span className="chip">{fx.sealed}</span>}
+                  {lfx.apRing && <span className="chip">{lfx.declick ? fx.declick : fx.apRing}</span>}
+                  {lfx.clutch && <span className="chip">{fx.clutch}</span>}
+                  {lfx.fn && <span className="chip">{fx.fn}</span>}
+                  {lfx.ctrlRing && <span className="chip">{fx.ctrlRing}</span>}
+                  {lfx.zoomLock && <span className="chip">{fx.zoomLock}</span>}
+                  {lfx.pz && <span className="chip">{fx.pz}</span>}
+                </p>
+                {(lfx.ois || lfx.afmf) && (
+                  <div className="checks">
+                    {lfx.ois && (
+                      <label className="check">
+                        <input type="checkbox" id="lensois" checked={lensOis} onChange={(e) => setLensOis(e.target.checked)} />
+                        {fx.oisSw}
+                      </label>
+                    )}
+                    {lfx.afmf && !afFixed && (
+                      <label className="check">
+                        <input type="checkbox" id="lensmf" checked={lensMfSw} onChange={(e) => setLensMfSw(e.target.checked)} />
+                        {fx.mfSw}
+                      </label>
+                    )}
+                  </div>
+                )}
+                {lfx.limiter && (
+                  <>
+                    <label htmlFor="lenslim">{fx.limSw}</label>
+                    <select {...sel("lenslim")} value={lensLim ? "far" : "full"} onChange={(e) => setLensLim(e.target.value === "far")}>
+                      <option value="full">{fx.limFull}</option>
+                      <option value="far">{fill(fx.limFar, formatMeters(lfx.limiter * 1000))}</option>
+                    </select>
+                  </>
+                )}
+                {subjectM < lfx.mfd && <p className="warn">{fill(fx.tooClose, formatMeters(subjectM * 1000), formatMeters(lfx.mfd * 1000))}</p>}
+                {limOn && targetRaw < lfx.limiter! && <p className="warn">{fill(fx.limBlock, formatMeters(lfx.limiter! * 1000), formatMeters(targetRaw * 1000))}</p>}
+                {limOn && targetRaw >= lfx.limiter! && <p className="ok">{fill(fx.limOk, formatMeters(lfx.limiter! * 1000))}</p>}
+                {lfx.ois && (lensOis ? stab !== "off" && <p className="ok">{fx.oisOn}</p> : <p className="note">{fx.oisOff}</p>)}
+                {isVideo && lfx.declick && <p className="note">{fx.declickTip}</p>}
+              </div>
+            )}
             <div className="row-label">
               <label htmlFor="focal">{t.focalLength}</label>
               <output htmlFor="focal">{Math.round(focal * 10) / 10} mm</output>
@@ -1599,6 +1664,69 @@ export default function App() {
             )}
             {mic.float32 && <p className={f32On ? "ok" : "note"}>{f32On ? (mic.f32cam ? t.f32cam : t.float32) : t.f32off}</p>}
             {mic.onboard && onboard && <p className="note">{t.onboardOn}</p>}
+            {mfx && (
+              <div className="fx-box">
+                <p className="eyebrow">{fx.micFx}</p>
+                <p className="chip-row">
+                  <span className="chip">{fill(fx.conn, mfx.conn)}</span>
+                  <span className="chip">
+                    {{ plugin: fx.pwPlugin, battery: fx.pwBattery, phantom: fx.pwPhantom, shoe: fx.pwShoe, aa: fx.pwAa }[mfx.power]}
+                    {mfx.hours ? ` · ${fill(fx.hours, mfx.hours)}` : ""}
+                  </span>
+                  {mfx.range && <span className="chip">{fill(fx.range, mfx.range)}</span>}
+                  {mfx.gainAssist && <span className="chip">{fx.gainAssist}</span>}
+                  {mfx.monitor && <span className="chip">{fx.monitor}</span>}
+                  {mfx.usb && <span className="chip">{fx.usb}</span>}
+                  {mfx.timecode && <span className="chip">{fx.timecode}</span>}
+                  {mfx.mute && <span className="chip">{fx.mute}</span>}
+                  {mfx.autoPower && <span className="chip">{fx.autoPower}</span>}
+                  {mfx.phone && <span className="chip">{fx.phone}</span>}
+                </p>
+                {mfx.lowCut && (
+                  <>
+                    <label htmlFor="miclc">{fx.lowCutSw}</label>
+                    <select {...sel("miclc")} value={mLc} onChange={(e) => setMicLc(Number(e.target.value))}>
+                      <option value={0}>{fx.off}</option>
+                      {mfx.lowCut.map((hz, i) => (
+                        <option key={hz} value={hz}>{mfx.lcNames?.[i] ? `${mfx.lcNames[i]} (${hz} Hz)` : `${hz} Hz`}</option>
+                      ))}
+                    </select>
+                  </>
+                )}
+                {mfx.pad && (
+                  <>
+                    <label htmlFor="micpad">{fx.padSw}</label>
+                    <select {...sel("micpad")} value={mPad} onChange={(e) => setMicPad(Number(e.target.value))}>
+                      <option value={0}>0 dB</option>
+                      {mfx.pad.map((d) => <option key={d} value={d}>{d} dB</option>)}
+                    </select>
+                  </>
+                )}
+                {mfx.steps && (
+                  <>
+                    <label htmlFor="micstep">{fx.stepSw}</label>
+                    <select {...sel("micstep")} value={mStep} onChange={(e) => setMicStep(Number(e.target.value))}>
+                      {mfx.steps.map((d) => <option key={d} value={d}>{d > 0 ? "+" : ""}{d} dB</option>)}
+                    </select>
+                  </>
+                )}
+                {mfx.boost && (
+                  <div className="checks">
+                    <label className="check">
+                      <input type="checkbox" id="micboost" checked={micBoost} onChange={(e) => setMicBoost(e.target.checked)} />
+                      {fx.boostSw}
+                    </label>
+                  </div>
+                )}
+                {mLc >= 150 && <p className="note">{fx.lc150}</p>}
+                {micBoost && mfx.boost && <p className="note">{fx.boostTip}</p>}
+                {mfx.pad && !mPad && SOURCES[sourceId].spl >= 88 && <p className="warn">{fx.padTip}</p>}
+                {mfx.power === "phantom" && <p className="note">{fx.phantomTip}</p>}
+                {mfx.phone && <p className="note">{fx.phoneTip}</p>}
+                {mfx.range && subjectM > mfx.range * 0.6 && <p className="warn">{fill(fx.rangeTip, formatMeters(subjectM * 1000))}</p>}
+                <p className="note fx-approx">{fx.approx}</p>
+              </div>
+            )}
             </div>
 
             <div className="audio-col">

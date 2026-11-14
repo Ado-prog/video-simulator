@@ -354,6 +354,13 @@ export const BACKDROPS: Record<string, { kind: BackdropKind; palette: Partial<Sc
   "p-hill-aisle": { kind: "photo", photo: "bg/hill-aisle.jpg", palette: { indoor: false } },
   "p-beach-arch": { kind: "photo", photo: "bg/beach-arch.jpg", palette: { indoor: false } },
   "p-hall": { kind: "photo", photo: "bg/hall-chandeliers.jpg", palette: { indoor: true } },
+  "p-church": { kind: "photo", photo: "bg/church.jpg", palette: { indoor: true } }, // Wikimedia Commons, CC BY-SA 2.0
+  "p-palace-ballroom": { kind: "photo", photo: "bg/palace-ballroom.jpg", palette: { indoor: true } }, // Wikimedia Commons, CC BY-SA 4.0
+  "p-castle-court": { kind: "photo", photo: "bg/castle-court.jpg", palette: { indoor: false } }, // Wikimedia Commons, CC BY-SA 4.0
+  "p-rose-pergola": { kind: "photo", photo: "bg/rose-pergola.jpg", palette: { indoor: false } }, // Wikimedia Commons, CC BY-SA 3.0
+  "p-lavender": { kind: "photo", photo: "bg/lavender.jpg", palette: { indoor: false } }, // Wikimedia Commons, CC BY-SA 4.0
+  "p-forest-path": { kind: "photo", photo: "bg/forest-path.jpg", palette: { indoor: false } }, // Wikimedia Commons, CC BY-SA 4.0
+  "p-old-town": { kind: "photo", photo: "bg/old-town.jpg", palette: { indoor: false } }, // Wikimedia Commons, CC BY 3.0
 };
 
-export const PHOTO_BACKDROPS = ["p-garden-sea", "p-garden-chairs", "p-lake-sunset", "p-hill-aisle", "p-beach-arch", "p-hall"] as const;
+export const PHOTO_BACKDROPS = ["p-garden-sea", "p-garden-chairs", "p-lake-sunset", "p-hill-aisle", "p-beach-arch", "p-hall", "p-church", "p-palace-ballroom", "p-castle-court", "p-rose-pergola", "p-lavender", "p-forest-path", "p-old-town"] as const;

@@ -134,6 +134,7 @@ export const LENS_PHOTOS: Record<string, GearPhoto> = {
   "Nikon:Nikkor Z 35mm f/1.4": P("lens-nikon-nikkor-z-35mm-f-1-4", "Henry Söderlund from Helsinki, Finland, Finland", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Nikon_NIKKOR_Z_35mm_f_1.4_(53868344792).jpg", 440, 293),
   "Nikon:Nikkor Z 50mm f/1.2 S": P("lens-nikon-nikkor-z-50mm-f-1-2-s", "Henry Söderlund from Helsinki, Finland", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Nikon_NIKKOR_Z_50mm_f_1.2_S_(51602295538).jpg", 412, 330),
   "Nikon:Nikkor Z DX 16-50mm f/3.5-6.3 VR": P("lens-nikon-nikkor-z-dx-16-50mm-f-3-5-6-3-vr", "Thilo Parg", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Nikon_Z_50_Nikkor_Z_DX_16-50_VR.jpg", 440, 330),
+  "Sigma:35mm F1.4 DG DN Art": P("lens-sigma-35mm-f1-4-dg-dn-art", "Henry Söderlund from Helsinki, Finland", "CC BY 2.0", "https://commons.wikimedia.org/w/index.php?curid=106475263", 440, 293),
 };
 
 export const MIC_PHOTOS: Record<string, GearPhoto> = {
@@ -143,6 +144,7 @@ export const MIC_PHOTOS: Record<string, GearPhoto> = {
   "shure-movemic": P("mic-shure-movemic", "TaurusEmerald", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Shure_MoveMic_Two_Kit_Wireless_System.jpg", 440, 330),
   "rode-wpro": P("mic-rode-wpro", "RØDE", "\u00a9", "https://rode.com/", 281, 330),
   "dji-micmini": P("mic-dji-micmini", "Linie29", "CC BY 4.0", "https://commons.wikimedia.org/wiki/File:DJI_Mic_Mini_2S_Mikro_Windschutz.jpg", 440, 294),
+  "rode-vmgo2": P("mic-rode-vmgo2", "Gannu03", "CC BY-SA 4.0", "https://commons.wikimedia.org/w/index.php?curid=187539940", 440, 293),
   "pana-dms1": P("mic-pana-dms1", "Panasonic", "\u00a9", "https://www.panasonic.com/", 440, 326),
   "pana-ms2": P("mic-pana-ms2", "Panasonic", "\u00a9", "https://www.panasonic.com/", 330, 330),
   "rode-vmicro2": P("mic-rode-vmicro2", "RØDE", "\u00a9", "https://rode.com/", 330, 330),

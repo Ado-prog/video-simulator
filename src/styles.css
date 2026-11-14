@@ -642,3 +642,9 @@ body.is-resizing { cursor: col-resize; user-select: none; }
 .slots { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 2px; font-size: 13px; }
 .slots li { margin: 0; }
 .btn-ghost.is-on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+
+/* Lens / microphone switches and functions */
+.fx-box { display: flex; flex-direction: column; gap: 4px; margin: 6px 0 4px; padding: 8px 10px; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; background: rgba(255,255,255,0.02); }
+.fx-box .eyebrow { margin: 0 0 2px; }
+.fx-box .chip-row { display: flex; flex-wrap: wrap; gap: 4px; margin: 0; }
+.fx-box .fx-approx { opacity: 0.55; font-size: 10.5px; }

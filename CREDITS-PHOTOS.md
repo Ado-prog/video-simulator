@@ -134,7 +134,23 @@ The gear photographs in `public/gear/` come from Wikimedia Commons and are used 
 | Nikon:Nikkor Z 50mm f/1.2 S | [Nikon NIKKOR Z 50mm f 1.2 S (51602295538).jpg](https://commons.wikimedia.org/wiki/File:Nikon_NIKKOR_Z_50mm_f_1.2_S_(51602295538).jpg) | Henry Söderlund from Helsinki, Finland | CC BY 2.0 |
 | Nikon:Nikkor Z DX 16-50mm f/3.5-6.3 VR | [Nikon Z 50 Nikkor Z DX 16-50 VR.jpg](https://commons.wikimedia.org/wiki/File:Nikon_Z_50_Nikkor_Z_DX_16-50_VR.jpg) | Thilo Parg | CC BY-SA 4.0 |
 | dji-micmini | [DJI Mic Mini 2S Mikro Windschutz.jpg](https://commons.wikimedia.org/wiki/File:DJI_Mic_Mini_2S_Mikro_Windschutz.jpg) | Linie29 | CC BY 4.0 |
+| Sigma:35mm F1.4 DG DN Art | [Sigma 35mm F1.4 DG DN Art, Sony E - by Henry Söderlund (51193475283)](https://commons.wikimedia.org/w/index.php?curid=106475263) | Henry Söderlund from Helsinki, Finland | CC BY 2.0 |
+| rode-vmgo2 | [Rode VMGOII USB Video Mic GO II Lightweight Directional Microphone 01](https://commons.wikimedia.org/w/index.php?curid=187539940) | Gannu03 | CC BY-SA 4.0 |
 | rode-wpro | product image supplied by the project owner | © RØDE | all rights reserved by RØDE, not freely licensed |
 | pana-dms1 | product image supplied by the project owner | © Panasonic | all rights reserved by Panasonic, not freely licensed |
 | pana-ms2 | product image supplied by the project owner | © Panasonic | all rights reserved by Panasonic, not freely licensed |
 | rode-vmicro2 | product image supplied by the project owner | © RØDE | all rights reserved by RØDE, not freely licensed |
+
+## Monitor backgrounds
+
+The photos in `public/bg/` listed below come from Wikimedia Commons (cropped to 16:9, resized to 3840 px). The older backgrounds come from Pexels.
+
+| Background | File | Author | Licence |
+|---|---|---|---|
+| church | [Launceston, St. Mary Magdalene's Church, The nave from the north aisle - geograph.org.uk - 5746563.jpg](https://commons.wikimedia.org/wiki/File:Launceston,_St._Mary_Magdalene%27s_Church,_The_nave_from_the_north_aisle_-_geograph.org.uk_-_5746563.jpg) | Michael Garlick | CC BY-SA 2.0 |
+| castle-court | [Milano - Portico dell'Elefante - 2024-09-27 09-41-52 001.jpg](https://commons.wikimedia.org/wiki/File:Milano_-_Portico_dell%27Elefante_-_2024-09-27_09-41-52_001.jpg) | Terragio67 | CC BY-SA 4.0 |
+| forest-path | [Forest path through a deciduous forest in spring, Finland.jpg](https://commons.wikimedia.org/wiki/File:Forest_path_through_a_deciduous_forest_in_spring,_Finland.jpg) | Sanzzu | CC BY-SA 4.0 |
+| old-town | [Old cobblestone street with sidewalks in Old Town Stockholm - panoramio.jpg](https://commons.wikimedia.org/wiki/File:Old_cobblestone_street_with_sidewalks_in_Old_Town_Stockholm_-_panoramio.jpg) | Bengt Nyman | CC BY 3.0 |
+| lavender | [Lavender field in Drôme 04.jpg](https://commons.wikimedia.org/wiki/File:Lavender_field_in_Dr%C3%B4me_04.jpg) | John Samuel | CC BY-SA 4.0 |
+| palace-ballroom | [Venice, San Marco, Napoleonic Wing (1810), ballroom 2.jpg](https://commons.wikimedia.org/wiki/File:Venice,_San_Marco,_Napoleonic_Wing_(1810),_ballroom_2.jpg) | Armin Kleiner | CC BY-SA 4.0 |
+| rose-pergola | [Rose Pergola at Kew Gardens.jpg](https://commons.wikimedia.org/wiki/File:Rose_Pergola_at_Kew_Gardens.jpg) | Daniel Case | CC BY-SA 3.0 |

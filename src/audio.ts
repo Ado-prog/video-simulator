@@ -145,6 +145,8 @@ export type AudioInput = {
   limiter: boolean;
   lowCut: boolean;
   float32?: boolean; // 32-bit float switched on (and supported)
+  micTrim?: number; // dB set on the mic itself (PAD / level switch)
+  micCut?: number; // dB of wind and rumble removed by the mic's own low-cut
 };
 
 export type AudioResult = {
@@ -172,10 +174,10 @@ export function micDistance(mic: Mic, source: SourceId, cameraDistanceM: number)
 export function audioLevels(a: AudioInput): AudioResult {
   const src = SOURCES[a.source];
   const distanceM = micDistance(a.mic, a.source, a.cameraDistanceM);
-  const toDbfs = (spl: number) => spl - 94 + a.mic.sens + a.gain;
+  const toDbfs = (spl: number) => spl - 94 + a.mic.sens + (a.micTrim ?? 0) + a.gain;
 
   const srcLevel = toDbfs(src.spl - 20 * Math.log10(distanceM));
-  const wind = a.outdoor ? 52 - (a.lowCut ? 10 : 0) - (a.mic.type === "lav" ? 6 : 0) : -100;
+  const wind = a.outdoor ? 52 - Math.max(a.lowCut ? 10 : 0, a.micCut ?? 0) - (a.lowCut && a.micCut ? 3 : 0) - (a.mic.type === "lav" ? 6 : 0) : -100;
   const room = sumDb(AMBIENT[a.sceneId] ?? 45, wind) - a.mic.rejection;
   const roomLevel = toDbfs(room);
   const noiseFloor = sumDb(toDbfs(a.mic.selfNoise), roomLevel);
