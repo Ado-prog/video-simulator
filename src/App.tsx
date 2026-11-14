@@ -301,6 +301,9 @@ export default function App() {
   const [expMode, setExpMode] = useState<"M" | "A">("M");
   const [photoShutter, setPhotoShutter] = useState(1 / 250);
   const [photoIso, setPhotoIso] = useState(800);
+  const [photoIsoAuto, setPhotoIsoAuto] = useState(false);
+  const [photoIsoCap, setPhotoIsoCap] = useState(0); // Auto-ISO upper limit in photo mode, 0 = camera maximum
+  const [photoMinShutter, setPhotoMinShutter] = useState(0); // slowest shutter Auto-ISO allows in A mode, 0 = 1/focal length
 
   // ── Monitor assists
   const zSpec = zebraSpecFor(camera);
@@ -390,14 +393,30 @@ export default function App() {
   const look = activeLog ? (lutNone ? NEUTRAL_LOOK : creativeLut?.look ?? makerLut?.look ?? NEUTRAL_LOOK) : style.look;
   const lutTag = lutNone ? "" : creativeLut ? ` + ${t[creativeLut.id]}` : " + LUT";
   const activeMinIso = isVideo ? minIso : 100;
-  const effShutter = isVideo
-    ? shutter
-    : expMode === "A"
-    ? clamp(correctShutter(sceneEV, aperture, photoIso), 1 / 8000, 30)
-    : photoShutter;
+  // photo Auto-ISO: M keeps the shutter and moves the ISO; A holds the minimum shutter speed and raises the ISO
+  // up to the limit, only then the shutter gets slower
+  const photoMaxIso = Math.max(51200, camMaxIso);
+  const pCap = photoIsoCap && photoIsoCap < photoMaxIso ? photoIsoCap : photoMaxIso;
+  const pMinT = photoMinShutter || nearestShutter(1 / Math.max(1, focal * crop));
+  const pAuto = (() => {
+    const fit = (tt: number) => clamp(tt, 1 / 8000, 30);
+    if (!photoIsoAuto) return { iso: photoIso, t: expMode === "A" ? fit(correctShutter(sceneEV, aperture, photoIso)) : photoShutter, capped: false };
+    if (expMode === "M") {
+      const raw = 100 * Math.pow(2, cameraEV(aperture, photoShutter, 100) - sceneEV);
+      return { iso: clamp(raw, 100, pCap), t: photoShutter, capped: raw > pCap * 1.01 };
+    }
+    const t100 = correctShutter(sceneEV, aperture, 100);
+    if (t100 <= pMinT) return { iso: 100, t: fit(t100), capped: false };
+    const raw = (100 * t100) / pMinT;
+    if (raw <= pCap) return { iso: raw, t: pMinT, capped: false };
+    return { iso: pCap, t: fit(correctShutter(sceneEV, aperture, pCap)), capped: true };
+  })();
+  const pIso = pAuto.iso;
+  const pIsoShown = Math.round((100 * Math.pow(2, Math.round(Math.log2(pIso / 100) * 3) / 3)) / 10) * 10;
+  const effShutter = isVideo ? shutter : pAuto.t;
   const auto = autoIso(sceneEV, aperture, effShutter, activeMinIso, autoMax);
   const useAuto = isVideo && isoAuto;
-  const effIso = isVideo ? (isoAuto ? auto.iso : Math.max(iso, minIso)) : photoIso;
+  const effIso = isVideo ? (isoAuto ? auto.iso : Math.max(iso, minIso)) : pIso;
   const exposureDelta = sceneEV - cameraEV(aperture, effShutter, effIso);
   const shakeLimit = Math.round(focal * crop);
   const shakeRisk = !isVideo && effShutter > 1 / shakeLimit;
@@ -417,7 +436,7 @@ export default function App() {
   const bandOk = 1 / (2 * mains);
   const banding = !isVideo && shutterType === "e" && facts.readout > 0 && scene.palette.indoor && effShutter < bandOk - 1e-9;
   const bands = Math.max(1, Math.round((facts.readout / 1000) * 2 * mains));
-  const camDR = sensorDR(sensorKey) - Math.max(0, Math.log2((isVideo ? effIso : photoIso) / 100)) * 0.6 + (activeLog ? 1 : 0);
+  const camDR = sensorDR(sensorKey) - Math.max(0, Math.log2(effIso / 100)) * 0.6 + (activeLog ? 1 : 0);
   const sceneDR = SCENE_DR[sceneId] ?? 12;
   const brN = bracketId === "off" ? 1 : Number(bracketId[0]);
   const brStep = bracketId === "off" ? 0 : Number(bracketId[2]);
@@ -435,12 +454,12 @@ export default function App() {
     const baseEV = scene.ev + boost - (cplOn ? CPL_LOSS : 0);
     if (!isVideo) {
       let ev = baseEV - ndStops;
-      let tt = correctShutter(ev, aperture, photoIso);
+      let tt = correctShutter(ev, aperture, pIso);
       if (tt < 1 / 8000) {
         const pickP = pickNd(Math.log2(1 / 8000 / tt) + ndStops);
         setNdId(pickP.id);
         ev = baseEV - pickP.stops;
-        tt = correctShutter(ev, aperture, photoIso);
+        tt = correctShutter(ev, aperture, pIso);
       }
       setPhotoShutter(nearestShutter(tt));
       return;
@@ -525,7 +544,7 @@ export default function App() {
   const snapshot = () => ({
     shootMode, cameraId, lensId, manualSensor, focal, aperture, focusM: subjectM, lensM,
     vSystem, fps, shutter, isoAuto, isoCap, iso, wbMode, wbK, profileId, lutId, styleId,
-    expMode, focusPhoto, focusVideo, photoShutter, photoIso, ndId, vnd, cplOn, cplRot, uvOn,
+    expMode, focusPhoto, focusVideo, photoShutter, photoIso, photoIsoAuto, photoIsoCap, photoMinShutter, ndId, vnd, cplOn, cplRot, uvOn,
     subject,
     zebraMode, zebraLevels, falseColor, wfmOn, wfmType, histogram, peaking, frameOn, frameMarkers, frameMask,
     motion, roninId, roninMode, stab, timelineFps, resId, codecId, containerId, flashMode, shutterType, bracketId,
@@ -535,7 +554,7 @@ export default function App() {
     shootMode: setShootMode, cameraId: setCameraId, lensId: setLensId, manualSensor: setManualSensor, focal: setFocal,
     aperture: setAperture, focusM: setSubjectM, lensM: setLensM, vSystem: setVSystem, fps: setFps, shutter: setShutter, isoAuto: setIsoAuto, isoCap: setIsoCap,
     iso: setIso, wbMode: setWbMode, wbK: setWbK, profileId: setProfileId, lutId: setLutId, styleId: setStyleId,
-    expMode: setExpMode, focusPhoto: setFocusPhoto, focusVideo: setFocusVideo, photoShutter: setPhotoShutter, photoIso: setPhotoIso, ndId: setNdId, vnd: setVnd, cplOn: setCplOn,
+    expMode: setExpMode, focusPhoto: setFocusPhoto, focusVideo: setFocusVideo, photoShutter: setPhotoShutter, photoIso: setPhotoIso, photoIsoAuto: setPhotoIsoAuto, photoIsoCap: setPhotoIsoCap, photoMinShutter: setPhotoMinShutter, ndId: setNdId, vnd: setVnd, cplOn: setCplOn,
     cplRot: setCplRot, uvOn: setUvOn,
     subject: setSubject, zebraMode: setZebraMode, zebraLevels: setZebraLevels, falseColor: setFalseColor,
     wfmOn: setWfmOn, wfmType: setWfmType, histogram: setHistogram, peaking: setPeaking, frameOn: setFrameOn,
@@ -931,13 +950,52 @@ export default function App() {
               </div>
               <div>
                 <label htmlFor="piso">ISO</label>
-                <select {...sel("piso")} value={String(photoIso)} onChange={(e) => setPhotoIso(Number(e.target.value))}>
-                  {ISOS.filter((v) => v <= Math.max(51200, camMaxIso)).map((v) => (
+                <select {...sel("piso")} value={photoIsoAuto ? "auto" : String(photoIso)} onChange={(e) => {
+                  if (e.target.value === "auto") setPhotoIsoAuto(true);
+                  else {
+                    setPhotoIsoAuto(false);
+                    setPhotoIso(Number(e.target.value));
+                  }
+                }}>
+                  <option value="auto">{t.isoAuto}{photoIsoAuto ? ` (${pIsoShown})` : ""}</option>
+                  {ISOS.filter((v) => v <= photoMaxIso).map((v) => (
                     <option key={v} value={String(v)}>{v}</option>
                   ))}
                 </select>
               </div>
             </div>
+            {photoIsoAuto && (
+              <>
+                <div className="grid2">
+                  <div>
+                    <label htmlFor="pisocap">{t.isoCap}</label>
+                    <select {...sel("pisocap")} value={String(pCap === photoMaxIso ? 0 : pCap)} onChange={(e) => setPhotoIsoCap(Number(e.target.value))}>
+                      <option value="0">{fill(t.isoCapAuto, photoMaxIso)}</option>
+                      {ISOS.filter((v) => v >= 400 && v < photoMaxIso).map((v) => (
+                        <option key={v} value={String(v)}>{v}</option>
+                      ))}
+                    </select>
+                  </div>
+                  {expMode === "A" && (
+                    <div>
+                      <label htmlFor="pmint">{t.minShutter}</label>
+                      <select {...sel("pmint")} value={String(photoMinShutter)} onChange={(e) => setPhotoMinShutter(Number(e.target.value))}>
+                        <option value="0">{fill(t.minShutterAuto, formatShutter(pMinT))}</option>
+                        {SHUTTER_SPEEDS.filter((v) => v >= 1 / 2000 && v <= 1 / 15).map((v) => (
+                          <option key={v} value={String(v)}>{formatShutter(v)}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
+                <p className="note">{expMode === "A" ? t.pAutoNoteA : t.pAutoNoteM}</p>
+                {pAuto.capped && (
+                  <p className="warn warn-strong">
+                    {expMode === "A" ? fill(t.isoCapSlow, pCap, formatShutter(effShutter)) : fill(t.isoCapHit, pCap)}
+                  </p>
+                )}
+              </>
+            )}
             <label htmlFor="pwb">{t.wb}</label>
             <select {...sel("pwb")} value={wbMode} onChange={(e) => setWbMode(e.target.value as WbMode)}>
               {WB_MODES.map((m) => (
@@ -1322,8 +1380,8 @@ export default function App() {
               <p className="note">
                 {fill(
                   t.ndCalc,
-                  formatShutter(correctShutter(scene.ev + boost - (cplOn ? CPL_LOSS : 0), aperture, photoIso)),
-                  formatShutter(correctShutter(sceneEV, aperture, photoIso))
+                  formatShutter(correctShutter(scene.ev + boost - (cplOn ? CPL_LOSS : 0), aperture, pIso)),
+                  formatShutter(correctShutter(sceneEV, aperture, pIso))
                 )}
               </p>
             )}
@@ -1807,7 +1865,7 @@ export default function App() {
             hud={{
               fps: isVideo ? `${fps}p ${vSystem}` : expMode === "A" ? "A" : "M",
               shutter: formatShutter(effShutter),
-              iso: useAuto ? `AUTO ${auto.display}` : String(effIso),
+              iso: useAuto ? `AUTO ${auto.display}` : !isVideo && photoIsoAuto ? `AUTO ${pIsoShown}` : String(effIso),
               focus: formatMeters(lensM * 1000),
               af: afFixed ? "FF" : focusTag(camera, afKind, isVideo),
               profile: activeLog ? `${activeLog.name}${lutTag}` : style === styles[0] ? "" : style.name,
