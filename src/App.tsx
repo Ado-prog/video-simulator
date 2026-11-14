@@ -9,7 +9,7 @@ import { zebraSpecFor, zebraBands, FRAME_RATIOS, FRAME_COLORS, type ZebraMode, t
 import { sunDay, PLACES } from "./sun";
 import { focusModes, focusLabel, focusTag, fixedFocus, validFocus, type FocusKind } from "./focus";
 import PhotoDiagram from "./PhotoDiagram";
-import { LensArt, IrisArt, CameraArt, cameraKind } from "./GearArt";
+import { LensArt, IrisArt, CameraArt, MicArt, cameraKind } from "./GearArt";
 import { DICT, LANGUAGES, fill, loadLang, saveLang, type Lang } from "./i18n";
 import { BRANDS, CAMERAS, lensesForCamera, maxApertureAt, logProfilesFor, type Lens } from "./gear";
 import {
@@ -752,7 +752,7 @@ export default function App() {
           <fieldset className="group">
             <legend>{t.camera}</legend>
             <div className="art-wrap">
-              <CameraArt kind={cameraKind(camera?.id)} label={camera ? `${camera.brand} ${camera.model}` : t.manual} />
+              <CameraArt kind={cameraKind(camera?.id)} label={camera ? `${camera.brand} ${camera.model}` : t.manual} cam={camera} />
             </div>
             <label htmlFor="camera">{t.camera}</label>
             <select {...sel("camera")} value={cameraId} onChange={(e) => selectCamera(e.target.value)}>
@@ -815,7 +815,7 @@ export default function App() {
             <input id="focus" type="range" min={0} max={1000} value={toSlider(subjectM)} onChange={(e) => { setWalking(false); setSubjectM(fromSlider(Number(e.target.value))); }} />
 
             <div className="art-wrap art-wrap-lens">
-              <LensArt focal={focal} minF={lens ? lens.minFocal : Math.round(focal)} maxF={lens ? lens.maxFocal : Math.round(focal)} maxAperture={apMin} />
+              <LensArt focal={focal} minF={lens ? lens.minFocal : Math.round(focal)} maxF={lens ? lens.maxFocal : Math.round(focal)} maxAperture={apMin} lens={lens} />
             </div>
             <div className="row-label">
               <label htmlFor="focal">{t.focalLength}</label>
@@ -1515,6 +1515,9 @@ export default function App() {
           <fieldset className="group">
             <legend>{t.audio}</legend>
             <div className="audio-col">
+            <div className="art-wrap">
+              <MicArt mic={mic} />
+            </div>
             <label htmlFor="mic">{t.mic}</label>
             <select {...sel("mic")} value={micId} onChange={(e) => setMicId(e.target.value)}>
               <optgroup label={`★ ${t.myMics}`}>

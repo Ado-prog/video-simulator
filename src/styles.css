@@ -326,6 +326,9 @@ input[type="range"].kelvin-wb::-moz-range-track { background: linear-gradient(90
 .art { display: block; height: auto; }
 .art-camera { width: 128px; }
 .art-lens { width: 100%; max-width: 280px; }
+.art-mic { width: 150px; }
+.card .art-mic { width: 120px; }
+.studio .card .art-mic { width: 132px; }
 .art-wrap-lens { padding-top: 2px; }
 .iris-row { display: flex; align-items: center; gap: 12px; }
 .art-iris { width: 58px; flex: none; }
@@ -470,7 +473,7 @@ input[type="range"].kelvin-wb::-moz-range-track { background: linear-gradient(90
 .card .btn-primary { margin-top: 8px; padding: 9px 14px; font-size: 15px; }
 .card .btn-ghost { margin: 6px 0 2px; padding: 4px 10px; font-size: 12px; }
 .card .art-wrap { padding: 2px 0 0; }
-.card .art-camera { width: 74px; }
+.card .art-camera { width: 90px; }
 .card .art-lens { max-width: 190px; }
 .card .art-iris { width: 44px; }
 .card .seg-item { padding: 4px; font-size: 12px !important; }
@@ -480,8 +483,8 @@ input[type="range"].kelvin-wb::-moz-range-track { background: linear-gradient(90
 
 /* photo is the tightest: camera art inline, lens art smaller */
 .simple.is-photo .card > .group { padding: 6px 0 8px; }
-.simple.is-photo .art-camera { width: 60px; }
-.simple.is-photo .art-lens { max-width: 160px; }
+.simple.is-photo .art-camera { width: 80px; }
+.simple.is-photo .art-lens { max-width: 200px; }
 .simple.is-photo .art-iris { width: 38px; }
 
 /* ── Studio layout: wide side view on the left, narrow monitor column on the right ── */
@@ -538,8 +541,8 @@ body { font-size: 14px; }
 .studio .card .seg-item { font-size: 11px !important; padding: 3px; }
 .studio .card .btn-primary { font-size: 13px; padding: 7px 12px; margin-top: 6px; }
 .studio .card .art-wrap { padding: 0; justify-content: flex-start; }
-.studio .card .art-camera { width: 46px; }
-.studio .card .art-lens { max-width: 120px; }
+.studio .card .art-camera { width: 84px; }
+.studio .card .art-lens { max-width: 210px; }
 .studio .card .art-iris { width: 28px; }
 .studio .card .iris-row { gap: 8px; }
 .d-person path { fill: var(--ink); }
