@@ -148,9 +148,6 @@ The photos in `public/bg/` listed below come from Wikimedia Commons (cropped to 
 | Background | File | Author | Licence |
 |---|---|---|---|
 | church | [Launceston, St. Mary Magdalene's Church, The nave from the north aisle - geograph.org.uk - 5746563.jpg](https://commons.wikimedia.org/wiki/File:Launceston,_St._Mary_Magdalene%27s_Church,_The_nave_from_the_north_aisle_-_geograph.org.uk_-_5746563.jpg) | Michael Garlick | CC BY-SA 2.0 |
-| castle-court | [Milano - Portico dell'Elefante - 2024-09-27 09-41-52 001.jpg](https://commons.wikimedia.org/wiki/File:Milano_-_Portico_dell%27Elefante_-_2024-09-27_09-41-52_001.jpg) | Terragio67 | CC BY-SA 4.0 |
 | forest-path | [Forest path through a deciduous forest in spring, Finland.jpg](https://commons.wikimedia.org/wiki/File:Forest_path_through_a_deciduous_forest_in_spring,_Finland.jpg) | Sanzzu | CC BY-SA 4.0 |
-| old-town | [Old cobblestone street with sidewalks in Old Town Stockholm - panoramio.jpg](https://commons.wikimedia.org/wiki/File:Old_cobblestone_street_with_sidewalks_in_Old_Town_Stockholm_-_panoramio.jpg) | Bengt Nyman | CC BY 3.0 |
-| lavender | [Lavender field in Drôme 04.jpg](https://commons.wikimedia.org/wiki/File:Lavender_field_in_Dr%C3%B4me_04.jpg) | John Samuel | CC BY-SA 4.0 |
 | palace-ballroom | [Venice, San Marco, Napoleonic Wing (1810), ballroom 2.jpg](https://commons.wikimedia.org/wiki/File:Venice,_San_Marco,_Napoleonic_Wing_(1810),_ballroom_2.jpg) | Armin Kleiner | CC BY-SA 4.0 |
 | rose-pergola | [Rose Pergola at Kew Gardens.jpg](https://commons.wikimedia.org/wiki/File:Rose_Pergola_at_Kew_Gardens.jpg) | Daniel Case | CC BY-SA 3.0 |

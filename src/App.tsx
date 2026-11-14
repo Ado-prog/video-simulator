@@ -2018,7 +2018,7 @@ export default function App() {
             <label htmlFor="backdrop">{t.backdrop}</label>
             <select id="backdrop" className="control" value={backdropId} onChange={(e) => setBackdropId(e.target.value)}>
               <optgroup label={t.bgDrawn}>
-                {(["auto", "garden", "curtain", "forest", "city", "beach"] as const).map((k) => (
+                {(["auto", "garden", "curtain", "forest"] as const).map((k) => (
                   <option key={k} value={k}>{t.backdrops[k]}</option>
                 ))}
               </optgroup>

@@ -333,20 +333,6 @@ export const BACKDROPS: Record<string, { kind: BackdropKind; palette: Partial<Sc
       hills: "#6e8a74", trees: ["#2f5a34", "#3b6b3f", "#24472a"], trunk: "#3f3022", leaves: ["#2f5a2a", "#3c7034"],
     },
   },
-  city: {
-    kind: "buildings",
-    palette: {
-      indoor: false, skyTop: "#8fb3d9", skyBottom: "#e9eef2", groundTop: "#9a9a94", groundBottom: "#6c6c68",
-      hills: "#b9c3cc", trees: ["#c7b8a3", "#9fa8b2", "#d9cbb5"], trunk: "#5b4632", leaves: ["#4f7a44", "#5e8a52"],
-    },
-  },
-  beach: {
-    kind: "sea",
-    palette: {
-      indoor: false, skyTop: "#6fb0e8", skyBottom: "#e6f3fb", groundTop: "#ecd9b0", groundBottom: "#d4bb88",
-      hills: "#2f86b5", trees: ["#2f86b5", "#4aa3c9", "#2a6f9a"], trunk: "#7a5a3a", leaves: ["#5f9a46", "#4f8a3a"],
-    },
-  },
   // real photos (Pexels, free licence), shown blurred by the depth of field
   "p-garden-sea": { kind: "photo", photo: "bg/garden-sea.jpg", palette: { indoor: false } },
   "p-garden-chairs": { kind: "photo", photo: "bg/garden-chairs.jpg", palette: { indoor: false } },
@@ -356,11 +342,8 @@ export const BACKDROPS: Record<string, { kind: BackdropKind; palette: Partial<Sc
   "p-hall": { kind: "photo", photo: "bg/hall-chandeliers.jpg", palette: { indoor: true } },
   "p-church": { kind: "photo", photo: "bg/church.jpg", palette: { indoor: true } }, // Wikimedia Commons, CC BY-SA 2.0
   "p-palace-ballroom": { kind: "photo", photo: "bg/palace-ballroom.jpg", palette: { indoor: true } }, // Wikimedia Commons, CC BY-SA 4.0
-  "p-castle-court": { kind: "photo", photo: "bg/castle-court.jpg", palette: { indoor: false } }, // Wikimedia Commons, CC BY-SA 4.0
   "p-rose-pergola": { kind: "photo", photo: "bg/rose-pergola.jpg", palette: { indoor: false } }, // Wikimedia Commons, CC BY-SA 3.0
-  "p-lavender": { kind: "photo", photo: "bg/lavender.jpg", palette: { indoor: false } }, // Wikimedia Commons, CC BY-SA 4.0
   "p-forest-path": { kind: "photo", photo: "bg/forest-path.jpg", palette: { indoor: false } }, // Wikimedia Commons, CC BY-SA 4.0
-  "p-old-town": { kind: "photo", photo: "bg/old-town.jpg", palette: { indoor: false } }, // Wikimedia Commons, CC BY 3.0
 };
 
-export const PHOTO_BACKDROPS = ["p-garden-sea", "p-garden-chairs", "p-lake-sunset", "p-hill-aisle", "p-beach-arch", "p-hall", "p-church", "p-palace-ballroom", "p-castle-court", "p-rose-pergola", "p-lavender", "p-forest-path", "p-old-town"] as const;
+export const PHOTO_BACKDROPS = ["p-garden-sea", "p-garden-chairs", "p-lake-sunset", "p-hill-aisle", "p-beach-arch", "p-hall", "p-church", "p-palace-ballroom", "p-rose-pergola", "p-forest-path"] as const;
