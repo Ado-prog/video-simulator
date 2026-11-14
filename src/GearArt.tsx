@@ -549,11 +549,13 @@ export function MicArt({ mic }: { mic: MicInfo }) {
 
 /** A real photograph of the gear with the credit its licence asks for. */
 export function GearPhotoView({ photo, label }: { photo: { src: string; author: string; license: string; page: string; w: number; h: number }; label: string }) {
+  const credit = photo.license === "©" ? `Foto: © ${photo.author}` : `Foto: ${photo.author} · ${photo.license}`;
   return (
     <figure className="gear-photo">
-      <img src={photo.src} alt={label} width={photo.w} height={photo.h} loading="lazy" className={photo.license === "©" ? "on-white" : undefined} />
+      <img src={photo.src} alt={label} title={credit} width={photo.w} height={photo.h} loading="lazy" className={photo.license === "©" ? "on-white" : undefined} />
       <figcaption>
-        <a href={photo.page} target="_blank" rel="noreferrer">Foto: {photo.license === "©" ? `© ${photo.author}` : `${photo.author} · ${photo.license}`}</a>
+        <span className="gear-name">{label}</span>
+        <a href={photo.page} target="_blank" rel="noreferrer" title={credit} aria-label={credit}>ⓘ</a>
       </figcaption>
     </figure>
   );

@@ -1918,6 +1918,7 @@ export default function App() {
 
       <footer className="footer">
         <span>© 2026 Mustafi Studio</span>
+        <a href="https://github.com/Ado-prog/video-simulator/blob/main/CREDITS-PHOTOS.md" target="_blank" rel="noreferrer">Foto-Credits</a>
         <a href="https://github.com/Ado-prog/video-simulator" target="_blank" rel="noreferrer">{t.sourceCode}</a>
       </footer>
     </div>
