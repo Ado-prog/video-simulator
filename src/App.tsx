@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import Monitor, { type SubjectKind, type AfHit, ROW_GAP, rowCount, backgroundOffset } from "./Monitor";
 import { MICS, MIC_BRANDS, INTERNAL_MIC, SOURCES, STEREO_PATTERNS, type SourceId, type PatternId, audioLevels, autoGain, effectiveMic } from "./audio";
 import { stylesFor, makerLutsFor, CREATIVE_LUTS, NEUTRAL_LOOK } from "./looks";
@@ -520,6 +520,38 @@ export default function App() {
     return (["cam", "light", "image", "audio", "assist", "rec", "custom"].includes(v ?? "") ? v : "cam") as "cam";
   });
   const pickTab = (id: typeof tabPick) => { setTabPick(id); try { localStorage.setItem("video-sim-tab", id); } catch { /* ignore */ } };
+  // ── Resizable split between the monitor stage and the settings panel
+  const deckRef = useRef<HTMLElement>(null);
+  const [panelFrac, setPanelFrac] = useState(() => {
+    try {
+      const v = Number(localStorage.getItem("video-sim-deck"));
+      if (v >= 0.25 && v <= 0.6) return v;
+    } catch { /* storage unavailable */ }
+    return 0.38;
+  });
+  const savePanel = (f: number) => {
+    const v = Math.min(0.6, Math.max(0.25, f));
+    setPanelFrac(v);
+    try { localStorage.setItem("video-sim-deck", String(v)); } catch { /* storage unavailable */ }
+  };
+  const startDeckDrag = (e: ReactPointerEvent<HTMLDivElement>) => {
+    const el = deckRef.current;
+    if (!el) return;
+    e.preventDefault();
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    const move = (ev: PointerEvent) => {
+      const r = el.getBoundingClientRect();
+      savePanel((r.right - ev.clientX) / r.width);
+    };
+    const up = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      document.body.classList.remove("is-resizing");
+    };
+    document.body.classList.add("is-resizing");
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+  };
   const [sideOpen, setSideOpen] = useState(() => typeof window === "undefined" || !window.matchMedia("(max-width: 1000px)").matches);
   const [slotName, setSlotName] = useState("");
   const [customMsg, setCustomMsg] = useState("");
@@ -1958,7 +1990,7 @@ export default function App() {
         ))}
       </div>
 
-      <main className={`deck ${isVideo ? "is-video" : "is-photo"}`}>
+      <main ref={deckRef} className={`deck ${isVideo ? "is-video" : "is-photo"}`} style={{ "--panel": `${(panelFrac * 100).toFixed(1)}%` } as CSSProperties}>
         <section className="deck-stage">
           <Monitor
             mode={shootMode}
@@ -2073,6 +2105,25 @@ export default function App() {
           </div>
           </details>
         </section>
+
+        <div
+          className="deck-split"
+          role="separator"
+          aria-orientation="vertical"
+          aria-valuemin={25}
+          aria-valuemax={60}
+          aria-valuenow={Math.round(panelFrac * 100)}
+          tabIndex={0}
+          title="↔"
+          onPointerDown={startDeckDrag}
+          onDoubleClick={() => savePanel(0.38)}
+          onKeyDown={(e) => {
+            if (e.key === "ArrowLeft") savePanel(panelFrac + 0.02);
+            if (e.key === "ArrowRight") savePanel(panelFrac - 0.02);
+          }}
+        >
+          <span aria-hidden="true" />
+        </div>
 
         <section className="deck-panel">
           <nav className="deck-tabs" role="tablist" aria-label={t.camera} style={{ gridTemplateColumns: `repeat(${tabs.length}, minmax(0, 1fr))` }}>

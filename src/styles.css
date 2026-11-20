@@ -742,3 +742,12 @@ button.seg-item:focus-visible { outline: 2px solid var(--accent); outline-offset
   .st { font-size: 12px; padding: 5px 8px; }
   .status-bar .btn-primary { width: 100%; margin: 4px 0 0; }
 }
+
+/* resizable split (drag the line between monitor and settings) */
+.deck { grid-template-columns: minmax(0, 1fr) 14px minmax(320px, var(--panel, 38%)); gap: 6px; }
+.deck-split { align-self: stretch; cursor: col-resize; display: flex; justify-content: center; border-radius: 8px; touch-action: none; }
+.deck-split span { width: 4px; height: 100%; min-height: 120px; border-radius: 4px; background: color-mix(in srgb, var(--line) 90%, transparent); transition: background 0.15s ease; }
+.deck-split:hover span, .deck-split:focus-visible span, body.is-resizing .deck-split span { background: var(--accent); }
+.deck-split:focus-visible { outline: none; }
+body.is-resizing { cursor: col-resize; user-select: none; }
+@media (max-width: 1000px) { .deck { grid-template-columns: minmax(0, 1fr); gap: 20px; } .deck-split { display: none; } }
