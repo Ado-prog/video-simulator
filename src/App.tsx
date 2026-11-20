@@ -515,18 +515,26 @@ export default function App() {
   const mLc = mfx?.lowCut?.includes(micLc) ? micLc : 0;
   const mPad = mfx?.pad?.includes(micPad) ? micPad : 0;
   const mStep = mfx?.steps?.includes(micStep) ? micStep : 0;
+  const [micNc, setMicNc] = useState(0); // index+1 of the NOISE CUT position, 0 = OFF
+  const [micLimSw, setMicLimSw] = useState("OFF"); // limiter switch on the mic
+  const [micDial, setMicDial] = useState(0); // dB on the mic's level dial
+  const mNc = mfx?.noiseCut && micNc <= mfx.noiseCut.db.length ? micNc : 0;
+  const ncDb = mNc ? mfx!.noiseCut!.db[mNc - 1] : 0;
+  const mLim = mfx?.micLim?.includes(micLimSw) ? micLimSw : "OFF";
+  const mDial = mfx?.dial ? Math.min(Math.max(micDial, mfx.dial[0]), mfx.dial[1]) : 0;
+  const limiterAll = limiter || mLim !== "OFF";
   const audioBase = {
-    mic: effectiveMic(mic, pattern, noiseCancel), source: sourceId, sceneId, outdoor: !scene.palette.indoor,
-    cameraDistanceM: subjectM, lowCut, float32: f32On, micTrim: mPad + mStep, micCut: lowCutDb(mLc),
+    mic: (() => { const m = effectiveMic(mic, pattern, noiseCancel); return ncDb ? { ...m, rejection: m.rejection + ncDb } : m; })(), source: sourceId, sceneId, outdoor: !scene.palette.indoor,
+    cameraDistanceM: subjectM, lowCut, float32: f32On, micTrim: mPad + mStep + mDial, micCut: lowCutDb(mLc),
   };
   const effGain = autoLevel ? autoGain(audioBase) : gain;
-  const audio = audioLevels({ ...audioBase, gain: effGain, limiter });
+  const audio = audioLevels({ ...audioBase, gain: effGain, limiter: limiterAll });
   const quality = audio.snr === null ? null : audio.snr >= 15 ? "good" : audio.snr >= 6 ? "fair" : "poor";
   const tooNoisy = audio.avg - audio.noiseFloor < 18;
   const safetyPeak = !f32On && mic.safety && safetyOn && (audio.clip || audio.overdriven) ? Math.round(audio.rawPeak + mic.safety) : null;
   const dmsBackup = mic.id === "pana-dms1" && safetyOn;
-  const ch3 = dmsBackup ? audioLevels({ ...audioBase, mic: effectiveMic(mic, "omni", false), gain: effGain, limiter }) : null;
-  const ch4 = dmsBackup ? audioLevels({ ...audioBase, mic: effectiveMic(mic, "omni", false), gain: effGain - 20, limiter }) : null;
+  const ch3 = dmsBackup ? audioLevels({ ...audioBase, mic: effectiveMic(mic, "omni", false), gain: effGain, limiter: limiterAll }) : null;
+  const ch4 = dmsBackup ? audioLevels({ ...audioBase, mic: effectiveMic(mic, "omni", false), gain: effGain - 20, limiter: limiterAll }) : null;
   const typeLabel = { lav: t.t_lav, oncam: t.t_oncam, boom: t.t_boom, internal: t.t_internal }[mic.type];
 
   // ── Group rows: which rows are inside the sharp zone
@@ -563,7 +571,7 @@ export default function App() {
     subject,
     zebraMode, zebraLevels, falseColor, wfmOn, wfmType, histogram, peaking, frameOn, frameMarkers, frameMask,
     motion, roninId, roninMode, stab, timelineFps, resId, codecId, containerId, flashMode, shutterType, bracketId,
-    micId, channelMode, sourceId, gain, autoLevel, limiter, lowCut, float32, patternId, noiseCancel, safetyOn, onboard, micLc, micPad, micStep, micBoost, lensOis, lensMfSw, lensLim,
+    micId, channelMode, sourceId, gain, autoLevel, limiter, lowCut, float32, patternId, noiseCancel, safetyOn, onboard, micLc, micPad, micStep, micBoost, micNc, micLimSw, micDial, lensOis, lensMfSw, lensLim,
   });
   const setters = {
     shootMode: setShootMode, cameraId: setCameraId, lensId: setLensId, manualSensor: setManualSensor, focal: setFocal,
@@ -575,7 +583,7 @@ export default function App() {
     wfmOn: setWfmOn, wfmType: setWfmType, histogram: setHistogram, peaking: setPeaking, frameOn: setFrameOn,
     frameMarkers: setFrameMarkers, frameMask: setFrameMask, motion: setMotion, roninId: setRoninId, roninMode: setRoninMode, stab: setStab, containerId: setContainerId,
     timelineFps: setTimelineFps, resId: setResId, codecId: setCodecId, flashMode: setFlashMode, shutterType: setShutterType,
-    bracketId: setBracketId, micId: setMicId, micLc: setMicLc, micPad: setMicPad, micStep: setMicStep, micBoost: setMicBoost, lensOis: setLensOis, lensMfSw: setLensMfSw, lensLim: setLensLim, channelMode: setChannelMode, sourceId: setSourceId, gain: setGain, autoLevel: setAutoLevel,
+    bracketId: setBracketId, micId: setMicId, micLc: setMicLc, micPad: setMicPad, micStep: setMicStep, micBoost: setMicBoost, micNc: setMicNc, micLimSw: setMicLimSw, micDial: setMicDial, lensOis: setLensOis, lensMfSw: setLensMfSw, lensLim: setLensLim, channelMode: setChannelMode, sourceId: setSourceId, gain: setGain, autoLevel: setAutoLevel,
     limiter: setLimiter, lowCut: setLowCut, float32: setFloat32, patternId: setPatternId, noiseCancel: setNoiseCancel,
     safetyOn: setSafetyOn, onboard: setOnboard,
   } as unknown as Record<string, (v: unknown) => void>;
@@ -1681,12 +1689,13 @@ export default function App() {
                   {mfx.mute && <span className="chip">{fx.mute}</span>}
                   {mfx.autoPower && <span className="chip">{fx.autoPower}</span>}
                   {mfx.phone && <span className="chip">{fx.phone}</span>}
+                  {mfx.safetyCh && <span className="chip">{fill(fx.safetyChip, mfx.safetyCh)}</span>}
                 </p>
                 {mfx.lowCut && (
                   <>
-                    <label htmlFor="miclc">{fx.lowCutSw}</label>
+                    <label htmlFor="miclc">{mfx.lcWind ? fx.windSw : fx.lowCutSw}</label>
                     <select {...sel("miclc")} value={mLc} onChange={(e) => setMicLc(Number(e.target.value))}>
-                      <option value={0}>{fx.off}</option>
+                      <option value={0}>{mfx.lcWind ? "OFF" : fx.off}</option>
                       {mfx.lowCut.map((hz, i) => (
                         <option key={hz} value={hz}>{mfx.lcNames?.[i] ? `${mfx.lcNames[i]} (${hz} Hz)` : `${hz} Hz`}</option>
                       ))}
@@ -1702,11 +1711,37 @@ export default function App() {
                     </select>
                   </>
                 )}
+                {mfx.noiseCut && (
+                  <>
+                    <label htmlFor="micnc2">{fx.noiseSw}</label>
+                    <select {...sel("micnc2")} value={mNc} onChange={(e) => setMicNc(Number(e.target.value))}>
+                      <option value={0}>OFF</option>
+                      {mfx.noiseCut.names.map((n, i) => <option key={n} value={i + 1}>{n}</option>)}
+                    </select>
+                  </>
+                )}
                 {mfx.steps && (
                   <>
-                    <label htmlFor="micstep">{fx.stepSw}</label>
+                    <label htmlFor="micstep">{mfx.lcWind ? "GAIN" : fx.stepSw}</label>
                     <select {...sel("micstep")} value={mStep} onChange={(e) => setMicStep(Number(e.target.value))}>
                       {mfx.steps.map((d) => <option key={d} value={d}>{d > 0 ? "+" : ""}{d} dB</option>)}
+                    </select>
+                  </>
+                )}
+                {mfx.dial && (
+                  <>
+                    <div className="row-label">
+                      <label htmlFor="micdial">{fx.dialSw}</label>
+                      <output htmlFor="micdial">{mDial > 0 ? "+" : ""}{mDial} dB</output>
+                    </div>
+                    <input id="micdial" type="range" min={mfx.dial[0]} max={mfx.dial[1]} step={1} value={mDial} onChange={(e) => setMicDial(Number(e.target.value))} />
+                  </>
+                )}
+                {mfx.micLim && (
+                  <>
+                    <label htmlFor="miclim">{fx.limSwMic}</label>
+                    <select {...sel("miclim")} value={mLim} onChange={(e) => setMicLimSw(e.target.value)}>
+                      {mfx.micLim.map((n) => <option key={n} value={n}>{n}</option>)}
                     </select>
                   </>
                 )}
@@ -1718,7 +1753,22 @@ export default function App() {
                     </label>
                   </div>
                 )}
-                {mLc >= 150 && <p className="note">{fx.lc150}</p>}
+                {mLc >= 150 && <p className="note">{mfx.lcWind ? fx.windTip : fx.lc150}</p>}
+                {mNc > 0 && <p className="note">{fx.noiseTip}</p>}
+                {mLim !== "OFF" && <p className="note">{fx.micLimTip}</p>}
+                {mfx.dial && mDial !== 0 && <p className="note">{fx.dialTip}</p>}
+                {mfx.cam && (
+                  <>
+                    <p className="eyebrow">{fx.camHead}</p>
+                    <p className="chip-row">{mfx.cam.map((k) => <span key={k} className="chip">{fx.camKeys[k]}</span>)}</p>
+                  </>
+                )}
+                {mfx.app && (
+                  <>
+                    <p className="eyebrow">{fx.appHead}</p>
+                    <p className="chip-row">{mfx.app.map((k) => <span key={k} className="chip">{fx.appKeys[k]}</span>)}</p>
+                  </>
+                )}
                 {micBoost && mfx.boost && <p className="note">{fx.boostTip}</p>}
                 {mfx.pad && !mPad && SOURCES[sourceId].spl >= 88 && <p className="warn">{fx.padTip}</p>}
                 {mfx.power === "phantom" && <p className="note">{fx.phantomTip}</p>}

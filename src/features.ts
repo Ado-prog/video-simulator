@@ -116,40 +116,54 @@ export type MicFx = {
   timecode?: boolean;
   mute?: boolean;
   phone?: boolean; // made for phones (no camera receiver in the box)
+  lcWind?: boolean; // the low-cut switch is labelled WIND CUT on the mic
+  noiseCut?: { names: string[]; db: number[] }; // NOISE CUT switch: less steady room noise
+  micLim?: string[]; // limiter switch on the mic, e.g. OFF / ON / AUTO
+  dial?: [number, number]; // continuous level dial in dB (min, max)
+  safetyCh?: number; // dB of the mic's own safety channel (second channel)
+  cam?: CamKey[]; // settings in the camera menu when the mic sits on the digital shoe
+  app?: AppKey[]; // settings in the receiver menu or the maker's app
 };
+
+export type CamKey = "pattern" | "f32" | "ch4" | "level" | "wind" | "rate" | "hp" | "power";
+export type AppKey = "gain" | "hpf" | "f32" | "tc" | "safety" | "stereo" | "led" | "nc" | "rec" | "fw";
 
 const TRS = "3,5 mm TRS";
 const XLR = "XLR";
 
 const MIC_FX: Record<string, MicFx> = {
-  "rode-wpro": { conn: `${TRS} / USB-C`, power: "battery", hours: 7, range: 260, gainAssist: true, monitor: true, usb: true, timecode: true, mute: true },
-  "pana-dms1": { conn: "Multi-Interface (digital)", power: "shoe", lowCut: [100, 200], lcNames: ["STD", "HI"], steps: [-20, 0, 20], monitor: false },
+  "rode-wpro": { conn: `${TRS} / USB-C`, power: "battery", hours: 7, range: 260, gainAssist: true, monitor: true, usb: true, timecode: true, mute: true, lowCut: [75, 150], app: ["gain", "hpf", "f32", "tc", "safety", "stereo", "led", "rec", "fw"] },
+  "pana-dms1": {
+    conn: "Multi-Interface (digital)", power: "shoe", lowCut: [100, 200], lcNames: ["STD", "HI"], lcWind: true,
+    noiseCut: { names: ["STD", "HI"], db: [4, 8] }, steps: [-20, 0, 20], dial: [-12, 12], micLim: ["OFF", "ON", "AUTO"],
+    cam: ["pattern", "f32", "ch4", "level", "wind", "rate", "hp", "power"],
+  },
   "pana-ms2": { conn: TRS, power: "plugin" },
-  "rode-wgo3": { conn: `${TRS} / USB-C`, power: "battery", hours: 7, range: 260, gainAssist: true, monitor: true, usb: true, mute: true },
+  "rode-wgo3": { conn: `${TRS} / USB-C`, power: "battery", hours: 7, range: 260, gainAssist: true, monitor: true, usb: true, mute: true, lowCut: [75, 150], app: ["gain", "hpf", "f32", "safety", "stereo", "led", "rec", "fw"] },
   "rode-wme": { conn: `${TRS} / USB-C`, power: "battery", hours: 7, range: 100, gainAssist: true, usb: true },
-  "rode-vmntg": { conn: `${TRS} / USB-C`, power: "battery", hours: 30, lowCut: [75, 150], pad: [-20], boost: true, monitor: true, usb: true, autoPower: true },
+  "rode-vmntg": { conn: `${TRS} / USB-C`, power: "battery", hours: 30, lowCut: [75, 150], pad: [-20], boost: true, monitor: true, usb: true, autoPower: true, dial: [-20, 20], safetyCh: -20 },
   "rode-vmgo2": { conn: `${TRS} / USB-C`, power: "plugin", monitor: true, usb: true },
   "rode-vmicro2": { conn: TRS, power: "plugin" },
   "rode-ntg4p": { conn: XLR, power: "phantom", hours: 150, lowCut: [75], pad: [-10], boost: true },
   "rode-ntg5": { conn: XLR, power: "phantom" },
-  "dji-mic2": { conn: `${TRS} / USB-C`, power: "battery", hours: 6, range: 250, lowCut: [150], steps: [-12, -6, 0, 6, 12], monitor: true, usb: true, mute: true },
+  "dji-mic2": { conn: `${TRS} / USB-C`, power: "battery", hours: 6, range: 250, lowCut: [150], steps: [-12, -6, 0, 6, 12], monitor: true, usb: true, mute: true, app: ["gain", "nc", "f32", "safety", "stereo", "rec", "fw"] },
   "dji-micmini": { conn: `${TRS} / USB-C`, power: "battery", hours: 11, range: 400, steps: [-12, -6, 0, 6, 12], mute: true },
   "senn-mke600": { conn: XLR, power: "aa", hours: 150, lowCut: [100] },
   "senn-mke400": { conn: "3,5 mm TRS/TRRS", power: "battery", hours: 100, lowCut: [200], steps: [-20, 0, 20], monitor: true, autoPower: true },
   "senn-profile": { conn: `${TRS} / USB-C`, power: "battery", hours: 7, range: 245, monitor: true, usb: true, mute: true },
   "senn-ewdp": { conn: `${TRS} / XLR`, power: "aa", hours: 12, range: 100, mute: true },
-  "deity-d3pro": { conn: "3,5 mm TRRS (Smart)", power: "battery", hours: 51, lowCut: [75, 150], autoPower: true },
+  "deity-d3pro": { conn: "3,5 mm TRRS (Smart)", power: "battery", hours: 51, lowCut: [75, 150], autoPower: true, dial: [-20, 20] },
   "holly-m2": { conn: `${TRS} / USB-C`, power: "battery", hours: 10, range: 300 },
   "holly-max": { conn: `${TRS} / USB-C`, power: "battery", hours: 7.5, range: 250, monitor: true, mute: true },
-  "sony-ecmb10": { conn: "MI-Schuh (digital)", power: "shoe", lowCut: [100], lcNames: ["LC"], pad: [-10, -20] },
-  "sony-ecmb1m": { conn: "MI-Schuh (digital)", power: "shoe", lowCut: [100], lcNames: ["LC"], pad: [-10, -20] },
-  "canon-dme1d": { conn: "Multi-Funktions-Schuh (digital)", power: "shoe" },
+  "sony-ecmb10": { conn: "MI-Schuh (digital)", power: "shoe", noiseCut: { names: ["ON"], db: [6] }, cam: ["level", "wind", "f32", "rate", "hp", "power"] },
+  "sony-ecmb1m": { conn: "MI-Schuh (digital)", power: "shoe", lowCut: [100], lcNames: ["LC"], pad: [-10, -20], noiseCut: { names: ["ON"], db: [6] }, cam: ["level", "wind", "f32", "ch4", "rate", "hp", "power"] },
+  "canon-dme1d": { conn: "Multi-Funktions-Schuh (digital)", power: "shoe", lowCut: [100], lcWind: true, cam: ["level", "wind", "ch4", "rate", "hp", "power"] },
   "nikon-me1": { conn: TRS, power: "plugin", lowCut: [100] },
-  "dji-mic3": { conn: `${TRS} / USB-C`, power: "battery", hours: 8, range: 400, lowCut: [150], steps: [-12, -6, 0, 6, 12], monitor: true, usb: true, timecode: true, mute: true },
+  "dji-mic3": { conn: `${TRS} / USB-C`, power: "battery", hours: 8, range: 400, lowCut: [150], steps: [-12, -6, 0, 6, 12], monitor: true, usb: true, timecode: true, mute: true, app: ["gain", "nc", "f32", "tc", "safety", "stereo", "rec", "fw"] },
   "dji-mic1": { conn: `${TRS} / USB-C`, power: "battery", hours: 5.5, range: 250, lowCut: [150], monitor: true, mute: true },
   "rode-wgo2": { conn: `${TRS} / USB-C`, power: "battery", hours: 7, range: 200, pad: [-10, -20], usb: true, mute: true },
   "rode-wmicro": { conn: "USB-C / Lightning", power: "battery", hours: 7, range: 100, gainAssist: true, phone: true },
-  "rode-vmproplus": { conn: TRS, power: "battery", hours: 100, lowCut: [75, 150], steps: [-10, 0, 20], boost: true, autoPower: true },
+  "rode-vmproplus": { conn: TRS, power: "battery", hours: 100, lowCut: [75, 150], steps: [-10, 0, 20], boost: true, autoPower: true, safetyCh: -10 },
   "senn-mke200": { conn: "3,5 mm TRS/TRRS", power: "plugin" },
   "holly-m1": { conn: TRS, power: "battery", hours: 8, range: 200 },
   "holly-m2s": { conn: `${TRS} / USB-C`, power: "battery", hours: 9, range: 300 },
@@ -170,6 +184,14 @@ export const micFx = (mic: Mic): MicFx | null => MIC_FX[mic.id] ?? null;
 export const lowCutDb = (hz: number) => (hz <= 0 ? 0 : hz < 90 ? 8 : hz < 130 ? 11 : hz < 180 ? 14 : 16);
 
 const de = {
+  windSw: "WIND CUT am Mikrofon", noiseSw: "NOISE CUT am Mikrofon", limSwMic: "Limiter am Mikrofon (LMT)", dialSw: "Pegelregler am Mikrofon (Drehrad)",
+  safetyChip: "Sicherheitskanal {x} dB", camHead: "Einstellungen im Kameramenü", appHead: "Einstellungen im Empfänger / in der App",
+  camKeys: { pattern: "Richtcharakteristik", f32: "32-Bit-Float-Aufnahme", ch4: "4-Kanal-Aufnahme (Backup)", level: "Tonpegel", wind: "Windgeräuschreduzierung", rate: "Abtastrate 48 / 96 kHz", hp: "Kopfhörer-Lautstärke", power: "Strom über den Kameraschuh" },
+  appKeys: { gain: "Verstärkung", hpf: "Hochpassfilter", f32: "32-Bit-Float intern", tc: "Timecode", safety: "Sicherheitsspur", stereo: "Mono / Stereo / Merged", led: "LED-Helligkeit", nc: "Rauschunterdrückung", rec: "Interne Aufnahme", fw: "Firmware-Update" },
+  noiseTip: "NOISE CUT nimmt gleichmäßiges Rauschen (Klimaanlage, Lüfter) weg – auf HI können Stimmen etwas künstlich klingen.",
+  windTip: "WIND CUT auf HI schneidet tiefe Frequenzen stärker – gut draußen bei Wind, drinnen klingen Stimmen dünner.",
+  micLimTip: "Der Limiter im Mikrofon fängt laute Spitzen ab, bevor sie zur Kamera gehen (AUTO: nur wenn nötig).",
+  dialTip: "Mit dem Drehrad stellst du den Pegel fein ein, zusätzlich zum GAIN-Schalter.",
   lensFx: "Schalter & Funktionen am Objektiv",
   micFx: "Schalter & Funktionen am Mikrofon",
   ois: "Bildstabilisator im Objektiv", afmf: "AF/MF-Schalter", limiter: "Fokusbegrenzer", apRing: "Blendenring", declick: "Blendenring entklickbar",
@@ -196,6 +218,14 @@ const de = {
 type Txt = typeof de;
 
 const bs: Txt = {
+  windSw: "WIND CUT na mikrofonu", noiseSw: "NOISE CUT na mikrofonu", limSwMic: "Limiter na mikrofonu (LMT)", dialSw: "Regulator nivoa na mikrofonu (točkić)",
+  safetyChip: "Sigurnosni kanal {x} dB", camHead: "Podešavanja u meniju kamere", appHead: "Podešavanja u prijemniku / aplikaciji",
+  camKeys: { pattern: "Karakteristika usmjerenosti", f32: "32-bit float snimanje", ch4: "4-kanalno snimanje (rezerva)", level: "Nivo zvuka", wind: "Smanjenje šuma vjetra", rate: "Frekvencija uzorkovanja 48 / 96 kHz", hp: "Jačina slušalica", power: "Struja preko stopice kamere" },
+  appKeys: { gain: "Pojačanje", hpf: "Visokopropusni filter", f32: "32-bit float interno", tc: "Timecode", safety: "Sigurnosna traka", stereo: "Mono / Stereo / Spojeno", led: "Jačina LED-a", nc: "Uklanjanje šuma", rec: "Interno snimanje", fw: "Ažuriranje firmvera" },
+  noiseTip: "NOISE CUT skida ravnomjeran šum (klima, ventilator) – na HI glas može zvučati malo vještački.",
+  windTip: "WIND CUT na HI jače reže niske frekvencije – dobro napolju na vjetru, unutra glas zvuči tanje.",
+  micLimTip: "Limiter u mikrofonu hvata glasne vrhove prije nego odu u kameru (AUTO: samo kad treba).",
+  dialTip: "Točkićem fino podešavaš nivo, uz GAIN prekidač.",
   lensFx: "Prekidači i funkcije na objektivu",
   micFx: "Prekidači i funkcije na mikrofonu",
   ois: "Stabilizator u objektivu", afmf: "AF/MF prekidač", limiter: "Limiter fokusa", apRing: "Prsten blende", declick: "Prsten blende bez klika",
@@ -221,6 +251,14 @@ const bs: Txt = {
 };
 
 const en: Txt = {
+  windSw: "WIND CUT on the mic", noiseSw: "NOISE CUT on the mic", limSwMic: "Limiter on the mic (LMT)", dialSw: "Level dial on the mic",
+  safetyChip: "Safety channel {x} dB", camHead: "Settings in the camera menu", appHead: "Settings in the receiver / app",
+  camKeys: { pattern: "Pickup pattern", f32: "32-bit float recording", ch4: "4-channel recording (backup)", level: "Recording level", wind: "Wind noise reduction", rate: "Sample rate 48 / 96 kHz", hp: "Headphone volume", power: "Power through the camera shoe" },
+  appKeys: { gain: "Gain", hpf: "High-pass filter", f32: "32-bit float onboard", tc: "Timecode", safety: "Safety track", stereo: "Mono / Stereo / Merged", led: "LED brightness", nc: "Noise cancelling", rec: "Onboard recording", fw: "Firmware update" },
+  noiseTip: "NOISE CUT removes steady noise (air conditioning, fans) – on HI voices can sound slightly artificial.",
+  windTip: "WIND CUT on HI cuts low frequencies harder – good outdoors in wind, indoors voices sound thinner.",
+  micLimTip: "The limiter in the mic catches loud peaks before they reach the camera (AUTO: only when needed).",
+  dialTip: "Use the dial to fine-tune the level on top of the GAIN switch.",
   lensFx: "Switches & functions on the lens",
   micFx: "Switches & functions on the microphone",
   ois: "Optical stabiliser in the lens", afmf: "AF/MF switch", limiter: "Focus limiter", apRing: "Aperture ring", declick: "De-clickable aperture ring",
@@ -251,6 +289,10 @@ const sr: Txt = {
   boostTip: "Vraća visoke tonove koje pojedu krzneni vetrobran i udaljenost.", lc150: "Visok low-cut skida vetar i udarce, ali glas postaje malo tanji.",
   phoneTip: "Ovaj sistem je pravljen za mobilni – na kameri samo uz dodatni prijemnik/adapter.", phone: "za mobilni",
   rangeTip: "⚠ Udaljenost {x}: blizu granice dometa (telo i zidovi guše signal) – uključi interno snimanje u predajniku kao rezervu.",
+  camKeys: { ...bs.camKeys, pattern: "Karakteristika usmerenosti", wind: "Smanjenje šuma vetra" },
+  windTip: "WIND CUT na HI jače seče niske frekvencije – dobro napolju na vetru, unutra glas zvuči tanje.",
+  noiseTip: "NOISE CUT skida ravnomeran šum (klima, ventilator) – na HI glas može zvučati malo veštački.",
+  micLimTip: "Limiter u mikrofonu hvata glasne vrhove pre nego odu u kameru (AUTO: samo kad treba).",
 };
 
 const TXT: Record<string, Txt> = { de, bs, sr, en };
