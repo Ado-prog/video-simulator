@@ -1909,6 +1909,19 @@ export default function App() {
           </div>
         </div>
         <div className="topbar-tools">
+          <Seg
+            label="View"
+            value="modern"
+            onChange={(v) => {
+              if (v !== "classic") return;
+              try { localStorage.setItem("video-sim-view", "classic"); } catch { /* ignore */ }
+              window.location.href = "./klassisch/";
+            }}
+            options={[
+              { v: "modern", l: lang === "de" ? "Modern" : lang === "en" ? "Modern" : "Moderno" },
+              { v: "classic", l: lang === "de" ? "Klassisch" : lang === "en" ? "Classic" : lang === "sr" ? "Klasično" : "Klasično" },
+            ]}
+          />
           <label className="sr-only" htmlFor="lang">{t.language}</label>
           <select id="lang" className="control control-compact" value={lang} onChange={(e) => setLang(e.target.value as Lang)}>
             {LANGUAGES.map((l) => (
@@ -2084,7 +2097,6 @@ export default function App() {
 
       <footer className="footer">
         <span>© 2026 Mustafi Studio</span>
-        <a href="./klassisch/">{lang === "de" ? "Klassische Ansicht" : lang === "en" ? "Classic view" : "Klasični izgled"}</a>
         <a href="https://github.com/Ado-prog/video-simulator/blob/main/CREDITS-PHOTOS.md" target="_blank" rel="noreferrer">Foto-Credits</a>
         <a href="https://github.com/Ado-prog/video-simulator" target="_blank" rel="noreferrer">{t.sourceCode}</a>
       </footer>

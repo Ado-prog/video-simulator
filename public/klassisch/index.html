@@ -15,5 +15,21 @@
   </head>
   <body>
     <div id="root"></div>
+    <div id="view-switch" style="position:fixed;right:max(14px,env(safe-area-inset-right));bottom:max(14px,env(safe-area-inset-bottom));z-index:50;display:flex;gap:3px;padding:3px;border-radius:12px;background:var(--raised,#1d2228);border:1px solid var(--line,#2b323a);box-shadow:0 6px 20px -8px rgba(0,0,0,.5);font:600 12px/1 Barlow,system-ui,sans-serif">
+      <button type="button" id="vs-modern" style="border:0;border-radius:9px;padding:8px 12px;cursor:pointer;background:transparent;color:var(--muted,#8b96a1);font:inherit">Modern</button>
+      <button type="button" style="border:0;border-radius:9px;padding:8px 12px;background:var(--accent,#f0ab3c);color:var(--accent-ink,#1a1206);font:inherit" aria-pressed="true" id="vs-classic">Klassisch</button>
+    </div>
+    <script>
+      (function () {
+        var l = "de"; try { l = localStorage.getItem("video-sim-lang") || "de"; } catch (e) {}
+        var m = { de: ["Modern", "Klassisch"], en: ["Modern", "Classic"] }[l] || ["Moderno", "Klasično"];
+        document.getElementById("vs-modern").textContent = m[0];
+        document.getElementById("vs-classic").textContent = m[1];
+        document.getElementById("vs-modern").onclick = function () {
+          try { localStorage.setItem("video-sim-view", "modern"); } catch (e) {}
+          location.href = "./?modern";
+        };
+      })();
+    </script>
   </body>
 </html>
