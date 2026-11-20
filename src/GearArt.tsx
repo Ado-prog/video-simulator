@@ -240,7 +240,7 @@ export function cameraKind(id: string | undefined): CameraKind {
   return "mirrorless";
 }
 
-const CINE = ["sony-fx3", "sony-fx30", "sony-fx2", "sony-fx5"];
+const CINE = ["sony-fx3", "sony-fx30", "sony-fx2", "sony-fx5", "nikon-zr"];
 const FLAT = ["pana-s9", "sony-a7cii", "sony-zve1", "sony-a6700", "sony-zve10ii"];
 const PRO = ["canon-r1", "canon-r3", "nikon-z9"];
 const RETRO = ["nikon-zf", "nikon-zfc"];

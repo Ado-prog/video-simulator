@@ -113,6 +113,7 @@ The gear photographs in `public/gear/` come from Wikimedia Commons and are used 
 | sony-zve10ii | [Sony ZV-E10 Mark II.tiff](https://commons.wikimedia.org/wiki/File:Sony_ZV-E10_Mark_II.tiff) | PJ | CC BY 4.0 |
 | canon-r5ii | [Canon EOS R5 Mark II (front, no body cap).jpg](https://commons.wikimedia.org/wiki/File:Canon_EOS_R5_Mark_II_(front,_no_body_cap).jpg) | D. Benjamin Miller | CC0 |
 | nikon-z9 | [Nikon Z 9 - front view - by Henry Söderlund (51946495569).jpg](https://commons.wikimedia.org/wiki/File:Nikon_Z_9_-_front_view_-_by_Henry_S%C3%B6derlund_(51946495569).jpg) | Henry Söderlund from Helsinki, Finland | CC BY 2.0 |
+| nikon-zr | [Nikon ZR 27 nov 2025c.jpg](https://commons.wikimedia.org/wiki/File:Nikon_ZR_27_nov_2025c.jpg) | 昼落ち | CC0 |
 | nikon-z6iii | [Nikon Z6III (by Henry Söderlund).jpg](https://commons.wikimedia.org/wiki/File:Nikon_Z6III_(by_Henry_S%C3%B6derlund).jpg) | Henry Söderlund | CC BY 2.0 |
 | dji-avata360 | [DJI Avata 360 in Store 2026-05-15-1.jpg](https://commons.wikimedia.org/wiki/File:DJI_Avata_360_in_Store_2026-05-15-1.jpg) | NDG | CC BY-SA 4.0 |
 | insta-x3 | [Insta360 X3 - 1.jpg](https://commons.wikimedia.org/wiki/File:Insta360_X3_-_1.jpg) | Kyu3a | CC BY-SA 4.0 |

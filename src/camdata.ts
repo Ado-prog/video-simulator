@@ -50,6 +50,7 @@ const F: Record<string, Facts> = {
   "nikon-z9": { mp: 45, readout: 4, sync: 1 / 200, k8: true, maxFps: 120 },
   "nikon-z8": { mp: 45, readout: 4, sync: 1 / 200, k8: true, maxFps: 120 },
   "nikon-z6iii": { mp: 24.5, readout: 14, sync: 1 / 200, k6: true, maxFps: 120 },
+  "nikon-zr": { mp: 24.5, readout: 14, dualIso: [800, 6400], openGate: true, k6: true, maxFps: 120 },
   "nikon-zf": { mp: 24.5, readout: 22, sync: 1 / 200, maxFps: 60 },
   "nikon-z5ii": { mp: 24.5, readout: 22, sync: 1 / 200, maxFps: 60 },
   "nikon-z50ii": { mp: 21, readout: 25, sync: 1 / 200, maxFps: 60 },
@@ -123,7 +124,7 @@ const SLOTS: Record<string, MediaId[]> = {
   "sony-fx2": ["cfasd", "cfasd"], "sony-zve1": ["sd"], "sony-a6700": ["sd"], "sony-fx30": ["cfasd", "cfasd"], "sony-zve10ii": ["sd"],
   "canon-r1": ["cfb", "cfb"], "canon-r3": ["cfb", "sd"], "canon-r5ii": ["cfb", "sd"], "canon-r6ii": ["sd", "sd"],
   "canon-r8": ["sd"], "canon-r7": ["sd", "sd"], "canon-r10": ["sd"], "canon-r50": ["sd"],
-  "nikon-z9": ["cfb", "cfb"], "nikon-z8": ["cfb", "sd"], "nikon-z6iii": ["cfb", "sd"], "nikon-zf": ["sd", "microsd"],
+  "nikon-z9": ["cfb", "cfb"], "nikon-z8": ["cfb", "sd"], "nikon-z6iii": ["cfb", "sd"], "nikon-zr": ["cfb", "microsd"], "nikon-zf": ["sd", "microsd"],
   "nikon-z5ii": ["sd", "sd"], "nikon-z50ii": ["sd"], "nikon-zfc": ["sd"],
 };
 
@@ -152,7 +153,7 @@ const VIDEO_MAX_ISO: Record<string, number> = {
   "sony-zve10ii": 32000,
   "canon-r1": 25600, "canon-r3": 25600, "canon-r5ii": 25600, "canon-r6ii": 25600, "canon-r8": 25600, "canon-r7": 25600,
   "canon-r10": 12800, "canon-r50": 12800,
-  "nikon-z9": 25600, "nikon-z8": 25600, "nikon-z6iii": 51200, "nikon-zf": 51200, "nikon-z5ii": 51200, "nikon-z50ii": 25600,
+  "nikon-z9": 25600, "nikon-z8": 25600, "nikon-z6iii": 51200, "nikon-zr": 51200, "nikon-zf": 51200, "nikon-z5ii": 51200, "nikon-z50ii": 25600,
   "nikon-zfc": 25600,
   "dji-pocket3": 16000, "dji-action5": 25600, "dji-action4": 12800, "dji-nano": 6400, "dji-osmo360": 12800,
   "dji-avata360": 12800, "dji-avata2": 12800, "dji-neo": 6400, "dji-mini4pro": 6400, "dji-mini5pro": 12800,

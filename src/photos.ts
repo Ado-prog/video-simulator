@@ -53,6 +53,7 @@ export const CAMERA_PHOTOS: Record<string, GearPhoto> = {
   "sony-zve10ii": P("cam-sony-zve10ii", "PJ", "CC BY 4.0", "https://commons.wikimedia.org/wiki/File:Sony_ZV-E10_Mark_II.tiff", 330, 227),
   "canon-r5ii": P("cam-canon-r5ii", "D. Benjamin Miller", "CC0", "https://commons.wikimedia.org/wiki/File:Canon_EOS_R5_Mark_II_(front,_no_body_cap).jpg", 440, 330),
   "nikon-z9": P("cam-nikon-z9", "Henry Söderlund from Helsinki, Finland", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Nikon_Z_9_-_front_view_-_by_Henry_S%C3%B6derlund_(51946495569).jpg", 440, 330),
+  "nikon-zr": P("cam-nikon-zr", "昼落ち", "CC0", "https://commons.wikimedia.org/wiki/File:Nikon_ZR_27_nov_2025c.jpg", 440, 297),
   "nikon-z6iii": P("cam-nikon-z6iii", "Henry Söderlund", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Nikon_Z6III_(by_Henry_S%C3%B6derlund).jpg", 440, 293),
   "dji-avata360": P("cam-dji-avata360", "NDG", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:DJI_Avata_360_in_Store_2026-05-15-1.jpg", 440, 330),
   "insta-x3": P("cam-insta-x3", "Kyu3a", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Insta360_X3_-_1.jpg", 247, 330),

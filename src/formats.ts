@@ -21,6 +21,7 @@ export const CODECS = [
   { id: "pr422hq", label: "Apple ProRes 422 HQ", mbps: 740, cap: 6000, gop: false },
   { id: "prraw", label: "Apple ProRes RAW", mbps: 1000, cap: 8000, gop: false },
   { id: "nraw", label: "N-RAW", mbps: 1100, cap: 8000, gop: false },
+  { id: "r3dne", label: "R3D NE (REDCODE RAW)", mbps: 1200, cap: 6000, gop: false },
   { id: "crm", label: "Cinema RAW Light", mbps: 1300, cap: 8000, gop: false },
   { id: "xocn", label: "X-OCN (16-bit RAW)", mbps: 1200, cap: 8000, gop: false },
 ] as const;
@@ -30,7 +31,7 @@ export type Container = { id: string; label: string; codecs: CodecId[]; factor?:
 
 const PANA_PRORES = ["pana-s1ii", "pana-s1rii", "pana-gh7", "pana-gh6", "pana-g9ii", "pana-s5iix"];
 const PANA_LITE = ["pana-s1ii", "pana-s1rii", "pana-s5ii", "pana-s5iix", "pana-s9", "pana-gh7", "pana-g9ii"];
-const NIKON_PRO = ["nikon-z9", "nikon-z8", "nikon-z6iii", "nikon-z5ii"];
+const NIKON_PRO = ["nikon-z9", "nikon-z8", "nikon-z6iii", "nikon-z5ii", "nikon-zr"];
 const CANON_RAW = ["canon-r1", "canon-r3", "canon-r5ii"];
 
 /** Recording file formats and the codecs each one offers on this camera. */
@@ -69,6 +70,7 @@ export function containersFor(cam: { id: string; brand: string } | undefined): C
         { id: "mp4", label: "MP4", codecs: ["h264", "h265"] },
       ];
       if (pro) list.push({ id: "nev", label: "N-RAW (.NEV)", codecs: ["nraw"] });
+      if (id === "nikon-zr") list.push({ id: "r3d", label: "R3D NE (.R3D)", codecs: ["r3dne"] });
       return list;
     }
     case "DJI":

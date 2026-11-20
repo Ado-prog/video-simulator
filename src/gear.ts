@@ -72,6 +72,7 @@ export const CAMERAS: Camera[] = [
   { id: "nikon-z9", brand: "Nikon", model: "Z9", sensor: FF, mounts: ["Z"] },
   { id: "nikon-z8", brand: "Nikon", model: "Z8", sensor: FF, mounts: ["Z"] },
   { id: "nikon-z6iii", brand: "Nikon", model: "Z6III", sensor: FF, mounts: ["Z"] },
+  { id: "nikon-zr", brand: "Nikon", model: "ZR", sensor: FF, mounts: ["Z"] },
   { id: "nikon-zf", brand: "Nikon", model: "Zf", sensor: FF, mounts: ["Z"] },
   { id: "nikon-z5ii", brand: "Nikon", model: "Z5II", sensor: FF, mounts: ["Z"] },
   { id: "nikon-z50ii", brand: "Nikon", model: "Z50II", sensor: APSC, mounts: ["Z-DX", "Z"] },
@@ -347,7 +348,7 @@ export function logProfilesFor(cam: Camera | undefined): LogProfile[] {
         ? [lp("C-Log3", 800), lp("C-Log2", 800)]
         : [lp("C-Log3", 800)];
     case "Nikon":
-      return cam.id === "nikon-zfc" ? [] : [lp("N-Log", 800)];
+      return cam.id === "nikon-zfc" ? [] : cam.id === "nikon-zr" ? [lp("N-Log", 800), lp("R3D NE (Log3G10)", 800)] : [lp("N-Log", 800)];
     case "DJI":
       if (cam.id === "dji-neo") return [];
       if (cam.id === "dji-mavic4pro" || cam.id === "dji-mavic3pro")
