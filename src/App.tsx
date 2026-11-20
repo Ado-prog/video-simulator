@@ -564,6 +564,31 @@ export default function App() {
       /* storage unavailable – kept for this visit only */
     }
   };
+  const importRef = useRef<HTMLInputElement>(null);
+  const exportCustoms = () => {
+    const file = `video-simulator-modi-${new Date().toISOString().slice(0, 10)}.json`;
+    const blob = new Blob([JSON.stringify({ app: "video-simulator", version: 1, modes: customs }, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = file;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    setCustomMsg(fill(t.customExported, file));
+  };
+  const importCustoms = async (f: File) => {
+    try {
+      const j = JSON.parse(await f.text());
+      const modes = j?.app === "video-simulator" ? j.modes : null;
+      const ok = modes && typeof modes === "object" ? Object.fromEntries(Object.entries(modes).filter(([k, v]) => (SLOTS as readonly string[]).includes(k) && v && typeof v === "object" && "data" in (v as object))) : {};
+      if (!Object.keys(ok).length) return setCustomMsg(t.customImportBad);
+      storeCustoms({ ...customs, ...(ok as Record<string, CustomSlot>) });
+      setCustomMsg(fill(t.customImported, Object.keys(ok).length));
+    } catch {
+      setCustomMsg(t.customImportBad);
+    }
+  };
   const snapshot = () => ({
     shootMode, cameraId, lensId, manualSensor, focal, aperture, focusM: subjectM, lensM,
     vSystem, fps, shutter, isoAuto, isoCap, iso, wbMode, wbK, profileId, lutId, styleId,
@@ -1141,6 +1166,12 @@ export default function App() {
               <button type="button" className="btn-ghost" disabled={!current} onClick={renameCustom}>{t.customRename}</button>
               <button type="button" className="btn-ghost" disabled={!current} onClick={clearCustom}>{t.customClear}</button>
             </div>
+            <div className="custom-row">
+              <button type="button" className="btn-ghost" disabled={!Object.keys(customs).length} onClick={exportCustoms}>⬇ {t.customExport}</button>
+              <button type="button" className="btn-ghost" onClick={() => importRef.current?.click()}>⬆ {t.customImport}</button>
+              <input ref={importRef} type="file" accept="application/json,.json" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) importCustoms(f); e.target.value = ""; }} />
+            </div>
+            <p className="note">{t.customFileTip}</p>
             {customMsg ? (
               <p className="ok">{customMsg}</p>
             ) : current ? (
