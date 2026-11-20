@@ -29,6 +29,18 @@
           try { localStorage.setItem("video-sim-view", "modern"); } catch (e) {}
           location.href = "./?modern";
         };
+        var box = document.getElementById("view-switch");
+        var move = function () {
+          var tools = document.querySelector(".topbar-tools");
+          if (!tools || tools.contains(box)) return !!tools;
+          box.style.position = "static"; box.style.boxShadow = "none";
+          tools.insertBefore(box, tools.firstChild);
+          return true;
+        };
+        if (!move()) {
+          var mo = new MutationObserver(function () { if (move()) mo.disconnect(); });
+          mo.observe(document.getElementById("root"), { childList: true, subtree: true });
+        }
       })();
     </script>
   </body>
