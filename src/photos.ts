@@ -148,4 +148,9 @@ export const MIC_PHOTOS: Record<string, GearPhoto> = {
   "pana-dms1": P("mic-pana-dms1", "Panasonic", "\u00a9", "https://www.panasonic.com/", 440, 326),
   "pana-ms2": P("mic-pana-ms2", "Panasonic", "\u00a9", "https://www.panasonic.com/", 330, 330),
   "rode-vmicro2": P("mic-rode-vmicro2", "RØDE", "\u00a9", "https://rode.com/", 330, 330),
+  "rode-wgo3": P("mic-rode-wgo3", "RØDE", "\u00a9", "https://rode.com/", 440, 330), // supplied by RØDE (ticket 874723)
+  "rode-wme": P("mic-rode-wme", "RØDE", "\u00a9", "https://rode.com/", 440, 330), // supplied by RØDE (ticket 874723)
+  "rode-wmicro": P("mic-rode-wmicro", "RØDE", "\u00a9", "https://rode.com/", 440, 330), // supplied by RØDE (ticket 874723)
+  "rode-vmproplus": P("mic-rode-vmproplus", "RØDE", "\u00a9", "https://rode.com/", 440, 330), // supplied by RØDE (ticket 874723)
+  "rode-vmntg": P("mic-rode-vmntg", "RØDE", "\u00a9", "https://rode.com/", 440, 308), // supplied by RØDE (ticket 874723)
 };

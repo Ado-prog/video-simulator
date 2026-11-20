@@ -140,6 +140,11 @@ The gear photographs in `public/gear/` come from Wikimedia Commons and are used 
 | pana-dms1 | product image supplied by the project owner | © Panasonic | all rights reserved by Panasonic, not freely licensed |
 | pana-ms2 | product image supplied by the project owner | © Panasonic | all rights reserved by Panasonic, not freely licensed |
 | rode-vmicro2 | product image supplied by the project owner | © RØDE | all rights reserved by RØDE, not freely licensed |
+| rode-wgo3 | product image supplied by RØDE on request (support ticket 874723, 2026-11-20) | © RØDE | all rights reserved by RØDE, used with their permission |
+| rode-wme | product image supplied by RØDE on request (support ticket 874723, 2026-11-20) | © RØDE | all rights reserved by RØDE, used with their permission |
+| rode-wmicro | product image supplied by RØDE on request (support ticket 874723, 2026-11-20) | © RØDE | all rights reserved by RØDE, used with their permission |
+| rode-vmproplus | product image supplied by RØDE on request (support ticket 874723, 2026-11-20) | © RØDE | all rights reserved by RØDE, used with their permission |
+| rode-vmntg | product image supplied by RØDE on request (support ticket 874723, 2026-11-20) | © RØDE | all rights reserved by RØDE, used with their permission |
 
 ## Monitor backgrounds
 
