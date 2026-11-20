@@ -549,7 +549,7 @@ export function MicArt({ mic }: { mic: MicInfo }) {
 
 /** A real photograph of the gear with the credit its licence asks for. */
 export function GearPhotoView({ photo, label }: { photo: { src: string; author: string; license: string; page: string; w: number; h: number }; label: string }) {
-  const credit = photo.license === "KI" ? "KI-Illustration (kein Originalfoto)" : photo.license === "©" ? `Foto: © ${photo.author}` : `Foto: ${photo.author} · ${photo.license}`;
+  const credit = photo.license === "KI" ? `KI-Illustration, kein Originalfoto${photo.author !== "KI" ? ` – ${photo.author}` : ""}` : photo.license === "©" ? `Foto: © ${photo.author}` : `Foto: ${photo.author} · ${photo.license}`;
   return (
     <figure className="gear-photo">
       <img src={photo.src} alt={label} title={credit} width={photo.w} height={photo.h} loading="lazy" className={photo.license === "©" || photo.license === "KI" ? "on-white" : undefined} />
