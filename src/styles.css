@@ -648,3 +648,97 @@ body.is-resizing { cursor: col-resize; user-select: none; }
 .fx-box .eyebrow { margin: 0 0 2px; }
 .fx-box .chip-row { display: flex; flex-wrap: wrap; gap: 4px; margin: 0; }
 .fx-box .fx-approx { opacity: 0.55; font-size: 10.5px; }
+
+/* ── Deck layout (2026-11 redesign): big monitor stage, camera status bar, tabbed panel ── */
+.app { max-width: 1480px; }
+.deck { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(360px, 1fr); gap: 20px; align-items: start; }
+.deck-stage, .deck-panel { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+@media (min-width: 1001px) {
+  .deck-stage { position: sticky; top: calc(10px + env(safe-area-inset-top, 0px)); }
+  .deck-panel { max-height: calc(100vh - 20px); position: sticky; top: calc(10px + env(safe-area-inset-top, 0px)); }
+  .deck-card { overflow-y: auto; scrollbar-width: thin; min-height: 0; }
+}
+@media (max-width: 1000px) { .deck { grid-template-columns: minmax(0, 1fr); } }
+
+.deck .monitor-bezel { border-radius: 20px; padding: clamp(8px, 1.1vw, 14px); }
+.deck .monitor-screen { border-radius: 10px; }
+.deck .caption { display: none; }
+
+.status-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.st {
+  font-family: var(--font-data); font-size: 13px; font-variant-numeric: tabular-nums;
+  padding: 6px 11px; border-radius: 10px;
+  background: var(--surface); border: 1px solid color-mix(in srgb, var(--line) 75%, transparent); color: var(--ink);
+}
+.st-ok { background: color-mix(in srgb, var(--ok) 14%, var(--surface)); color: var(--ok); border-color: color-mix(in srgb, var(--ok) 35%, transparent); }
+.st-warn { background: var(--warn-bg); color: var(--warn-ink); border-color: color-mix(in srgb, var(--warn-ink) 30%, transparent); }
+.st-bad { background: color-mix(in srgb, var(--tally) 14%, var(--surface)); color: var(--tally); border-color: color-mix(in srgb, var(--tally) 40%, transparent); }
+.status-bar .btn-primary { margin: 0 0 0 auto; width: auto; padding: 7px 14px; font-size: 13px; border-radius: 10px; }
+
+.deck .backdrop-row { display: flex; align-items: center; gap: 10px; }
+.deck .backdrop-row label { font-size: 13px; color: var(--muted); white-space: nowrap; }
+.deck .backdrop-row .control { flex: 1; min-width: 0; }
+
+.deck .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.deck .stats div { padding: 8px 12px; border-radius: 12px; text-align: left; box-shadow: none; background: var(--surface); }
+.deck .stats dt { font-family: var(--font-body); font-size: 12px; letter-spacing: 0; text-transform: none; }
+.deck .stats dd { font-size: 17px; }
+@media (max-width: 520px) { .deck .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+.side-view { background: var(--surface); border: 1px solid color-mix(in srgb, var(--line) 75%, transparent); border-radius: 16px; padding: 4px 12px 10px; }
+.side-view > summary { cursor: pointer; list-style: none; padding: 8px 0; font-weight: 500; font-size: 14px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+.side-view > summary::-webkit-details-marker { display: none; }
+.side-view > summary::before { content: "›"; display: inline-block; transition: transform 0.15s ease; font-size: 16px; }
+.side-view[open] > summary::before { transform: rotate(90deg); }
+.side-view .diagram-svg { box-shadow: none; border-radius: 12px; }
+.side-view .row-tools { margin-top: 8px; }
+
+.deck-tabs { display: grid; gap: 6px; padding: 5px; border-radius: 16px; background: var(--surface); border: 1px solid color-mix(in srgb, var(--line) 75%, transparent); }
+.deck-tab {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  font: inherit; font-size: 12px; font-weight: 500; color: var(--muted);
+  background: transparent; border: 0; border-radius: 11px; padding: 8px 4px; cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.deck-tab:hover { background: color-mix(in srgb, var(--ink) 6%, transparent); color: var(--ink); }
+.deck-tab.is-on { background: var(--accent); color: var(--accent-ink); }
+.deck-tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (max-width: 1000px) {
+  .deck-tabs { display: flex; overflow-x: auto; scrollbar-width: none; position: sticky; top: 0; z-index: 5; }
+  .deck-tab { flex: 0 0 auto; min-width: 72px; }
+}
+
+.deck-card { padding: 16px 18px 18px; border-radius: 18px; gap: 0; }
+.deck-card > .group { padding: 14px 0 16px; gap: 6px; }
+.deck-card > .group:first-child { padding-top: 2px; }
+.deck .group legend {
+  font-family: var(--font-body); text-transform: none; letter-spacing: 0;
+  font-size: 16px; font-weight: 600; color: var(--ink); margin-bottom: 6px;
+}
+.deck .card .group label { font-size: 12.5px; }
+.deck .card .control { font-size: 13px; padding: 6px 9px; border-radius: 10px; }
+.deck .card .note, .deck .card .ok, .deck .card .warn { font-size: 12px; }
+.deck .card .chip { font-size: 11px; padding: 2px 9px; border-radius: 999px; }
+.deck .card .art-camera { width: 100px; }
+.deck .card .art-lens { max-width: 240px; }
+.deck .card .eyebrow, .deck .fx-box .eyebrow { text-transform: none; letter-spacing: 0; font-family: var(--font-body); font-weight: 600; font-size: 12.5px; color: var(--ink); }
+.deck .card-audio { display: block; }
+
+.seg-n { gap: 3px; padding: 3px; border-radius: 10px; background: var(--bg); border: 1px solid color-mix(in srgb, var(--line) 75%, transparent); }
+button.seg-item { border: 0; background: transparent; font: inherit; font-size: 12px !important; font-weight: 500; padding: 6px 4px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+button.seg-item:hover:not(.is-on) { background: color-mix(in srgb, var(--ink) 6%, transparent); }
+button.seg-item:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.fx-box { border-radius: 14px; padding: 10px 12px; gap: 6px; }
+.gear-photo img { border-radius: 12px; }
+.mode-tab { border-radius: 999px; }
+.modes { border-radius: 999px; }
+
+.deck-tab span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mode-tab { text-transform: none; letter-spacing: 0; font-family: var(--font-body); font-weight: 600; }
+.brand-name { letter-spacing: 0.14em; }
+.deck .btn-primary { text-transform: none; letter-spacing: 0; font-family: var(--font-body); font-weight: 600; }
+@media (max-width: 600px) {
+  .st { font-size: 12px; padding: 5px 8px; }
+  .status-bar .btn-primary { width: 100%; margin: 4px 0 0; }
+}

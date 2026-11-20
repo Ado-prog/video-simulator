@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Monitor, { type SubjectKind, type AfHit, ROW_GAP, rowCount, backgroundOffset } from "./Monitor";
 import { MICS, MIC_BRANDS, INTERNAL_MIC, SOURCES, STEREO_PATTERNS, type SourceId, type PatternId, audioLevels, autoGain, effectiveMic } from "./audio";
 import { stylesFor, makerLutsFor, CREATIVE_LUTS, NEUTRAL_LOOK } from "./looks";
@@ -122,45 +122,6 @@ export default function App() {
 
   const [shootMode, setShootMode] = useState<"photo" | "video">("video");
   const isVideo = shootMode === "video";
-
-  // ── Resizable split between the side view and the monitor column
-  const studioRef = useRef<HTMLElement>(null);
-  const [sideFrac, setSideFrac] = useState(() => {
-    try {
-      const v = Number(localStorage.getItem("video-sim-side"));
-      if (v >= 0.2 && v <= 0.65) return v;
-    } catch {
-      /* storage unavailable */
-    }
-    return 1 / 3;
-  });
-  const saveSide = (f: number) => {
-    const v = clamp(f, 0.2, 0.65);
-    setSideFrac(v);
-    try {
-      localStorage.setItem("video-sim-side", String(v));
-    } catch {
-      /* storage unavailable */
-    }
-  };
-  const startDrag = (e: ReactPointerEvent<HTMLDivElement>) => {
-    const el = studioRef.current;
-    if (!el) return;
-    e.preventDefault();
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
-    const move = (ev: PointerEvent) => {
-      const rect = el.getBoundingClientRect();
-      saveSide((rect.right - ev.clientX) / rect.width);
-    };
-    const up = () => {
-      window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointerup", up);
-      document.body.classList.remove("is-resizing");
-    };
-    document.body.classList.add("is-resizing");
-    window.addEventListener("pointermove", move);
-    window.addEventListener("pointerup", up);
-  };
 
   // ── Camera & lens
   const [cameraId, setCameraId] = useState(DEFAULT_CAMERA);
@@ -554,6 +515,12 @@ export default function App() {
     }
   });
   const [slot, setSlot] = useState<(typeof SLOTS)[number]>("C1");
+  const [tabPick, setTabPick] = useState<"cam" | "light" | "image" | "audio" | "assist" | "rec" | "custom">(() => {
+    const v = (() => { try { return localStorage.getItem("video-sim-tab"); } catch { return null; } })();
+    return (["cam", "light", "image", "audio", "assist", "rec", "custom"].includes(v ?? "") ? v : "cam") as "cam";
+  });
+  const pickTab = (id: typeof tabPick) => { setTabPick(id); try { localStorage.setItem("video-sim-tab", id); } catch { /* ignore */ } };
+  const [sideOpen, setSideOpen] = useState(() => typeof window === "undefined" || !window.matchMedia("(max-width: 1000px)").matches);
   const [slotName, setSlotName] = useState("");
   const [customMsg, setCustomMsg] = useState("");
   const storeCustoms = (next: Record<string, CustomSlot>) => {
@@ -911,11 +878,8 @@ export default function App() {
                 )}
                 {lfx.limiter && (
                   <>
-                    <label htmlFor="lenslim">{fx.limSw}</label>
-                    <select {...sel("lenslim")} value={lensLim ? "far" : "full"} onChange={(e) => setLensLim(e.target.value === "far")}>
-                      <option value="full">{fx.limFull}</option>
-                      <option value="far">{fill(fx.limFar, formatMeters(lfx.limiter * 1000))}</option>
-                    </select>
+                    <label>{fx.limSw}</label>
+                    <Seg label={fx.limSw} value={lensLim ? "far" : "full"} onChange={(v) => setLensLim(v === "far")} options={[{ v: "full", l: "FULL" }, { v: "far", l: `${formatMeters(lfx.limiter * 1000)} – ∞` }]} />
                   </>
                 )}
                 {subjectM < lfx.mfd && <p className="warn">{fill(fx.tooClose, formatMeters(subjectM * 1000), formatMeters(lfx.mfd * 1000))}</p>}
@@ -1724,39 +1688,26 @@ export default function App() {
                 </p>
                 {mfx.lowCut && (
                   <>
-                    <label htmlFor="miclc">{mfx.lcWind ? fx.windSw : fx.lowCutSw}</label>
-                    <select {...sel("miclc")} value={mLc} onChange={(e) => setMicLc(Number(e.target.value))}>
-                      <option value={0}>{mfx.lcWind ? "OFF" : fx.off}</option>
-                      {mfx.lowCut.map((hz, i) => (
-                        <option key={hz} value={hz}>{mfx.lcNames?.[i] ? `${mfx.lcNames[i]} (${hz} Hz)` : `${hz} Hz`}</option>
-                      ))}
-                    </select>
+                    <label>{mfx.lcWind ? fx.windSw : fx.lowCutSw}</label>
+                    <Seg label={mfx.lcWind ? fx.windSw : fx.lowCutSw} value={mLc} onChange={setMicLc} options={[{ v: 0, l: mfx.lcWind ? "OFF" : fx.off }, ...mfx.lowCut.map((hz, i) => ({ v: hz, l: mfx.lcNames?.[i] ?? `${hz} Hz` }))]} />
                   </>
                 )}
                 {mfx.pad && (
                   <>
-                    <label htmlFor="micpad">{fx.padSw}</label>
-                    <select {...sel("micpad")} value={mPad} onChange={(e) => setMicPad(Number(e.target.value))}>
-                      <option value={0}>0 dB</option>
-                      {mfx.pad.map((d) => <option key={d} value={d}>{d} dB</option>)}
-                    </select>
+                    <label>{fx.padSw}</label>
+                    <Seg label={fx.padSw} value={mPad} onChange={setMicPad} options={[{ v: 0, l: "0 dB" }, ...mfx.pad.map((d) => ({ v: d, l: `${d} dB` }))]} />
                   </>
                 )}
                 {mfx.noiseCut && (
                   <>
-                    <label htmlFor="micnc2">{fx.noiseSw}</label>
-                    <select {...sel("micnc2")} value={mNc} onChange={(e) => setMicNc(Number(e.target.value))}>
-                      <option value={0}>OFF</option>
-                      {mfx.noiseCut.names.map((n, i) => <option key={n} value={i + 1}>{n}</option>)}
-                    </select>
+                    <label>{fx.noiseSw}</label>
+                    <Seg label={fx.noiseSw} value={mNc} onChange={setMicNc} options={[{ v: 0, l: "OFF" }, ...mfx.noiseCut.names.map((n, i) => ({ v: i + 1, l: n }))]} />
                   </>
                 )}
                 {mfx.steps && (
                   <>
-                    <label htmlFor="micstep">{mfx.lcWind ? "GAIN" : fx.stepSw}</label>
-                    <select {...sel("micstep")} value={mStep} onChange={(e) => setMicStep(Number(e.target.value))}>
-                      {mfx.steps.map((d) => <option key={d} value={d}>{d > 0 ? "+" : ""}{d} dB</option>)}
-                    </select>
+                    <label>{mfx.lcWind ? "GAIN" : fx.stepSw}</label>
+                    <Seg label={fx.stepSw} value={mStep} onChange={setMicStep} options={mfx.steps.map((d) => ({ v: d, l: `${d > 0 ? "+" : ""}${d}` }))} />
                   </>
                 )}
                 {mfx.dial && (
@@ -1770,10 +1721,8 @@ export default function App() {
                 )}
                 {mfx.micLim && (
                   <>
-                    <label htmlFor="miclim">{fx.limSwMic}</label>
-                    <select {...sel("miclim")} value={mLim} onChange={(e) => setMicLimSw(e.target.value)}>
-                      {mfx.micLim.map((n) => <option key={n} value={n}>{n}</option>)}
-                    </select>
+                    <label>{fx.limSwMic}</label>
+                    <Seg label={fx.limSwMic} value={mLim} onChange={setMicLimSw} options={mfx.micLim.map((n) => ({ v: n, l: n }))} />
                   </>
                 )}
                 {mfx.boost && (
@@ -1929,6 +1878,26 @@ export default function App() {
     </>
   );
 
+  type TabId = "cam" | "light" | "image" | "audio" | "assist" | "rec" | "custom";
+  const SHORT: Record<string, { light: string; assist: string; rec: string }> = {
+    de: { light: "Licht", assist: "Hilfen", rec: "Aufnahme" },
+    bs: { light: "Svjetlo", assist: "Pomoći", rec: "Snimanje" },
+    sr: { light: "Svetlo", assist: "Pomoći", rec: "Snimanje" },
+    hr: { light: "Svjetlo", assist: "Pomoći", rec: "Snimanje" },
+    en: { light: "Light", assist: "Assists", rec: "Recording" },
+  };
+  const short = SHORT[lang] ?? SHORT.en;
+  const tabs: { id: TabId; label: string }[] = [
+    { id: "cam", label: t.camera },
+    { id: "light", label: short.light },
+    { id: "image", label: isVideo ? t.video : t.photo },
+    ...(isVideo ? [{ id: "audio" as TabId, label: t.audio }] : []),
+    { id: "assist", label: short.assist },
+    ...(isVideo ? [{ id: "rec" as TabId, label: short.rec }] : []),
+    { id: "custom", label: "C1–C4" },
+  ];
+  const tab: TabId = tabs.some((x) => x.id === tabPick) ? tabPick : "cam";
+
   return (
     <div className="app">
       <header className="topbar">
@@ -1976,78 +1945,8 @@ export default function App() {
         ))}
       </div>
 
-      <main
-        ref={studioRef}
-        className={`studio ${isVideo ? "is-video" : "is-photo"}`}
-        style={{ "--side": sideFrac } as CSSProperties}
-      >
-        {/* wide area: side view, numbers, camera & optics */}
-        <div className="studio-main">
-            <PhotoDiagram
-              focal={focal}
-              aperture={aperture}
-              focusM={lensM}
-              subjectM={subjectM}
-              nearMM={dof.near}
-              farMM={dof.far}
-              hyperfocalMM={dof.hyperfocal}
-              sensorHeightMM={isVideo ? frameH : sensor.height}
-              subject={subject}
-              aspect={narrow ? 1.6 : 2.9}
-              label={t.sharpZone}
-              nearLabel={t.near}
-              farLabel={t.far}
-              illu
-            />
-          <dl className="stats">
-            <div><dt>{t.near}</dt><dd>{formatMeters(dof.near)}</dd></div>
-            <div><dt>{t.far}</dt><dd>{formatMeters(dof.far)}</dd></div>
-            <div><dt>{t.total}</dt><dd>{formatMeters(totalMM)}</dd></div>
-            <div><dt>{t.hyperfocal}</dt><dd>{formatMeters(dof.hyperfocal)}</dd></div>
-          </dl>
-          <div className="row-tools">
-            {rowsSharp.length > 1 && (
-              <span className="chip-row">
-                {rowsSharp.map((ok, i) => (
-                  <span key={i} className={`chip ${ok ? "chip-ok" : "chip-bad"}`}>
-                    {fill(ok ? t.rowOk : t.rowSoft, i + 1)}
-                  </span>
-                ))}
-              </span>
-            )}
-            <button type="button" className="btn-ghost" disabled={!canHyperfocal} onClick={setHyperfocal}>
-              {t.setHyperfocal}
-            </button>
-          </div>
-          <div className="card card-wide">
-            {g_cam}
-            {g_optics}
-          </div>
-          {isVideo && <div className="card card-wide card-audio">{g_audio}</div>}
-        </div>
-
-        <div
-          className="splitter"
-          role="separator"
-          aria-orientation="vertical"
-          aria-valuemin={20}
-          aria-valuemax={65}
-          aria-valuenow={Math.round(sideFrac * 100)}
-          tabIndex={0}
-          title="↔"
-          onPointerDown={startDrag}
-          onDoubleClick={() => saveSide(1 / 3)}
-          onKeyDown={(e) => {
-            if (e.key === "ArrowLeft") saveSide(sideFrac + 0.02);
-            if (e.key === "ArrowRight") saveSide(sideFrac - 0.02);
-          }}
-        >
-          <span aria-hidden="true" />
-        </div>
-
-        {/* narrow column: camera monitor and settings */}
-        <aside className="studio-side">
-          <p className="eyebrow col-title">{t.monitor}</p>
+      <main className={`deck ${isVideo ? "is-video" : "is-photo"}`}>
+        <section className="deck-stage">
           <Monitor
             mode={shootMode}
             aspect={isVideo ? 16 / 9 : sensor.width / sensor.height}
@@ -2095,6 +1994,16 @@ export default function App() {
               wb: `${wbMode === "auto" ? "AWB " : ""}${Math.round(camWbK / 100) * 100}K`,
             }}
           />
+          <div className="status-bar">
+            <span className="st">{formatShutter(effShutter)}</span>
+            <span className="st">f/{aperture}</span>
+            <span className="st">ISO {useAuto ? `A ${auto.display}` : !isVideo && photoIsoAuto ? `A ${pIsoShown}` : effIso}</span>
+            <span className="st">{Math.round(camWbK / 100) * 100}K</span>
+            <span className="st">{afFixed ? "FF" : focusTag(camera, afKind, isVideo)}</span>
+            {isVideo && <span className="st">{fps}p</span>}
+            {isVideo && <span className={`st ${audio.clip || audio.overdriven ? "st-bad" : quality === "poor" ? "st-warn" : "st-ok"}`}>{Math.round(audio.avg)} dB</span>}
+            {g_btn}
+          </div>
           <div className="backdrop-row">
             <label htmlFor="backdrop">{t.backdrop}</label>
             <select id="backdrop" className="control" value={backdropId} onChange={(e) => setBackdropId(e.target.value)}>
@@ -2111,25 +2020,104 @@ export default function App() {
 
             </select>
           </div>
-          <div className="card">
-            {g_custom}
-            {g_light}
-            {g_photo}
-            {g_tech}
-            {g_video}
-            {g_rec}
-            {g_assist}
-            {g_filters}
-            {g_btn}
+          <dl className="stats">
+            <div><dt>{t.near}</dt><dd>{formatMeters(dof.near)}</dd></div>
+            <div><dt>{t.far}</dt><dd>{formatMeters(dof.far)}</dd></div>
+            <div><dt>{t.total}</dt><dd>{formatMeters(totalMM)}</dd></div>
+            <div><dt>{t.hyperfocal}</dt><dd>{formatMeters(dof.hyperfocal)}</dd></div>
+          </dl>
+          <details className="side-view" open={sideOpen} onToggle={(e) => setSideOpen((e.target as HTMLDetailsElement).open)}>
+            <summary>{t.sharpZone}</summary>
+            <PhotoDiagram
+              focal={focal}
+              aperture={aperture}
+              focusM={lensM}
+              subjectM={subjectM}
+              nearMM={dof.near}
+              farMM={dof.far}
+              hyperfocalMM={dof.hyperfocal}
+              sensorHeightMM={isVideo ? frameH : sensor.height}
+              subject={subject}
+              aspect={narrow ? 1.6 : 2.9}
+              label={t.sharpZone}
+              nearLabel={t.near}
+              farLabel={t.far}
+              illu
+            />
+          <div className="row-tools">
+            {rowsSharp.length > 1 && (
+              <span className="chip-row">
+                {rowsSharp.map((ok, i) => (
+                  <span key={i} className={`chip ${ok ? "chip-ok" : "chip-bad"}`}>
+                    {fill(ok ? t.rowOk : t.rowSoft, i + 1)}
+                  </span>
+                ))}
+              </span>
+            )}
+            <button type="button" className="btn-ghost" disabled={!canHyperfocal} onClick={setHyperfocal}>
+              {t.setHyperfocal}
+            </button>
           </div>
-        </aside>
+          </details>
+        </section>
+
+        <section className="deck-panel">
+          <nav className="deck-tabs" role="tablist" aria-label={t.camera} style={{ gridTemplateColumns: `repeat(${tabs.length}, minmax(0, 1fr))` }}>
+            {tabs.map((tb) => (
+              <button key={tb.id} type="button" role="tab" aria-selected={tab === tb.id} className={`deck-tab ${tab === tb.id ? "is-on" : ""}`} onClick={() => pickTab(tb.id)}>
+                <Icon name={tb.id} />
+                <span>{tb.label}</span>
+              </button>
+            ))}
+          </nav>
+          <div className="card deck-card" role="tabpanel">
+            {tab === "cam" && <>{g_cam}{g_optics}</>}
+            {tab === "light" && <>{g_light}{g_filters}</>}
+            {tab === "image" && <>{g_photo}{g_video}{g_tech}</>}
+            {tab === "audio" && g_audio}
+            {tab === "assist" && g_assist}
+            {tab === "rec" && g_rec}
+            {tab === "custom" && g_custom}
+          </div>
+        </section>
       </main>
 
       <footer className="footer">
         <span>© 2026 Mustafi Studio</span>
+        <a href="./klassisch/">{lang === "de" ? "Klassische Ansicht" : lang === "en" ? "Classic view" : "Klasični izgled"}</a>
         <a href="https://github.com/Ado-prog/video-simulator/blob/main/CREDITS-PHOTOS.md" target="_blank" rel="noreferrer">Foto-Credits</a>
         <a href="https://github.com/Ado-prog/video-simulator" target="_blank" rel="noreferrer">{t.sourceCode}</a>
       </footer>
     </div>
+  );
+}
+
+/** Segmented switch, like the slide switches on the gear. */
+function Seg<T extends string | number>({ value, options, onChange, label }: { value: T; options: { v: T; l: string }[]; onChange: (v: T) => void; label: string }) {
+  return (
+    <div className="seg seg-n" role="radiogroup" aria-label={label} style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}>
+      {options.map((o) => (
+        <button key={String(o.v)} type="button" role="radio" aria-checked={o.v === value} className={`seg-item ${o.v === value ? "is-on" : ""}`} onClick={() => onChange(o.v)}>
+          {o.l}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+const ICON_PATHS: Record<string, string> = {
+  cam: "M4 8h3l2-3h6l2 3h3v11H4z M12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8z",
+  light: "M12 4v2 M12 18v2 M4 12h2 M18 12h2 M6.3 6.3l1.4 1.4 M16.3 16.3l1.4 1.4 M6.3 17.7l1.4-1.4 M16.3 7.7l1.4-1.4 M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8z",
+  image: "M4 5h16v14H4z M4 15l4-4 4 4 3-3 5 5 M15.5 9.5a1.5 1.5 0 1 0 0-.01",
+  audio: "M12 4a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0V7a3 3 0 0 1 3-3z M6 11a6 6 0 0 0 12 0 M12 17v3",
+  assist: "M4 7h10 M18 7h2 M4 17h4 M12 17h8 M16 5v4 M10 15v4",
+  rec: "M7 3h7l4 4v14H7z M10 7v3 M13 7v3",
+  custom: "M7 4h10v16l-5-4-5 4z",
+};
+function Icon({ name }: { name: string }) {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d={ICON_PATHS[name]} />
+    </svg>
   );
 }

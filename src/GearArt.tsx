@@ -14,7 +14,7 @@ function lensLook(lens: LensInfo | undefined, maxF: number) {
   let badge: { fill: string; ink: string; t: string } | null = null;
   let white = false;
   let mount = "#9aa1aa";
-  let ink = "#cfd5db";
+  let ink = "var(--muted)";
   if (maker === "Canon") {
     const L = n.includes(" L ");
     ring = L ? "#d0252b" : "#aeb4bb";
