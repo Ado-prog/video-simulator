@@ -146,6 +146,16 @@ The gear photographs in `public/gear/` come from Wikimedia Commons and are used 
 | rode-vmproplus | product image supplied by RØDE on request (support ticket 874723, 2026-11-20) | © RØDE | all rights reserved by RØDE, used with their permission |
 | rode-vmntg | product image supplied by RØDE on request (support ticket 874723, 2026-11-20) | © RØDE | all rights reserved by RØDE, used with their permission |
 
+## AI illustrations
+
+Nikon declined the use of its official product images (2026-11-20). These five lenses are therefore shown as AI-generated illustrations (Canva image generation), without any logo or brand name. They are not original Nikon photos and only approximate the real lens design.
+
+- Nikkor Z 14-24mm f/2.8 S
+- Nikkor Z DX 18-140mm f/3.5-6.3 VR
+- Nikkor Z DX 50-250mm f/4.5-6.3 VR
+- Nikkor Z DX 12-28mm f/3.5-5.6 PZ VR
+- Nikkor Z DX 24mm f/1.7
+
 ## Monitor backgrounds
 
 The photos in `public/bg/` listed below come from Wikimedia Commons (cropped to 16:9, resized to 3840 px). The older backgrounds come from Pexels.

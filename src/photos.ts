@@ -135,6 +135,11 @@ export const LENS_PHOTOS: Record<string, GearPhoto> = {
   "Nikon:Nikkor Z 50mm f/1.2 S": P("lens-nikon-nikkor-z-50mm-f-1-2-s", "Henry Söderlund from Helsinki, Finland", "CC BY 2.0", "https://commons.wikimedia.org/wiki/File:Nikon_NIKKOR_Z_50mm_f_1.2_S_(51602295538).jpg", 412, 330),
   "Nikon:Nikkor Z DX 16-50mm f/3.5-6.3 VR": P("lens-nikon-nikkor-z-dx-16-50mm-f-3-5-6-3-vr", "Thilo Parg", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Nikon_Z_50_Nikkor_Z_DX_16-50_VR.jpg", 440, 330),
   "Sigma:35mm F1.4 DG DN Art": P("lens-sigma-35mm-f1-4-dg-dn-art", "Henry Söderlund from Helsinki, Finland", "CC BY 2.0", "https://commons.wikimedia.org/w/index.php?curid=106475263", 440, 293),
+  "Nikon:Nikkor Z 14-24mm f/2.8 S": P("lens-nikon-nikkor-z-14-24mm-f-2-8-s", "KI", "KI", "https://github.com/Ado-prog/video-simulator/blob/main/CREDITS-PHOTOS.md", 440, 330), // AI illustration, no logo (Nikon declined official images)
+  "Nikon:Nikkor Z DX 18-140mm f/3.5-6.3 VR": P("lens-nikon-nikkor-z-dx-18-140mm-f-3-5-6-3-vr", "KI", "KI", "https://github.com/Ado-prog/video-simulator/blob/main/CREDITS-PHOTOS.md", 440, 330), // AI illustration, no logo (Nikon declined official images)
+  "Nikon:Nikkor Z DX 50-250mm f/4.5-6.3 VR": P("lens-nikon-nikkor-z-dx-50-250mm-f-4-5-6-3-vr", "KI", "KI", "https://github.com/Ado-prog/video-simulator/blob/main/CREDITS-PHOTOS.md", 440, 330), // AI illustration, no logo (Nikon declined official images)
+  "Nikon:Nikkor Z DX 12-28mm f/3.5-5.6 PZ VR": P("lens-nikon-nikkor-z-dx-12-28mm-f-3-5-5-6-pz-vr", "KI", "KI", "https://github.com/Ado-prog/video-simulator/blob/main/CREDITS-PHOTOS.md", 440, 330), // AI illustration, no logo (Nikon declined official images)
+  "Nikon:Nikkor Z DX 24mm f/1.7": P("lens-nikon-nikkor-z-dx-24mm-f-1-7", "KI", "KI", "https://github.com/Ado-prog/video-simulator/blob/main/CREDITS-PHOTOS.md", 440, 330), // AI illustration, no logo (Nikon declined official images)
 };
 
 export const MIC_PHOTOS: Record<string, GearPhoto> = {
