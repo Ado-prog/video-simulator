@@ -46,6 +46,7 @@ import {
   ND_FILTERS,
   BACKDROPS,
   PHOTO_BACKDROPS,
+  BACKDROP_GROUPS,
   type BackdropKind,
   CPL_LOSS,
   pickNd,
@@ -2049,22 +2050,34 @@ export default function App() {
             {isVideo && <span className={`st ${audio.clip || audio.overdriven ? "st-bad" : quality === "poor" ? "st-warn" : "st-ok"}`}>{Math.round(audio.avg)} dB</span>}
             {g_btn}
           </div>
-          <div className="backdrop-row">
-            <label htmlFor="backdrop">{t.backdrop}</label>
-            <select id="backdrop" className="control" value={backdropId} onChange={(e) => setBackdropId(e.target.value)}>
-              <optgroup label={t.bgDrawn}>
+          <details className="bg-picker">
+            <summary>
+              <span className="bg-picker-label">{t.backdrop}</span>
+              {bd?.photo && <img className="bg-mini" src={`./${bd.photo.replace("bg/", "bg/thumb/").replace(".jpg", ".webp")}`} alt="" />}
+              <span className="bg-picker-name">{backdropId.startsWith("p-") ? t.photoBackdrops[backdropId as (typeof PHOTO_BACKDROPS)[number]] : t.backdrops[backdropId as "auto"]}</span>
+            </summary>
+            {(Object.keys(BACKDROP_GROUPS) as (keyof typeof BACKDROP_GROUPS)[]).map((g) => (
+              <div key={g} className="bg-group">
+                <p className="bg-group-label">{t.bgGroups[g]}</p>
+                <div className="bg-strip">
+                  {BACKDROP_GROUPS[g].map((k) => (
+                    <button key={k} type="button" className={`bg-thumb ${backdropId === k ? "is-on" : ""}`} onClick={() => setBackdropId(k)} aria-pressed={backdropId === k}>
+                      <img src={`./${BACKDROPS[k].photo!.replace("bg/", "bg/thumb/").replace(".jpg", ".webp")}`} alt="" loading="lazy" />
+                      <span>{t.photoBackdrops[k]}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+            <div className="bg-group">
+              <p className="bg-group-label">{t.bgDrawn}</p>
+              <div className="bg-drawn">
                 {(["auto", "garden", "curtain", "forest"] as const).map((k) => (
-                  <option key={k} value={k}>{t.backdrops[k]}</option>
+                  <button key={k} type="button" className={`bg-chip ${backdropId === k ? "is-on" : ""}`} onClick={() => setBackdropId(k)} aria-pressed={backdropId === k}>{t.backdrops[k]}</button>
                 ))}
-              </optgroup>
-              <optgroup label={t.bgPhotos}>
-                {PHOTO_BACKDROPS.map((k) => (
-                  <option key={k} value={k}>{t.photoBackdrops[k]}</option>
-                ))}
-              </optgroup>
-
-            </select>
-          </div>
+              </div>
+            </div>
+          </details>
           <dl className="stats">
             <div><dt>{t.near}</dt><dd>{formatMeters(dof.near)}</dd></div>
             <div><dt>{t.far}</dt><dd>{formatMeters(dof.far)}</dd></div>

@@ -167,3 +167,11 @@ The photos in `public/bg/` listed below come from Wikimedia Commons (cropped to 
 | forest-path | [Forest path through a deciduous forest in spring, Finland.jpg](https://commons.wikimedia.org/wiki/File:Forest_path_through_a_deciduous_forest_in_spring,_Finland.jpg) | Sanzzu | CC BY-SA 4.0 |
 | palace-ballroom | [Venice, San Marco, Napoleonic Wing (1810), ballroom 2.jpg](https://commons.wikimedia.org/wiki/File:Venice,_San_Marco,_Napoleonic_Wing_(1810),_ballroom_2.jpg) | Armin Kleiner | CC BY-SA 4.0 |
 | rose-pergola | [Rose Pergola at Kew Gardens.jpg](https://commons.wikimedia.org/wiki/File:Rose_Pergola_at_Kew_Gardens.jpg) | Daniel Case | CC BY-SA 3.0 |
+| mosque-gazi | [L'intérieur de la mosquée Gazi Husrev-beg.jpg](https://commons.wikimedia.org/wiki/File:L%27int%C3%A9rieur_de_la_mosqu%C3%A9e_Gazi_Husrev-beg.jpg) | Yukof | CC BY-SA 4.0 |
+| mosque-mihrab | [Gazi Husrev-beg's Mosque, Sarajevo 20250223 15.jpg](https://commons.wikimedia.org/wiki/File:Gazi_Husrev-beg%27s_Mosque,_Sarajevo_20250223_15.jpg) | Argo Navis | CC BY-SA 4.0 |
+| mosque-ornament | [Tabatabaee mosque at Fatima Masumeh Shrine2, qom, iran.jpg](https://commons.wikimedia.org/wiki/File:Tabatabaee_mosque_at_Fatima_Masumeh_Shrine2,_qom,_iran.jpg) | Amir Pashaei | CC BY-SA 4.0 |
+| library | [Blick in den Heyne-Lesesaal der Niedersächsischen Staats- und Universitätsbibliothek, September 2022.jpg](https://commons.wikimedia.org/wiki/File:Blick_in_den_Heyne-Lesesaal_der_Nieders%C3%A4chsischen_Staats-_und_Universit%C3%A4tsbibliothek,_September_2022.jpg) | Frank Schulenburg | CC BY-SA 4.0 |
+| palm-house | [Exterior of Sefton Park Palm House, Liverpool, England.jpg](https://commons.wikimedia.org/wiki/File:Exterior_of_Sefton_Park_Palm_House,_Liverpool,_England.jpg) | Fatih Renkligil | CC BY-SA 4.0 |
+| vineyard-danube | [Spitz Hofarnsdorf Donau downstream-3191.jpg](https://commons.wikimedia.org/wiki/File:Spitz_Hofarnsdorf_Donau_downstream-3191.jpg) | Isiwal | CC BY-SA 4.0 |
+| bay-sunset | [Šolta Maslinica Hrvatska Šipkova uvala 2012 07b.jpg](https://commons.wikimedia.org/wiki/File:%C5%A0olta_Maslinica_Hrvatska_%C5%A0ipkova_uvala_2012_07b.jpg) | Joadl | CC BY-SA 3.0 at |
+| harbour-adriatic | [Šolta Maslinica Hrvatska Hafen 2012 a.jpg](https://commons.wikimedia.org/wiki/File:%C5%A0olta_Maslinica_Hrvatska_Hafen_2012_a.jpg) | Joadl | CC BY-SA 3.0 at |

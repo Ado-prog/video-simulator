@@ -344,6 +344,22 @@ export const BACKDROPS: Record<string, { kind: BackdropKind; palette: Partial<Sc
   "p-palace-ballroom": { kind: "photo", photo: "bg/palace-ballroom.jpg", palette: { indoor: true } }, // Wikimedia Commons, CC BY-SA 4.0
   "p-rose-pergola": { kind: "photo", photo: "bg/rose-pergola.jpg", palette: { indoor: false } }, // Wikimedia Commons, CC BY-SA 3.0
   "p-forest-path": { kind: "photo", photo: "bg/forest-path.jpg", palette: { indoor: false } }, // Wikimedia Commons, CC BY-SA 4.0
+  "p-mosque-gazi": { kind: "photo", photo: "bg/mosque-gazi.jpg", palette: { indoor: true } }, // Wikimedia Commons, CC BY-SA 4.0
+  "p-mosque-mihrab": { kind: "photo", photo: "bg/mosque-mihrab.jpg", palette: { indoor: true } }, // Wikimedia Commons, CC BY-SA 4.0
+  "p-mosque-ornament": { kind: "photo", photo: "bg/mosque-ornament.jpg", palette: { indoor: true } }, // Wikimedia Commons, CC BY-SA 4.0
+  "p-library": { kind: "photo", photo: "bg/library.jpg", palette: { indoor: true } }, // Wikimedia Commons, CC BY-SA 4.0
+  "p-palm-house": { kind: "photo", photo: "bg/palm-house.jpg", palette: { indoor: true } }, // Wikimedia Commons, CC BY-SA 4.0
+  "p-vineyard-danube": { kind: "photo", photo: "bg/vineyard-danube.jpg", palette: { indoor: false } }, // Wikimedia Commons, CC BY-SA 4.0
+  "p-bay-sunset": { kind: "photo", photo: "bg/bay-sunset.jpg", palette: { indoor: false } }, // Wikimedia Commons, CC BY-SA 3.0 at
+  "p-harbour-adriatic": { kind: "photo", photo: "bg/harbour-adriatic.jpg", palette: { indoor: false } }, // Wikimedia Commons, CC BY-SA 3.0 at
 };
 
-export const PHOTO_BACKDROPS = ["p-garden-sea", "p-garden-chairs", "p-lake-sunset", "p-hill-aisle", "p-beach-arch", "p-hall", "p-church", "p-palace-ballroom", "p-rose-pergola", "p-forest-path"] as const;
+export const PHOTO_BACKDROPS = ["p-church", "p-mosque-gazi", "p-mosque-mihrab", "p-mosque-ornament", "p-hall", "p-palace-ballroom", "p-library", "p-palm-house", "p-garden-sea", "p-garden-chairs", "p-rose-pergola", "p-hill-aisle", "p-forest-path", "p-vineyard-danube", "p-beach-arch", "p-lake-sunset", "p-bay-sunset", "p-harbour-adriatic"] as const;
+
+/** Photo backdrops grouped for the picker under the monitor. */
+export const BACKDROP_GROUPS = {
+  wedding: ["p-church", "p-mosque-gazi", "p-mosque-mihrab", "p-mosque-ornament"],
+  indoor: ["p-hall", "p-palace-ballroom", "p-library", "p-palm-house"],
+  nature: ["p-garden-sea", "p-garden-chairs", "p-rose-pergola", "p-hill-aisle", "p-forest-path", "p-vineyard-danube"],
+  water: ["p-beach-arch", "p-lake-sunset", "p-bay-sunset", "p-harbour-adriatic"],
+} as const;

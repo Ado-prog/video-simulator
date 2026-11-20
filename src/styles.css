@@ -751,3 +751,26 @@ button.seg-item:focus-visible { outline: 2px solid var(--accent); outline-offset
 .deck-split:focus-visible { outline: none; }
 body.is-resizing { cursor: col-resize; user-select: none; }
 @media (max-width: 1000px) { .deck { grid-template-columns: minmax(0, 1fr); gap: 20px; } .deck-split { display: none; } }
+
+/* background picker with thumbnails */
+.bg-picker { background: var(--surface); border: 1px solid color-mix(in srgb, var(--line) 75%, transparent); border-radius: 16px; padding: 4px 12px; }
+.bg-picker > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 6px 0; font-size: 14px; }
+.bg-picker > summary::-webkit-details-marker { display: none; }
+.bg-picker > summary::after { content: "›"; margin-left: auto; color: var(--muted); font-size: 18px; transition: transform 0.15s ease; }
+.bg-picker[open] > summary::after { transform: rotate(90deg); }
+.bg-picker-label { color: var(--muted); }
+.bg-picker-name { font-weight: 600; }
+.bg-mini { width: 48px; height: 27px; object-fit: cover; border-radius: 6px; }
+.bg-group { padding: 4px 0 8px; }
+.bg-group-label { margin: 2px 0 6px; font-size: 12.5px; font-weight: 600; color: var(--muted); }
+.bg-strip { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; }
+.bg-thumb { display: flex; flex-direction: column; gap: 4px; padding: 0; border: 0; background: none; cursor: pointer; text-align: left; font: inherit; color: var(--ink); min-width: 0; }
+.bg-thumb img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 10px; border: 2px solid transparent; transition: border-color 0.15s ease, transform 0.15s ease; }
+.bg-thumb:hover img { transform: translateY(-1px); border-color: color-mix(in srgb, var(--accent) 50%, transparent); }
+.bg-thumb.is-on img { border-color: var(--accent); }
+.bg-thumb span { font-size: 11.5px; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bg-thumb.is-on span { color: var(--accent); font-weight: 600; }
+.bg-thumb:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 10px; }
+.bg-drawn { display: flex; flex-wrap: wrap; gap: 6px; }
+.bg-chip { font: inherit; font-size: 12px; padding: 5px 11px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--muted); cursor: pointer; }
+.bg-chip.is-on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
