@@ -184,6 +184,15 @@ export const micFx = (mic: Mic): MicFx | null => MIC_FX[mic.id] ?? null;
 export const lowCutDb = (hz: number) => (hz <= 0 ? 0 : hz < 90 ? 8 : hz < 130 ? 11 : hz < 180 ? 14 : 16);
 
 const de = {
+  nzHead: "Bildrauschen & ETTR", nzOn: "Rauschen simulieren", nzEttr: "ETTR-Vorschau: in der Post runterziehen",
+  nzChip: { low: "Rauschen gering", mid: "Rauschen mittel", high: "Rauschen stark" }, nzOffChip: "Rauschen aus",
+  nzStateOn: "Rauschen-Simulation an: Rauschen steigt mit ISO, wenig Licht und Unterbelichtung – in Log sieht man es in den Schatten besonders.",
+  nzStateOff: "Rauschen-Simulation aus: das Bild ist sauberer als in Wirklichkeit.",
+  nzUnder: "⚠ {x} Blenden unterbelichtet: beim Aufhellen in der Post kommt das Rauschen mit hoch (wie leise Aufnahme laut drehen).",
+  nzEttrTip: "ETTR (Expose To The Right): in Log +1 bis +2 Blenden heller belichten, Lichter nicht clippen, in der Post runterziehen – das Rauschen geht mit runter.",
+  nzEttrGood: "✓ +{x} Blenden belichtet und in der Post runtergezogen: saubere Schatten, satte Farben.",
+  nzClip: "⚠ Lichter clippen (über +{x} Blenden) – Zebra auf Clip-Level stellen und abblenden, bis die Streifen verschwinden.",
+  nzLog: "Faustregel Log: Belichte fürs Rauschen, grade für den Look.",
   windSw: "WIND CUT am Mikrofon", noiseSw: "NOISE CUT am Mikrofon", limSwMic: "Limiter am Mikrofon (LMT)", dialSw: "Pegelregler am Mikrofon (Drehrad)",
   safetyChip: "Sicherheitskanal {x} dB", camHead: "Einstellungen im Kameramenü", appHead: "Einstellungen im Empfänger / in der App",
   camKeys: { pattern: "Richtcharakteristik", f32: "32-Bit-Float-Aufnahme", ch4: "4-Kanal-Aufnahme (Backup)", level: "Tonpegel", wind: "Windgeräuschreduzierung", rate: "Abtastrate 48 / 96 kHz", hp: "Kopfhörer-Lautstärke", power: "Strom über den Kameraschuh" },
@@ -218,6 +227,15 @@ const de = {
 type Txt = typeof de;
 
 const bs: Txt = {
+  nzHead: "Šum slike i ETTR", nzOn: "Simuliraj šum", nzEttr: "ETTR pregled: povuci dolje u postu",
+  nzChip: { low: "Šum mali", mid: "Šum srednji", high: "Šum jak" }, nzOffChip: "Šum isključen",
+  nzStateOn: "Simulacija šuma uključena: šum raste s ISO-om, slabim svjetlom i podeksponiranjem – u Logu se naročito vidi u sjenama.",
+  nzStateOff: "Simulacija šuma isključena: slika je čistija nego u stvarnosti.",
+  nzUnder: "⚠ {x} blende podeksponirano: kad u postu posvijetliš, šum dođe s tim (kao kad tihi snimak pojačaš).",
+  nzEttrTip: "ETTR (Expose To The Right): u Logu eksponiraj +1 do +2 blende svjetlije, ne pali svjetla (clipping), u postu povuci dolje – šum ide dolje s tim.",
+  nzEttrGood: "✓ Eksponirano +{x} blende i povučeno dolje u postu: čiste sjene, bogate boje.",
+  nzClip: "⚠ Svjetla se pale (clipping, preko +{x} blende) – zebru stavi na clip-nivo i zatvaraj blendu dok pruge ne nestanu.",
+  nzLog: "Pravilo za Log: eksponiraj za šum, gradiraj za izgled.",
   windSw: "WIND CUT na mikrofonu", noiseSw: "NOISE CUT na mikrofonu", limSwMic: "Limiter na mikrofonu (LMT)", dialSw: "Regulator nivoa na mikrofonu (točkić)",
   safetyChip: "Sigurnosni kanal {x} dB", camHead: "Podešavanja u meniju kamere", appHead: "Podešavanja u prijemniku / aplikaciji",
   camKeys: { pattern: "Karakteristika usmjerenosti", f32: "32-bit float snimanje", ch4: "4-kanalno snimanje (rezerva)", level: "Nivo zvuka", wind: "Smanjenje šuma vjetra", rate: "Frekvencija uzorkovanja 48 / 96 kHz", hp: "Jačina slušalica", power: "Struja preko stopice kamere" },
@@ -251,6 +269,15 @@ const bs: Txt = {
 };
 
 const en: Txt = {
+  nzHead: "Image noise & ETTR", nzOn: "Simulate noise", nzEttr: "ETTR preview: pull down in post",
+  nzChip: { low: "Noise low", mid: "Noise medium", high: "Noise high" }, nzOffChip: "Noise off",
+  nzStateOn: "Noise simulation on: noise rises with ISO, low light and under-exposure – in Log it shows most in the shadows.",
+  nzStateOff: "Noise simulation off: the picture is cleaner than in reality.",
+  nzUnder: "⚠ {x} stops under-exposed: brightening it in post brings the noise up too (like turning up a quiet recording).",
+  nzEttrTip: "ETTR (Expose To The Right): in Log expose +1 to +2 stops brighter, don't clip the highlights, pull it down in post – the noise goes down with it.",
+  nzEttrGood: "✓ Exposed +{x} stops and pulled down in post: clean shadows, rich colour.",
+  nzClip: "⚠ Highlights clip (beyond +{x} stops) – set zebras to clip level and stop down until the stripes disappear.",
+  nzLog: "Log rule of thumb: expose for the noise, grade for the look.",
   windSw: "WIND CUT on the mic", noiseSw: "NOISE CUT on the mic", limSwMic: "Limiter on the mic (LMT)", dialSw: "Level dial on the mic",
   safetyChip: "Safety channel {x} dB", camHead: "Settings in the camera menu", appHead: "Settings in the receiver / app",
   camKeys: { pattern: "Pickup pattern", f32: "32-bit float recording", ch4: "4-channel recording (backup)", level: "Recording level", wind: "Wind noise reduction", rate: "Sample rate 48 / 96 kHz", hp: "Headphone volume", power: "Power through the camera shoe" },
@@ -290,6 +317,13 @@ const sr: Txt = {
   phoneTip: "Ovaj sistem je pravljen za mobilni – na kameri samo uz dodatni prijemnik/adapter.", phone: "za mobilni",
   rangeTip: "⚠ Udaljenost {x}: blizu granice dometa (telo i zidovi guše signal) – uključi interno snimanje u predajniku kao rezervu.",
   camKeys: { ...bs.camKeys, pattern: "Karakteristika usmerenosti", wind: "Smanjenje šuma vetra" },
+  nzUnder: "⚠ {x} blende podeksponirano: kad u postu posvetliš, šum dođe s tim (kao kad tihi snimak pojačaš).",
+  nzEttrTip: "ETTR (Expose To The Right): u Logu eksponiraj +1 do +2 blende svetlije, ne pali svetla (clipping), u postu povuci dole – šum ide dole s tim.",
+  nzEttrGood: "✓ Eksponirano +{x} blende i povučeno dole u postu: čiste senke, bogate boje.",
+  nzClip: "⚠ Svetla se pale (clipping, preko +{x} blende) – zebru stavi na clip-nivo i zatvaraj blendu dok pruge ne nestanu.",
+  nzStateOn: "Simulacija šuma uključena: šum raste s ISO-om, slabim svetlom i podeksponiranjem – u Logu se naročito vidi u senkama.",
+  nzStateOff: "Simulacija šuma isključena: slika je čistija nego u stvarnosti.",
+  nzEttr: "ETTR pregled: povuci dole u postu",
   windTip: "WIND CUT na HI jače seče niske frekvencije – dobro napolju na vetru, unutra glas zvuči tanje.",
   noiseTip: "NOISE CUT skida ravnomeran šum (klima, ventilator) – na HI glas može zvučati malo veštački.",
   micLimTip: "Limiter u mikrofonu hvata glasne vrhove pre nego odu u kameru (AUTO: samo kad treba).",

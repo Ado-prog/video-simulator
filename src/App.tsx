@@ -396,6 +396,17 @@ export default function App() {
   const activeBase = dualIso ? [...dualIso].reverse().find((b) => effIso >= b) ?? dualIso[0] : 0;
   const noiseIso = onSecondBase ? (effIso * dualIso![0]) / activeBase : effIso;
   const grain = Math.min(0.45, Math.max(0, Math.log2(noiseIso / 100)) * 0.045 * Math.sqrt(crop));
+  // ── Noise simulation: ISO + under-exposure (shadows lifted) + Log, ETTR pulled down in post
+  const [noiseOn, setNoiseOn] = useState(true);
+  const [ettrPost, setEttrPost] = useState(false);
+  const underEV = Math.max(0, -exposureDelta);
+  const overEV = Math.max(0, exposureDelta);
+  const clipHeadroom = isVideo && activeLog ? 2.5 : 1.2; // stops above "correct" before highlights clip
+  const clipping = overEV > clipHeadroom;
+  const noiseBase = Math.max(grain, 0.035 * Math.sqrt(crop)); // even base ISO has a little noise in the shadows
+  const noiseAmt = Math.min(0.6, noiseBase * Math.pow(2, underEV * 0.65) * (isVideo && activeLog ? 1.35 : 1) * (ettrPost && overEV > 0 ? Math.pow(2, -Math.min(overEV, clipHeadroom) * 0.75) : 1));
+  const noiseLevel = noiseAmt < 0.09 ? "low" : noiseAmt < 0.2 ? "mid" : "high";
+  const shownDelta = ettrPost && overEV > 0 ? Math.max(0, overEV - clipHeadroom) : exposureDelta;
 
   // photo checks
   const mains = VIDEO_SYSTEMS[vSystem].mainsHz;
@@ -596,7 +607,7 @@ export default function App() {
     subject,
     zebraMode, zebraLevels, falseColor, wfmOn, wfmType, histogram, peaking, frameOn, frameMarkers, frameMask,
     motion, roninId, roninMode, stab, timelineFps, resId, codecId, containerId, flashMode, shutterType, bracketId,
-    micId, channelMode, sourceId, gain, autoLevel, limiter, lowCut, float32, patternId, noiseCancel, safetyOn, onboard, micLc, micPad, micStep, micBoost, micNc, micLimSw, micDial, lensOis, lensMfSw, lensLim,
+    micId, channelMode, sourceId, gain, autoLevel, limiter, lowCut, float32, patternId, noiseCancel, safetyOn, onboard, micLc, micPad, micStep, micBoost, micNc, micLimSw, micDial, noiseOn, ettrPost, lensOis, lensMfSw, lensLim,
   });
   const setters = {
     shootMode: setShootMode, cameraId: setCameraId, lensId: setLensId, manualSensor: setManualSensor, focal: setFocal,
@@ -608,7 +619,7 @@ export default function App() {
     wfmOn: setWfmOn, wfmType: setWfmType, histogram: setHistogram, peaking: setPeaking, frameOn: setFrameOn,
     frameMarkers: setFrameMarkers, frameMask: setFrameMask, motion: setMotion, roninId: setRoninId, roninMode: setRoninMode, stab: setStab, containerId: setContainerId,
     timelineFps: setTimelineFps, resId: setResId, codecId: setCodecId, flashMode: setFlashMode, shutterType: setShutterType,
-    bracketId: setBracketId, micId: setMicId, micLc: setMicLc, micPad: setMicPad, micStep: setMicStep, micBoost: setMicBoost, micNc: setMicNc, micLimSw: setMicLimSw, micDial: setMicDial, lensOis: setLensOis, lensMfSw: setLensMfSw, lensLim: setLensLim, channelMode: setChannelMode, sourceId: setSourceId, gain: setGain, autoLevel: setAutoLevel,
+    bracketId: setBracketId, micId: setMicId, micLc: setMicLc, micPad: setMicPad, micStep: setMicStep, micBoost: setMicBoost, micNc: setMicNc, micLimSw: setMicLimSw, micDial: setMicDial, noiseOn: setNoiseOn, ettrPost: setEttrPost, lensOis: setLensOis, lensMfSw: setLensMfSw, lensLim: setLensLim, channelMode: setChannelMode, sourceId: setSourceId, gain: setGain, autoLevel: setAutoLevel,
     limiter: setLimiter, lowCut: setLowCut, float32: setFloat32, patternId: setPatternId, noiseCancel: setNoiseCancel,
     safetyOn: setSafetyOn, onboard: setOnboard,
   } as unknown as Record<string, (v: unknown) => void>;
@@ -1903,6 +1914,27 @@ export default function App() {
           </fieldset>
     </>
   );
+  const g_noise = (
+    <>
+{/* Image noise & ETTR */}
+          <fieldset className="group">
+            <legend>{fx.nzHead}</legend>
+            <Seg label={fx.nzOn} value={noiseOn ? "on" : "off"} onChange={(v) => setNoiseOn(v === "on")} options={[{ v: "on", l: `${fx.nzOn}: ON` }, { v: "off", l: "OFF" }]} />
+            <p className={noiseOn ? "note" : "warn"}>{noiseOn ? fx.nzStateOn : fx.nzStateOff}</p>
+            <div className="checks">
+              <label className="check">
+                <input type="checkbox" id="ettrpost" checked={ettrPost} onChange={(e) => setEttrPost(e.target.checked)} />
+                {fx.nzEttr}
+              </label>
+            </div>
+            {underEV >= 0.5 && <p className="warn">{fill(fx.nzUnder, underEV.toFixed(1))}</p>}
+            {clipping && <p className="warn">{fill(fx.nzClip, clipHeadroom)}</p>}
+            {ettrPost && overEV >= 0.5 && !clipping && <p className="ok">{fill(fx.nzEttrGood, overEV.toFixed(1))}</p>}
+            {isVideo && activeLog && <p className="note">{fx.nzEttrTip}</p>}
+            {isVideo && activeLog && <p className="note"><b>{fx.nzLog}</b></p>}
+          </fieldset>
+    </>
+  );
   const g_btn = (
     <>
 <button type="button" className="btn-primary" onClick={exposeCorrectly}>
@@ -2009,9 +2041,9 @@ export default function App() {
             backdrop={backdropKind}
             illu={ILLU}
             photo={bd?.photo ? `./${bd.photo}` : undefined}
-            exposureDelta={exposureDelta}
+            exposureDelta={shownDelta}
             cast={cast}
-            grain={grain}
+            grain={noiseOn ? noiseAmt : 0}
             logView={!!activeLog && lutNone}
             look={look}
             assist={{
@@ -2047,6 +2079,8 @@ export default function App() {
             <span className="st">{Math.round(camWbK / 100) * 100}K</span>
             <span className="st">{afFixed ? "FF" : focusTag(camera, afKind, isVideo)}</span>
             {isVideo && <span className="st">{fps}p</span>}
+            <span className={`st ${!noiseOn ? "" : noiseLevel === "high" ? "st-bad" : noiseLevel === "mid" ? "st-warn" : "st-ok"}`} title={noiseOn ? fx.nzStateOn : fx.nzStateOff}>{noiseOn ? fx.nzChip[noiseLevel] : fx.nzOffChip}</span>
+            {clipping && <span className="st st-bad">CLIP</span>}
             {isVideo && <span className={`st ${audio.clip || audio.overdriven ? "st-bad" : quality === "poor" ? "st-warn" : "st-ok"}`}>{Math.round(audio.avg)} dB</span>}
             {g_btn}
           </div>
@@ -2150,7 +2184,7 @@ export default function App() {
           <div className="card deck-card" role="tabpanel">
             {tab === "cam" && <>{g_cam}{g_optics}</>}
             {tab === "light" && <>{g_light}{g_filters}</>}
-            {tab === "image" && <>{g_photo}{g_video}{g_tech}</>}
+            {tab === "image" && <>{g_photo}{g_video}{g_noise}{g_tech}</>}
             {tab === "audio" && g_audio}
             {tab === "assist" && g_assist}
             {tab === "rec" && g_rec}
