@@ -779,3 +779,6 @@ body.is-resizing { cursor: col-resize; user-select: none; }
 .expose-msg .expose-head { margin: 0 0 4px; font-weight: 600; }
 .expose-msg ol { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 2px; }
 .expose-close { position: absolute; top: 6px; right: 8px; border: 0; background: transparent; color: var(--muted); font-size: 18px; cursor: pointer; line-height: 1; }
+.status-bar .btn-noise { margin-left: auto; background: color-mix(in srgb, var(--ok) 85%, #000); }
+.status-bar .btn-noise + .btn-primary { margin-left: 0; }
+@media (max-width: 600px) { .status-bar .btn-noise { width: 100%; margin: 4px 0 0; } }

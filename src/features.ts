@@ -184,6 +184,18 @@ export const micFx = (mic: Mic): MicFx | null => MIC_FX[mic.id] ?? null;
 export const lowCutDb = (hz: number) => (hz <= 0 ? 0 : hz < 90 ? 8 : hz < 130 ? 11 : hz < 180 ? 14 : 16);
 
 const de = {
+  nzBtn: "Rauschen minimieren",
+  nzmHead: "Weniger Rauschen – das wurde gemacht / das machst du an der Kamera:",
+  nzmBase: "ISO auf den Basis-ISO {x} – dort rauscht die Kamera am wenigsten.",
+  nzmRaise: "Wenig Licht: ISO auf {x} – so niedrig wie möglich, aber hell genug.",
+  nzmSecond: "Wenig Licht: ISO auf den zweiten Basis-ISO {x} (Dual Native) – sauberer als ein ISO knapp darunter.",
+  nzmNd: "ND-Filter {x}, damit Basis-ISO, Blende und Verschluss bleiben können.",
+  nzmOpen: "Blende auf {x} geöffnet – mehr Licht auf den Sensor (dafür weniger Schärfentiefe).",
+  nzmLight: "⚠ Es fehlen noch ca. {x} Blenden Licht: LED/Fenster dazu oder ein lichtstärkeres Objektiv – sonst bleibt Rauschen.",
+  nzmEttr: "Log: ca. +1,3 Blenden heller belichtet (ETTR) – in der Post runterziehen, die ETTR-Vorschau ist eingeschaltet.",
+  nzmShutterP: "Verschlusszeit {x} (Grenze aus der Hand ca. {y}).",
+  nzmTripod: "⚠ Noch zu dunkel für aus der Hand: Stativ, Blitz oder mehr Licht.",
+  nzmCheck: "Ergebnis: siehe Rauschen- und Belichtungsanzeige in der Statusleiste.",
   isoExtShort: "erweitert",
   isoExtInfo: "Erweitert nach unten: L {x} – nur im Standardprofil, nicht in Log.",
   isoExt: "Erweiterter ISO L {x}: unter dem Basis-ISO {y} – ca. 1 Blende weniger Dynamik in den Lichtern. Gut für Sonne ohne ND, sonst lieber ND-Filter.",
@@ -248,6 +260,18 @@ const de = {
 type Txt = typeof de;
 
 const bs: Txt = {
+  nzBtn: "Smanji šum",
+  nzmHead: "Manje šuma – ovo je urađeno / ovo radiš na kameri:",
+  nzmBase: "ISO na bazni ISO {x} – tu kamera ima najmanje šuma.",
+  nzmRaise: "Malo svjetla: ISO na {x} – što niže, ali dovoljno svijetlo.",
+  nzmSecond: "Malo svjetla: ISO na drugi bazni ISO {x} (Dual Native) – čistije nego ISO malo ispod toga.",
+  nzmNd: "ND filter {x}, da bazni ISO, blenda i zatvarač mogu ostati.",
+  nzmOpen: "Blenda otvorena na {x} – više svjetla na senzor (ali manja dubinska oštrina).",
+  nzmLight: "⚠ Fali još oko {x} blende svjetla: dodaj LED/prozor ili svjetliji objektiv – inače ostaje šum.",
+  nzmEttr: "Log: eksponirano oko +1,3 blende svjetlije (ETTR) – u postu povuci dolje, ETTR pregled je uključen.",
+  nzmShutterP: "Zatvarač {x} (granica iz ruke oko {y}).",
+  nzmTripod: "⚠ Još pretamno za iz ruke: stativ, blic ili više svjetla.",
+  nzmCheck: "Rezultat: pogledaj prikaz šuma i ekspozicije u statusnoj traci.",
   isoExtShort: "prošireno",
   isoExtInfo: "Prošireno nadolje: L {x} – samo u standardnom profilu, ne u Logu.",
   isoExt: "Prošireni ISO L {x}: ispod baznog ISO {y} – oko 1 blenda manje dinamike u svjetlima. Dobro za sunce bez ND-a, inače radije ND filter.",
@@ -311,6 +335,18 @@ const bs: Txt = {
 };
 
 const en: Txt = {
+  nzBtn: "Minimise noise",
+  nzmHead: "Less noise – this was done / this is what you do on the camera:",
+  nzmBase: "ISO set to the base ISO {x} – that's where the camera is cleanest.",
+  nzmRaise: "Low light: ISO set to {x} – as low as possible but bright enough.",
+  nzmSecond: "Low light: ISO set to the second base ISO {x} (dual native) – cleaner than an ISO just below it.",
+  nzmNd: "ND filter {x}, so base ISO, aperture and shutter can stay.",
+  nzmOpen: "Aperture opened to {x} – more light on the sensor (less depth of field).",
+  nzmLight: "⚠ Still about {x} stops of light missing: add LED/window light or a faster lens – otherwise noise remains.",
+  nzmEttr: "Log: exposed about +1.3 stops brighter (ETTR) – pull it down in post, the ETTR preview is on.",
+  nzmShutterP: "Shutter {x} (handheld limit about {y}).",
+  nzmTripod: "⚠ Still too dark for handheld: tripod, flash or more light.",
+  nzmCheck: "Result: see the noise and exposure readouts in the status bar.",
   isoExtShort: "extended",
   isoExtInfo: "Extended low: L {x} – standard profile only, not in Log.",
   isoExt: "Extended ISO L {x}: below the base ISO {y} – about 1 stop less highlight range. Fine for sun without ND, otherwise prefer an ND filter.",
@@ -375,6 +411,12 @@ const en: Txt = {
 
 const sr: Txt = {
   ...bs,
+  nzmRaise: "Malo svetla: ISO na {x} – što niže, ali dovoljno svetlo.",
+  nzmSecond: "Malo svetla: ISO na drugi bazni ISO {x} (Dual Native) – čistije nego ISO malo ispod toga.",
+  nzmOpen: "Blenda otvorena na {x} – više svetla na senzor (ali manja dubinska oštrina).",
+  nzmLight: "⚠ Fali još oko {x} blende svetla: dodaj LED/prozor ili svetliji objektiv – inače ostaje šum.",
+  nzmEttr: "Log: eksponirano oko +1,3 blende svetlije (ETTR) – u postu povuci dole, ETTR pregled je uključen.",
+  nzmTripod: "⚠ Još pretamno za iz ruke: stativ, blic ili više svetla.",
   mfd: "Najbliži fokus {x}", limFull: "FULL – ceo opseg", sealed: "Zaštita od prašine i prskanja",
   boostTip: "Vraća visoke tonove koje pojedu krzneni vetrobran i udaljenost.", lc150: "Visok low-cut skida vetar i udarce, ali glas postaje malo tanji.",
   phoneTip: "Ovaj sistem je pravljen za mobilni – na kameri samo uz dodatni prijemnik/adapter.", phone: "za mobilni",

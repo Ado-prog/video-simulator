@@ -445,7 +445,8 @@ export default function App() {
   const ideal = shutter180(vSystem, fps);
   const on180 = Math.abs(Math.log2(shutter / ideal)) < 0.2;
 
-  const [exposeMsg, setExposeMsg] = useState<string[] | null>(null);
+  const [exposeMsg, setExposeMsgRaw] = useState<{ head: string; lines: string[] } | null>(null);
+  const setExposeMsg = (lines: string[] | null, head?: string) => setExposeMsgRaw(lines ? { head: head ?? fxText(lang).exHead, lines } : null);
   const exposeCorrectly = () => {
     const fxx = fxText(lang);
     const baseEV = scene.ev + boost - (cplOn ? CPL_LOSS : 0);
@@ -481,6 +482,79 @@ export default function App() {
     if (activeLog) lines.push(fill(fxx.exLog, activeLog.name, minIso));
     lines.push(fxx.exCheckV);
     setExposeMsg(lines);
+  };
+
+  const ndAtMost = (stops: number) => {
+    const fixed = ND_FILTERS.filter((n) => n.id !== "vnd" && n.id !== "none");
+    return [...fixed].reverse().find((n) => n.stops <= stops + 0.2) ?? ND_FILTERS[0];
+  };
+  const F_STOPS = [0.95, 1, 1.2, 1.4, 1.8, 2, 2.8, 3.5, 4, 5.6, 8, 11, 16, 22];
+  // aperture that gains `stops` of light, but not wider than the lens allows
+  const openBy = (ap: number, stops: number) => {
+    const target = Math.max(apMin, ap / Math.pow(2, stops / 2));
+    return F_STOPS.filter((f) => f >= apMin - 1e-6).reduce((b, f) => (Math.abs(Math.log2(f / target)) < Math.abs(Math.log2(b / target)) ? f : b), Math.max(apMin, F_STOPS[0]));
+  };
+  // ── "Minimise noise": base ISO / second base ISO, ND for ETTR in Log, open the aperture when it is dark
+  const reduceNoise = () => {
+    const fxx = fxText(lang);
+    const baseEV = scene.ev + boost - (cplOn ? CPL_LOSS : 0);
+    const lines: string[] = [];
+    const fixedAp = !!lens?.fixedAperture;
+    if (!isVideo) {
+      setPhotoIsoAuto(false);
+      setPhotoIso(stdMinIso);
+      lines.push(fill(fxx.nzmBase, stdMinIso));
+      let ap = aperture;
+      const limit = nearestShutter(1 / Math.max(1, Math.round(focal * crop * (lfx?.ois && lensOis ? 0.25 : 1))));
+      let tt = correctShutter(baseEV - ndStops, ap, stdMinIso);
+      if (tt > limit && !fixedAp && apMin < ap) {
+        { const na = openBy(ap, Math.log2(tt / limit)); if (na < ap - 1e-6) { ap = na; setAperture(ap); lines.push(fill(fxx.nzmOpen, `f/${ap}`)); } }
+        tt = correctShutter(baseEV - ndStops, ap, stdMinIso);
+      }
+      if (tt < 1 / 8000) {
+        const p = ndAtMost(Math.log2(1 / 8000 / tt) + ndStops); setNdId(p.id); lines.push(fill(fxx.nzmNd, p.id));
+        tt = correctShutter(baseEV - p.stops, ap, stdMinIso);
+      }
+      const ts = nearestShutter(Math.min(tt, 30));
+      setPhotoShutter(ts);
+      lines.push(fill(fxx.nzmShutterP, formatShutter(ts), formatShutter(limit)));
+      if (tt > limit) lines.push(fxx.nzmTripod);
+      lines.push(fxx.nzmCheck);
+      setExposeMsg(lines, fxx.nzmHead);
+      return;
+    }
+    setIsoAuto(false);
+    setNoiseOn(true);
+    const ettr = activeLog ? 1.3 : 0; // Log: expose a bit brighter and pull down in post
+    let ap = aperture;
+    let over = baseEV - cameraEV(ap, shutter, minIso) - ettr; // > 0: too much light even at base ISO
+    if (over < 0 && !fixedAp && apMin < ap) {
+      { const na = openBy(ap, -over); if (na < ap - 1e-6) { ap = na; setAperture(ap); lines.push(fill(fxx.nzmOpen, `f/${ap}`)); } }
+      over = baseEV - cameraEV(ap, shutter, minIso) - ettr;
+    }
+    let isoSet = minIso;
+    if (over >= -0.2) {
+      const p = ndAtMost(over);
+      setNdId(p.id);
+      lines.push(fill(fxx.nzmBase, minIso));
+      lines.push(p.id !== "none" ? fill(fxx.nzmNd, p.id) : fxx.exNoNd);
+    } else {
+      setNdId("none");
+      const need = minIso * Math.pow(2, -over);
+      const second = camDual && camDual.length > 1 && activeLog ? camDual[1] : 0;
+      if (second && need > second / Math.SQRT2) {
+        isoSet = Math.max(second, nearestIso(need, minIso));
+        lines.push(fill(fxx.nzmSecond, second));
+      } else {
+        isoSet = nearestIso(need, minIso);
+        lines.push(fill(fxx.nzmRaise, isoLabel(isoSet, minIso)));
+      }
+      if (need > Math.max(second, 3200)) lines.push(fill(fxx.nzmLight, Math.log2(need / Math.max(second || minIso, 3200)).toFixed(1)));
+    }
+    setIso(isoSet);
+    if (activeLog) { setEttrPost(true); lines.push(fxx.nzmEttr); }
+    lines.push(fxx.nzmCheck);
+    setExposeMsg(lines, fxx.nzmHead);
   };
 
   // ── Audio
@@ -2132,13 +2206,14 @@ export default function App() {
               return <span className={`st ${cls}`}>{txt}</span>;
             })()}
             {isVideo && <span className={`st ${audio.clip || audio.overdriven ? "st-bad" : quality === "poor" ? "st-warn" : "st-ok"}`}>{Math.round(audio.avg)} dB</span>}
+            <button type="button" className="btn-primary btn-noise" onClick={reduceNoise}>{fx.nzBtn}</button>
             {g_btn}
           </div>
           {exposeMsg && (
             <div className="expose-msg" role="status">
               <button type="button" className="expose-close" aria-label="×" onClick={() => setExposeMsg(null)}>×</button>
-              <p className="expose-head">{fx.exHead}</p>
-              <ol>{exposeMsg.map((l, i) => <li key={i}>{l}</li>)}</ol>
+              <p className="expose-head">{exposeMsg.head}</p>
+              <ol>{exposeMsg.lines.map((l, i) => <li key={i}>{l}</li>)}</ol>
             </div>
           )}
           <details className="bg-picker">
