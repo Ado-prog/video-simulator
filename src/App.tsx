@@ -253,14 +253,16 @@ export default function App() {
   const minIso = logProfile?.minIso ?? stdMinIso;
   const baseIsos = logProfile && factsFor(camera).dualIso ? factsFor(camera).dualIso! : [];
   const camMaxIso = maxIsoFor(camera);
-  const isoChoices = [...new Set([minIso, ...baseIsos, ...ISOS.filter((v) => v >= minIso && v <= camMaxIso), camMaxIso])].sort((a, b) => a - b);
+  const extMinIso = Math.round(stdMinIso / 2); // extended low ISO ("L"), only without Log
+  const lowestIso = logProfile ? minIso : extMinIso;
+  const isoChoices = [...new Set([...(logProfile ? [] : [extMinIso]), minIso, ...baseIsos, ...ISOS.filter((v) => v >= minIso && v <= camMaxIso), camMaxIso])].sort((a, b) => a - b);
   const capChoices = isoChoices.filter((v) => v >= Math.max(400, minIso * 2) && v < camMaxIso);
   const autoMax = isoCap && isoCap < camMaxIso ? Math.max(isoCap, minIso) : camMaxIso;
   const fxIso = fxText(lang);
   const camDual = factsFor(camera).dualIso;
   const isoInfoLines = (video: boolean) => {
     const name = camera ? `${camera.brand} ${camera.model}` : "";
-    const lines = [fill(fxIso.isoRange, name, `${stdMinIso}–${video ? camMaxIso : Math.max(51200, camMaxIso)}`)];
+    const lines = [fill(fxIso.isoRange, name, `${stdMinIso}–${video ? camMaxIso : Math.max(51200, camMaxIso)}`), fill(fxIso.isoExtInfo, extMinIso, "")];
     if (video) {
       const logs = logProfilesFor(camera);
       if (logs.length) lines.push(fill(fxIso.isoLog, logs.map((l) => `${l.name} ${l.minIso}`).join(" · "), ""));
@@ -398,7 +400,7 @@ export default function App() {
   const effShutter = isVideo ? shutter : pAuto.t;
   const auto = autoIso(sceneEV, aperture, effShutter, activeMinIso, autoMax);
   const useAuto = isVideo && isoAuto;
-  const effIso = isVideo ? (isoAuto ? auto.iso : Math.max(iso, minIso)) : pIso;
+  const effIso = isVideo ? (isoAuto ? auto.iso : Math.max(iso, lowestIso)) : pIso;
   const exposureDelta = sceneEV - cameraEV(aperture, effShutter, effIso);
   const shakeLimit = Math.max(1, Math.round((focal * crop) / (lfx?.ois && lensOis ? 4 : 1))); // lens OIS ≈ 2 stops
   const shakeRisk = !isVideo && effShutter > 1 / shakeLimit;
@@ -1106,13 +1108,14 @@ export default function App() {
                   }
                 }}>
                   <option value="auto">{t.isoAuto}{photoIsoAuto ? ` (${pIsoShown})` : ""}</option>
-                  {[...new Set([stdMinIso, ...ISOS.filter((v) => v >= stdMinIso && v <= photoMaxIso)])].sort((a, b) => a - b).map((v) => (
-                    <option key={v} value={String(v)}>{v}</option>
+                  {[...new Set([extMinIso, stdMinIso, ...ISOS.filter((v) => v >= stdMinIso && v <= photoMaxIso)])].sort((a, b) => a - b).map((v) => (
+                    <option key={v} value={String(v)}>{v < stdMinIso ? `L ${v} (${fxIso.isoExtShort})` : v}</option>
                   ))}
                 </select>
               </div>
             </div>
             {isoInfoLines(false).map((l) => <p key={l} className="note iso-info">{l}</p>)}
+            {!photoIsoAuto && pIso < stdMinIso && <p className="warn">{fill(fxIso.isoExt, pIso, stdMinIso)}</p>}
             {photoIsoAuto && (
               <>
                 <div className="grid2">
@@ -1579,7 +1582,7 @@ export default function App() {
               </div>
               <div>
                 <label htmlFor="iso">ISO</label>
-                <select {...sel("iso")} value={isoAuto ? "auto" : String(Math.max(iso, minIso))} onChange={(e) => {
+                <select {...sel("iso")} value={isoAuto ? "auto" : String(Math.max(iso, lowestIso))} onChange={(e) => {
                   if (e.target.value === "auto") setIsoAuto(true);
                   else {
                     setIsoAuto(false);
@@ -1588,12 +1591,13 @@ export default function App() {
                 }}>
                   <option value="auto">{t.isoAuto}</option>
                   {isoChoices.map((v) => (
-                    <option key={v} value={String(v)}>{v}</option>
+                    <option key={v} value={String(v)}>{v < stdMinIso ? `L ${v} (${fxIso.isoExtShort})` : v}</option>
                   ))}
                 </select>
               </div>
             </div>
             {isoInfoLines(true).map((l) => <p key={l} className="note iso-info">{l}</p>)}
+            {!isoAuto && effIso < stdMinIso && <p className="warn">{fill(fxIso.isoExt, effIso, stdMinIso)}</p>}
             <p className={on180 ? "ok" : "note"}>{on180 ? "✓ " : ""}{fill(t.rule180, Math.round(1 / ideal))}</p>
 
             <label htmlFor="profile">{t.profile}</label>

@@ -184,6 +184,9 @@ export const micFx = (mic: Mic): MicFx | null => MIC_FX[mic.id] ?? null;
 export const lowCutDb = (hz: number) => (hz <= 0 ? 0 : hz < 90 ? 8 : hz < 130 ? 11 : hz < 180 ? 14 : 16);
 
 const de = {
+  isoExtShort: "erweitert",
+  isoExtInfo: "Erweitert nach unten: L {x} – nur im Standardprofil, nicht in Log.",
+  isoExt: "Erweiterter ISO L {x}: unter dem Basis-ISO {y} – ca. 1 Blende weniger Dynamik in den Lichtern. Gut für Sonne ohne ND, sonst lieber ND-Filter.",
   isoRange: "{x}: ISO {y} – das Minimum ist der Basis-ISO im Standardprofil (z. B. bei Sonne).",
   isoLog: "Log-Basis-ISO: {x} – darunter weniger Dynamikumfang.",
   isoDual: "Dual Native ISO: {x} – auf dem zweiten Basiswert wieder sauber (wenig Rauschen).",
@@ -245,6 +248,9 @@ const de = {
 type Txt = typeof de;
 
 const bs: Txt = {
+  isoExtShort: "prošireno",
+  isoExtInfo: "Prošireno nadolje: L {x} – samo u standardnom profilu, ne u Logu.",
+  isoExt: "Prošireni ISO L {x}: ispod baznog ISO {y} – oko 1 blenda manje dinamike u svjetlima. Dobro za sunce bez ND-a, inače radije ND filter.",
   isoRange: "{x}: ISO {y} – minimum je bazni ISO u standardnom profilu (npr. na suncu).",
   isoLog: "Bazni ISO za Log: {x} – ispod toga manji dinamički raspon.",
   isoDual: "Dual Native ISO: {x} – na drugoj baznoj vrijednosti opet čisto (malo šuma).",
@@ -305,6 +311,9 @@ const bs: Txt = {
 };
 
 const en: Txt = {
+  isoExtShort: "extended",
+  isoExtInfo: "Extended low: L {x} – standard profile only, not in Log.",
+  isoExt: "Extended ISO L {x}: below the base ISO {y} – about 1 stop less highlight range. Fine for sun without ND, otherwise prefer an ND filter.",
   isoRange: "{x}: ISO {y} – the minimum is the base ISO in the standard profile (e.g. in sunshine).",
   isoLog: "Log base ISO: {x} – below that less dynamic range.",
   isoDual: "Dual native ISO: {x} – clean again on the second base value (little noise).",
@@ -385,6 +394,8 @@ const sr: Txt = {
   exLog: "{x}: od baznog ISO {y}. Za čiste senke eksponiraj +1 do +2 blende svetlije (ETTR) i u postu povuci dole.",
   exCheckP: "Provera: pogledaj histogram, svetla ne smeju udariti u desnu ivicu.",
   isoRange: "{x}: ISO {y} – minimum je bazni ISO u standardnom profilu (npr. na suncu).",
+  isoExtInfo: "Prošireno nadole: L {x} – samo u standardnom profilu, ne u Logu.",
+  isoExt: "Prošireni ISO L {x}: ispod baznog ISO {y} – oko 1 blenda manje dinamike u svetlima. Dobro za sunce bez ND-a, inače radije ND filter.",
   isoDual: "Dual Native ISO: {x} – na drugoj baznoj vrednosti opet čisto (malo šuma).",
   exCheckV: "Provera: zebra/histogram – lice oko 70 % (Rec.709), u Logu ten po vrednosti proizvođača.",
   windTip: "WIND CUT na HI jače seče niske frekvencije – dobro napolju na vetru, unutra glas zvuči tanje.",
