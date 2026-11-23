@@ -51,6 +51,7 @@ import {
   CPL_LOSS,
   pickNd,
   nearestIso,
+  isoLabel,
 } from "./lighting";
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), hi);
@@ -380,7 +381,7 @@ export default function App() {
     return { iso: pCap, t: fit(correctShutter(sceneEV, aperture, pCap)), capped: true };
   })();
   const pIso = pAuto.iso;
-  const pIsoShown = Math.round((100 * Math.pow(2, Math.round(Math.log2(pIso / 100) * 3) / 3)) / 10) * 10;
+  const pIsoShown = isoLabel(pIso, 100);
   const effShutter = isVideo ? shutter : pAuto.t;
   const auto = autoIso(sceneEV, aperture, effShutter, activeMinIso, autoMax);
   const useAuto = isVideo && isoAuto;
@@ -429,24 +430,42 @@ export default function App() {
   const ideal = shutter180(vSystem, fps);
   const on180 = Math.abs(Math.log2(shutter / ideal)) < 0.2;
 
+  const [exposeMsg, setExposeMsg] = useState<string[] | null>(null);
   const exposeCorrectly = () => {
+    const fxx = fxText(lang);
     const baseEV = scene.ev + boost - (cplOn ? CPL_LOSS : 0);
     if (!isVideo) {
       let ev = baseEV - ndStops;
       let tt = correctShutter(ev, aperture, pIso);
+      let nd = ndId;
       if (tt < 1 / 8000) {
         const pickP = pickNd(Math.log2(1 / 8000 / tt) + ndStops);
         setNdId(pickP.id);
+        nd = pickP.id;
         ev = baseEV - pickP.stops;
         tt = correctShutter(ev, aperture, pIso);
       }
-      setPhotoShutter(nearestShutter(tt));
+      const ts = nearestShutter(tt);
+      setPhotoShutter(ts);
+      const lines = [fill(fxx.exAperture, `f/${aperture}`), fill(fxx.exShutterP, formatShutter(ts)), fill(fxx.exIsoP, pIsoShown)];
+      if (nd !== "none") lines.push(fill(fxx.exNd, nd));
+      if (ts > 1 / Math.max(1, Math.round(focal * crop))) lines.push(fxx.exShake);
+      lines.push(fxx.exCheckP);
+      setExposeMsg(lines);
       return;
     }
     const over = baseEV - cameraEV(aperture, shutter, minIso);
     const pick = pickNd(over);
     setNdId(pick.id);
-    if (!isoAuto) setIso(nearestIso(minIso * Math.pow(2, pick.stops - over), minIso));
+    const newIso = nearestIso(minIso * Math.pow(2, pick.stops - over), minIso);
+    if (!isoAuto) setIso(newIso);
+    const lines = [fill(fxx.exShutterV, formatShutter(shutter)), fill(fxx.exAperture, `f/${aperture}`)];
+    lines.push(pick.id !== "none" ? fill(fxx.exNd, pick.id) : fxx.exNoNd);
+    lines.push(isoAuto ? fxx.exIsoAuto : fill(fxx.exIsoV, isoLabel(newIso, minIso)));
+    if (over < -0.3) lines.push(fill(fxx.exDark, Math.abs(over).toFixed(1)));
+    if (activeLog) lines.push(fill(fxx.exLog, activeLog.name, minIso));
+    lines.push(fxx.exCheckV);
+    setExposeMsg(lines);
   };
 
   // ── Audio
@@ -2080,10 +2099,29 @@ export default function App() {
             <span className="st">{afFixed ? "FF" : focusTag(camera, afKind, isVideo)}</span>
             {isVideo && <span className="st">{fps}p</span>}
             <span className={`st ${!noiseOn ? "" : noiseLevel === "high" ? "st-bad" : noiseLevel === "mid" ? "st-warn" : "st-ok"}`} title={noiseOn ? fx.nzStateOn : fx.nzStateOff}>{noiseOn ? fx.nzChip[noiseLevel] : fx.nzOffChip}</span>
-            {clipping && <span className="st st-bad">CLIP</span>}
+            {(() => {
+              const ev = Math.round(exposureDelta * 10) / 10;
+              const sign = ev > 0 ? "+" : "";
+              const logEttr = isVideo && !!activeLog;
+              const [cls, txt] = clipping
+                ? ["st-bad", `${fx.expClip} ${sign}${ev} EV`]
+                : ev >= 0.4
+                  ? [logEttr && ev <= 2 ? "st-ok" : "st-warn", `${logEttr && ev <= 2 ? "ETTR" : fx.expOver} ${sign}${ev} EV`]
+                  : ev <= -0.4
+                    ? [ev <= -1.5 ? "st-bad" : "st-warn", `${fx.expUnder} ${ev} EV`]
+                    : ["st-ok", fx.expOk];
+              return <span className={`st ${cls}`}>{txt}</span>;
+            })()}
             {isVideo && <span className={`st ${audio.clip || audio.overdriven ? "st-bad" : quality === "poor" ? "st-warn" : "st-ok"}`}>{Math.round(audio.avg)} dB</span>}
             {g_btn}
           </div>
+          {exposeMsg && (
+            <div className="expose-msg" role="status">
+              <button type="button" className="expose-close" aria-label="×" onClick={() => setExposeMsg(null)}>×</button>
+              <p className="expose-head">{fx.exHead}</p>
+              <ol>{exposeMsg.map((l, i) => <li key={i}>{l}</li>)}</ol>
+            </div>
+          )}
           <details className="bg-picker">
             <summary>
               <span className="bg-picker-label">{t.backdrop}</span>

@@ -269,8 +269,15 @@ export function autoIso(sceneEV: number, aperture: number, shutter: number, minI
   const exact = 100 * Math.pow(2, cameraEV(aperture, shutter, 100) - sceneEV);
   const iso = Math.min(maxIso, Math.max(minIso, exact));
   // round to nearest 1/3 stop for display
-  const stops = Math.round(Math.log2(iso / 100) * 3) / 3;
-  return { iso, display: Math.round((100 * Math.pow(2, stops)) / 10) * 10, atLimit: iso !== exact };
+  return { iso, display: isoLabel(iso, minIso), atLimit: iso !== exact };
+}
+
+/** ISO as the camera shows it: nominal 1/3-stop values (…, 500, 640, 800, 1000, …); the base ISO itself is shown exactly. */
+export function isoLabel(iso: number, base?: number) {
+  if (base && Math.abs(Math.log2(iso / base)) < 0.05) return base;
+  const n = Math.round(Math.log2(iso / 100) * 3);
+  const third = [100, 125, 160][((n % 3) + 3) % 3];
+  return Math.round(third * Math.pow(2, Math.floor(n / 3)));
 }
 
 // ── Filters

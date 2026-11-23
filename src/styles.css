@@ -774,3 +774,8 @@ body.is-resizing { cursor: col-resize; user-select: none; }
 .bg-drawn { display: flex; flex-wrap: wrap; gap: 6px; }
 .bg-chip { font: inherit; font-size: 12px; padding: 5px 11px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--muted); cursor: pointer; }
 .bg-chip.is-on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+
+.expose-msg { position: relative; background: color-mix(in srgb, var(--accent) 10%, var(--surface)); border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); border-radius: 14px; padding: 10px 36px 10px 14px; font-size: 13px; }
+.expose-msg .expose-head { margin: 0 0 4px; font-weight: 600; }
+.expose-msg ol { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 2px; }
+.expose-close { position: absolute; top: 6px; right: 8px; border: 0; background: transparent; color: var(--muted); font-size: 18px; cursor: pointer; line-height: 1; }
