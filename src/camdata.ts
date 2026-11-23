@@ -7,6 +7,7 @@ type Facts = {
   mp: number; // megapixels
   readout: number; // ms, full-width video readout (0 = global shutter)
   dualIso?: number[]; // native (base) ISOs in Log, two or three
+  isoMin?: number; // lowest native ISO outside Log (default 100)
   sync?: number; // flash sync speed in s (undefined = no hot-shoe flash)
   openGate?: boolean;
   k8?: boolean;
@@ -16,8 +17,8 @@ type Facts = {
 };
 
 const F: Record<string, Facts> = {
-  "pana-s1ii": { mp: 24, readout: 11, dualIso: [640, 4000], sync: 1 / 250, openGate: true, k6: true, maxFps: 120, frames: 3 },
-  "pana-s1rii": { mp: 44, readout: 15, dualIso: [640, 4000], sync: 1 / 250, openGate: true, k8: true, k6: true, maxFps: 120, frames: 3 },
+  "pana-s1ii": { mp: 24, readout: 11, dualIso: [640, 5000], sync: 1 / 250, openGate: true, k6: true, maxFps: 120, frames: 3 },
+  "pana-s1rii": { mp: 44, readout: 15, dualIso: [200, 1000], sync: 1 / 250, openGate: true, k8: true, k6: true, maxFps: 120, frames: 3 },
   "pana-s1h": { mp: 24, readout: 21, dualIso: [640, 4000], sync: 1 / 320, k6: true, maxFps: 60 },
   "pana-s5ii": { mp: 24, readout: 22, dualIso: [640, 4000], sync: 1 / 250, openGate: true, k6: true, maxFps: 60, frames: 3 },
   "pana-s5iix": { mp: 24, readout: 22, dualIso: [640, 4000], sync: 1 / 250, openGate: true, k6: true, maxFps: 60, frames: 3 },
@@ -27,32 +28,32 @@ const F: Record<string, Facts> = {
   "pana-gh6": { mp: 25, readout: 12, sync: 1 / 250, openGate: true, k6: true, maxFps: 120 },
   "pana-g9ii": { mp: 25, readout: 12, dualIso: [500, 2000], sync: 1 / 250, openGate: true, k6: true, maxFps: 120, frames: 3 },
   "sony-a1ii": { mp: 50, readout: 4, sync: 1 / 400, k8: true, maxFps: 120 },
-  "sony-a9iii": { mp: 24, readout: 0, sync: 1 / 80000, maxFps: 120 },
+  "sony-a9iii": { mp: 24, readout: 0, isoMin: 250, sync: 1 / 80000, maxFps: 120 },
   "sony-a7rv": { mp: 61, readout: 16, sync: 1 / 250, k8: true, maxFps: 60 },
   "sony-a7iv": { mp: 33, readout: 27, sync: 1 / 250, maxFps: 60 },
-  "sony-a7siii": { mp: 12, readout: 9, dualIso: [640, 12800], sync: 1 / 250, maxFps: 120 },
+  "sony-a7siii": { mp: 12, readout: 9, dualIso: [640, 12800], isoMin: 80, sync: 1 / 250, maxFps: 120 },
   "sony-a7cii": { mp: 33, readout: 27, sync: 1 / 160, maxFps: 60 },
   "sony-fx5": { mp: 16.6, readout: 4, dualIso: [800, 4000, 12800], openGate: true, maxFps: 120 },
   "sony-fx2": { mp: 33, readout: 22, dualIso: [800, 4000], openGate: true, maxFps: 60 },
-  "sony-fx3": { mp: 12, readout: 9, dualIso: [640, 12800], maxFps: 120 },
-  "sony-zve1": { mp: 12, readout: 9, dualIso: [640, 12800], maxFps: 120 },
+  "sony-fx3": { mp: 12, readout: 9, dualIso: [640, 12800], isoMin: 80, maxFps: 120 },
+  "sony-zve1": { mp: 12, readout: 9, dualIso: [640, 12800], isoMin: 80, maxFps: 120 },
   "sony-a6700": { mp: 26, readout: 20, sync: 1 / 160, maxFps: 120 },
   "sony-fx30": { mp: 26, readout: 20, dualIso: [800, 2500], maxFps: 120 },
   "sony-zve10ii": { mp: 26, readout: 25, maxFps: 60 },
-  "canon-r1": { mp: 24, readout: 6, sync: 1 / 250, k6: true, maxFps: 120 },
+  "canon-r1": { mp: 24, readout: 6, dualIso: [800], sync: 1 / 250, k6: true, maxFps: 120 },
   "canon-r3": { mp: 24, readout: 8, sync: 1 / 250, k6: true, maxFps: 120 },
-  "canon-r5ii": { mp: 45, readout: 9, sync: 1 / 250, k8: true, maxFps: 120 },
+  "canon-r5ii": { mp: 45, readout: 9, dualIso: [800], sync: 1 / 250, k8: true, maxFps: 120 },
   "canon-r6ii": { mp: 24, readout: 15, sync: 1 / 250, maxFps: 60 },
   "canon-r8": { mp: 24, readout: 15, sync: 1 / 200, maxFps: 60 },
   "canon-r7": { mp: 32.5, readout: 26, sync: 1 / 250, maxFps: 60 },
   "canon-r10": { mp: 24, readout: 27, sync: 1 / 250, maxFps: 60 },
   "canon-r50": { mp: 24, readout: 30, sync: 1 / 200, maxFps: 30 },
-  "nikon-z9": { mp: 45, readout: 4, sync: 1 / 200, k8: true, maxFps: 120 },
-  "nikon-z8": { mp: 45, readout: 4, sync: 1 / 200, k8: true, maxFps: 120 },
-  "nikon-z6iii": { mp: 24.5, readout: 14, sync: 1 / 200, k6: true, maxFps: 120 },
+  "nikon-z9": { mp: 45, readout: 4, isoMin: 64, dualIso: [800, 4000], sync: 1 / 200, k8: true, maxFps: 120 },
+  "nikon-z8": { mp: 45, readout: 4, isoMin: 64, dualIso: [800, 4000], sync: 1 / 200, k8: true, maxFps: 120 },
+  "nikon-z6iii": { mp: 24.5, readout: 14, dualIso: [800, 6400], sync: 1 / 200, k6: true, maxFps: 120 },
   "nikon-zr": { mp: 24.5, readout: 14, dualIso: [800, 6400], openGate: true, k6: true, maxFps: 120 },
   "nikon-zf": { mp: 24.5, readout: 22, sync: 1 / 200, maxFps: 60 },
-  "nikon-z5ii": { mp: 24.5, readout: 22, sync: 1 / 200, maxFps: 60 },
+  "nikon-z5ii": { mp: 24.5, readout: 22, dualIso: [800, 6400], sync: 1 / 200, maxFps: 60 },
   "nikon-z50ii": { mp: 21, readout: 25, sync: 1 / 200, maxFps: 60 },
   "nikon-zfc": { mp: 21, readout: 25, sync: 1 / 200, maxFps: 30 },
   "dji-pocket3": { mp: 9.4, readout: 12, maxFps: 120 },

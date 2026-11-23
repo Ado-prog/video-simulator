@@ -249,12 +249,25 @@ export default function App() {
   const makerLut = makerLuts.find((x) => x.id === lutId) ?? makerLuts[0];
   const lutNone = lutId === "none";
   const lutValue = lutNone ? "none" : creativeLut ? creativeLut.id : makerLut?.id ?? "none";
-  const minIso = logProfile?.minIso ?? 100;
+  const stdMinIso = factsFor(camera).isoMin ?? 100; // lowest native ISO without Log
+  const minIso = logProfile?.minIso ?? stdMinIso;
   const baseIsos = logProfile && factsFor(camera).dualIso ? factsFor(camera).dualIso! : [];
   const camMaxIso = maxIsoFor(camera);
   const isoChoices = [...new Set([minIso, ...baseIsos, ...ISOS.filter((v) => v >= minIso && v <= camMaxIso), camMaxIso])].sort((a, b) => a - b);
   const capChoices = isoChoices.filter((v) => v >= Math.max(400, minIso * 2) && v < camMaxIso);
   const autoMax = isoCap && isoCap < camMaxIso ? Math.max(isoCap, minIso) : camMaxIso;
+  const fxIso = fxText(lang);
+  const camDual = factsFor(camera).dualIso;
+  const isoInfoLines = (video: boolean) => {
+    const name = camera ? `${camera.brand} ${camera.model}` : "";
+    const lines = [fill(fxIso.isoRange, name, `${stdMinIso}–${video ? camMaxIso : Math.max(51200, camMaxIso)}`)];
+    if (video) {
+      const logs = logProfilesFor(camera);
+      if (logs.length) lines.push(fill(fxIso.isoLog, logs.map((l) => `${l.name} ${l.minIso}`).join(" · "), ""));
+      if (camDual && camDual.length > 1) lines.push(fill(fxIso.isoDual, camDual.join(" / "), ""));
+    }
+    return lines;
+  };
 
   const changeVideo = (sys: VideoSystem, rate: number) => {
     // a new system resets the timeline; a normal frame rate (≤ 30p) puts the timeline on the same rate,
@@ -361,7 +374,7 @@ export default function App() {
   const activeLog = isVideo ? logProfile : undefined;
   const look = activeLog ? (lutNone ? NEUTRAL_LOOK : creativeLut?.look ?? makerLut?.look ?? NEUTRAL_LOOK) : style.look;
   const lutTag = lutNone ? "" : creativeLut ? ` + ${t[creativeLut.id]}` : " + LUT";
-  const activeMinIso = isVideo ? minIso : 100;
+  const activeMinIso = isVideo ? minIso : stdMinIso;
   // photo Auto-ISO: M keeps the shutter and moves the ISO; A holds the minimum shutter speed and raises the ISO
   // up to the limit, only then the shutter gets slower
   const photoMaxIso = Math.max(51200, camMaxIso);
@@ -372,16 +385,16 @@ export default function App() {
     if (!photoIsoAuto) return { iso: photoIso, t: expMode === "A" ? fit(correctShutter(sceneEV, aperture, photoIso)) : photoShutter, capped: false };
     if (expMode === "M") {
       const raw = 100 * Math.pow(2, cameraEV(aperture, photoShutter, 100) - sceneEV);
-      return { iso: clamp(raw, 100, pCap), t: photoShutter, capped: raw > pCap * 1.01 };
+      return { iso: clamp(raw, stdMinIso, pCap), t: photoShutter, capped: raw > pCap * 1.01 };
     }
-    const t100 = correctShutter(sceneEV, aperture, 100);
-    if (t100 <= pMinT) return { iso: 100, t: fit(t100), capped: false };
-    const raw = (100 * t100) / pMinT;
+    const t100 = correctShutter(sceneEV, aperture, stdMinIso);
+    if (t100 <= pMinT) return { iso: stdMinIso, t: fit(t100), capped: false };
+    const raw = (stdMinIso * t100) / pMinT;
     if (raw <= pCap) return { iso: raw, t: pMinT, capped: false };
     return { iso: pCap, t: fit(correctShutter(sceneEV, aperture, pCap)), capped: true };
   })();
   const pIso = pAuto.iso;
-  const pIsoShown = isoLabel(pIso, 100);
+  const pIsoShown = isoLabel(pIso, stdMinIso);
   const effShutter = isVideo ? shutter : pAuto.t;
   const auto = autoIso(sceneEV, aperture, effShutter, activeMinIso, autoMax);
   const useAuto = isVideo && isoAuto;
@@ -1093,12 +1106,13 @@ export default function App() {
                   }
                 }}>
                   <option value="auto">{t.isoAuto}{photoIsoAuto ? ` (${pIsoShown})` : ""}</option>
-                  {ISOS.filter((v) => v <= photoMaxIso).map((v) => (
+                  {[...new Set([stdMinIso, ...ISOS.filter((v) => v >= stdMinIso && v <= photoMaxIso)])].sort((a, b) => a - b).map((v) => (
                     <option key={v} value={String(v)}>{v}</option>
                   ))}
                 </select>
               </div>
             </div>
+            {isoInfoLines(false).map((l) => <p key={l} className="note iso-info">{l}</p>)}
             {photoIsoAuto && (
               <>
                 <div className="grid2">
@@ -1579,6 +1593,7 @@ export default function App() {
                 </select>
               </div>
             </div>
+            {isoInfoLines(true).map((l) => <p key={l} className="note iso-info">{l}</p>)}
             <p className={on180 ? "ok" : "note"}>{on180 ? "✓ " : ""}{fill(t.rule180, Math.round(1 / ideal))}</p>
 
             <label htmlFor="profile">{t.profile}</label>

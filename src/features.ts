@@ -184,6 +184,9 @@ export const micFx = (mic: Mic): MicFx | null => MIC_FX[mic.id] ?? null;
 export const lowCutDb = (hz: number) => (hz <= 0 ? 0 : hz < 90 ? 8 : hz < 130 ? 11 : hz < 180 ? 14 : 16);
 
 const de = {
+  isoRange: "{x}: ISO {y} – das Minimum ist der Basis-ISO im Standardprofil (z. B. bei Sonne).",
+  isoLog: "Log-Basis-ISO: {x} – darunter weniger Dynamikumfang.",
+  isoDual: "Dual Native ISO: {x} – auf dem zweiten Basiswert wieder sauber (wenig Rauschen).",
   exHead: "Richtig belichtet – das wurde gemacht / das machst du an der Kamera:",
   exAperture: "Blende bleibt {x} (bestimmt Schärfentiefe und Look).",
   exShutterV: "Verschlusszeit bleibt {x} (180°-Regel: doppelte Bildrate).",
@@ -242,6 +245,9 @@ const de = {
 type Txt = typeof de;
 
 const bs: Txt = {
+  isoRange: "{x}: ISO {y} – minimum je bazni ISO u standardnom profilu (npr. na suncu).",
+  isoLog: "Bazni ISO za Log: {x} – ispod toga manji dinamički raspon.",
+  isoDual: "Dual Native ISO: {x} – na drugoj baznoj vrijednosti opet čisto (malo šuma).",
   exHead: "Pravilno eksponirano – ovo je urađeno / ovo radiš na kameri:",
   exAperture: "Blenda ostaje {x} (određuje dubinsku oštrinu i izgled).",
   exShutterV: "Brzina zatvarača ostaje {x} (pravilo 180°: duplo od broja sličica).",
@@ -299,6 +305,9 @@ const bs: Txt = {
 };
 
 const en: Txt = {
+  isoRange: "{x}: ISO {y} – the minimum is the base ISO in the standard profile (e.g. in sunshine).",
+  isoLog: "Log base ISO: {x} – below that less dynamic range.",
+  isoDual: "Dual native ISO: {x} – clean again on the second base value (little noise).",
   exHead: "Correctly exposed – this was done / this is what you do on the camera:",
   exAperture: "Aperture stays {x} (sets depth of field and look).",
   exShutterV: "Shutter stays {x} (180° rule: double the frame rate).",
@@ -375,6 +384,8 @@ const sr: Txt = {
   exDark: "⚠ Fali {x} blende svetla: otvori blendu, podigni ISO ili dodaj svetlo (LED, prozor) – inače će biti šuma.",
   exLog: "{x}: od baznog ISO {y}. Za čiste senke eksponiraj +1 do +2 blende svetlije (ETTR) i u postu povuci dole.",
   exCheckP: "Provera: pogledaj histogram, svetla ne smeju udariti u desnu ivicu.",
+  isoRange: "{x}: ISO {y} – minimum je bazni ISO u standardnom profilu (npr. na suncu).",
+  isoDual: "Dual Native ISO: {x} – na drugoj baznoj vrednosti opet čisto (malo šuma).",
   exCheckV: "Provera: zebra/histogram – lice oko 70 % (Rec.709), u Logu ten po vrednosti proizvođača.",
   windTip: "WIND CUT na HI jače seče niske frekvencije – dobro napolju na vetru, unutra glas zvuči tanje.",
   noiseTip: "NOISE CUT skida ravnomeran šum (klima, ventilator) – na HI glas može zvučati malo veštački.",
