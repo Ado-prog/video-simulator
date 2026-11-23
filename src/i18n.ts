@@ -2033,7 +2033,7 @@ export const DICT = Object.fromEntries(
 export type Dict = (typeof DICT)["de"];
 
 export function fill(template: string, x: string | number, y?: string | number) {
-  return template.replace("{x}", String(x)).replace("{y}", String(y ?? ""));
+  return template.split("{x}").join(String(x)).split("{y}").join(String(y ?? ""));
 }
 
 const STORAGE_KEY = "video-sim-lang";

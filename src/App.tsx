@@ -203,7 +203,7 @@ export default function App() {
   const scene = SCENES.find((s) => s.id === sceneId) ?? SCENES[0];
   const [boost, setBoost] = useState(0);
   const [lightK, setLightK] = useState(scene.kelvin);
-  const [backdropId, setBackdropId] = useState("garden");
+  const [backdropId, setBackdropId] = useState("p-garden-sea");
   const bd = BACKDROPS[backdropId];
   const viewPalette = bd ? { ...scene.palette, ...bd.palette } : scene.palette;
   const backdropKind: BackdropKind = bd ? bd.kind : scene.palette.indoor ? "curtain" : "trees";
@@ -254,8 +254,11 @@ export default function App() {
   const baseIsos = logProfile && factsFor(camera).dualIso ? factsFor(camera).dualIso! : [];
   const camMaxIso = maxIsoFor(camera);
   const extMinIso = Math.round(stdMinIso / 2); // extended low ISO ("L"), only without Log
-  const lowestIso = logProfile ? minIso : extMinIso;
-  const isoChoices = [...new Set([...(logProfile ? [] : [extMinIso]), minIso, ...baseIsos, ...ISOS.filter((v) => v >= minIso && v <= camMaxIso), camMaxIso])].sort((a, b) => a - b);
+  const [dualMode, setDualMode] = useState<"auto" | "low" | "high">("auto");
+  const dualAvail = shootMode === "video" && !!logProfile && baseIsos.length > 1;
+  const dualFloor = dualAvail && dualMode === "high" ? baseIsos[baseIsos.length - 1] : 0;
+  const lowestIso = Math.max(logProfile ? minIso : extMinIso, dualFloor);
+  const isoChoices = [...new Set([...(logProfile ? [] : [extMinIso]), minIso, ...baseIsos, ...ISOS.filter((v) => v >= minIso && v <= camMaxIso), camMaxIso])].filter((v) => v >= dualFloor).sort((a, b) => a - b);
   const capChoices = isoChoices.filter((v) => v >= Math.max(400, minIso * 2) && v < camMaxIso);
   const autoMax = isoCap && isoCap < camMaxIso ? Math.max(isoCap, minIso) : camMaxIso;
   const fxIso = fxText(lang);
@@ -376,7 +379,7 @@ export default function App() {
   const activeLog = isVideo ? logProfile : undefined;
   const look = activeLog ? (lutNone ? NEUTRAL_LOOK : creativeLut?.look ?? makerLut?.look ?? NEUTRAL_LOOK) : style.look;
   const lutTag = lutNone ? "" : creativeLut ? ` + ${t[creativeLut.id]}` : " + LUT";
-  const activeMinIso = isVideo ? minIso : stdMinIso;
+  const activeMinIso = isVideo ? Math.max(minIso, dualFloor) : stdMinIso;
   // photo Auto-ISO: M keeps the shutter and moves the ISO; A holds the minimum shutter speed and raises the ISO
   // up to the limit, only then the shutter gets slower
   const photoMaxIso = Math.max(51200, camMaxIso);
@@ -407,9 +410,9 @@ export default function App() {
   const camWbK = whiteBalanceKelvin(wbMode, lightK, wbK);
   const cast = colorCast(lightK, camWbK);
   const dualIso = isVideo && activeLog && facts.dualIso && facts.dualIso.length > 1 ? facts.dualIso : null;
-  const onSecondBase = !!dualIso && effIso >= dualIso[1];
-  // noise follows the highest base ISO at or below the chosen ISO
-  const activeBase = dualIso ? [...dualIso].reverse().find((b) => effIso >= b) ?? dualIso[0] : 0;
+  // noise follows the active base ISO: AUTO = highest base at or below the ISO, LOW = first circuit, HIGH = second circuit
+  const activeBase = !dualIso ? 0 : dualMode === "low" ? dualIso[0] : dualMode === "high" ? dualIso[dualIso.length - 1] : [...dualIso].reverse().find((b) => effIso >= b) ?? dualIso[0];
+  const onSecondBase = !!dualIso && activeBase > dualIso[0];
   const noiseIso = onSecondBase ? (effIso * dualIso![0]) / activeBase : effIso;
   const grain = Math.min(0.45, Math.max(0, Math.log2(noiseIso / 100)) * 0.045 * Math.sqrt(crop));
   // ── Noise simulation: ISO + under-exposure (shadows lifted) + Log, ETTR pulled down in post
@@ -534,6 +537,7 @@ export default function App() {
     }
     let isoSet = minIso;
     if (over >= -0.2) {
+      if (dualMode === "high") setDualMode("auto");
       const p = ndAtMost(over);
       setNdId(p.id);
       lines.push(fill(fxx.nzmBase, minIso));
@@ -542,6 +546,7 @@ export default function App() {
       setNdId("none");
       const need = minIso * Math.pow(2, -over);
       const second = camDual && camDual.length > 1 && activeLog ? camDual[1] : 0;
+      if (second) setDualMode("auto");
       if (second && need > second / Math.SQRT2) {
         isoSet = Math.max(second, nearestIso(need, minIso));
         lines.push(fill(fxx.nzmSecond, second));
@@ -715,7 +720,7 @@ export default function App() {
     subject,
     zebraMode, zebraLevels, falseColor, wfmOn, wfmType, histogram, peaking, frameOn, frameMarkers, frameMask,
     motion, roninId, roninMode, stab, timelineFps, resId, codecId, containerId, flashMode, shutterType, bracketId,
-    micId, channelMode, sourceId, gain, autoLevel, limiter, lowCut, float32, patternId, noiseCancel, safetyOn, onboard, micLc, micPad, micStep, micBoost, micNc, micLimSw, micDial, noiseOn, ettrPost, lensOis, lensMfSw, lensLim,
+    micId, channelMode, sourceId, gain, autoLevel, limiter, lowCut, float32, patternId, noiseCancel, safetyOn, onboard, micLc, micPad, micStep, micBoost, micNc, micLimSw, micDial, noiseOn, ettrPost, dualMode, lensOis, lensMfSw, lensLim,
   });
   const setters = {
     shootMode: setShootMode, cameraId: setCameraId, lensId: setLensId, manualSensor: setManualSensor, focal: setFocal,
@@ -727,7 +732,7 @@ export default function App() {
     wfmOn: setWfmOn, wfmType: setWfmType, histogram: setHistogram, peaking: setPeaking, frameOn: setFrameOn,
     frameMarkers: setFrameMarkers, frameMask: setFrameMask, motion: setMotion, roninId: setRoninId, roninMode: setRoninMode, stab: setStab, containerId: setContainerId,
     timelineFps: setTimelineFps, resId: setResId, codecId: setCodecId, flashMode: setFlashMode, shutterType: setShutterType,
-    bracketId: setBracketId, micId: setMicId, micLc: setMicLc, micPad: setMicPad, micStep: setMicStep, micBoost: setMicBoost, micNc: setMicNc, micLimSw: setMicLimSw, micDial: setMicDial, noiseOn: setNoiseOn, ettrPost: setEttrPost, lensOis: setLensOis, lensMfSw: setLensMfSw, lensLim: setLensLim, channelMode: setChannelMode, sourceId: setSourceId, gain: setGain, autoLevel: setAutoLevel,
+    bracketId: setBracketId, micId: setMicId, micLc: setMicLc, micPad: setMicPad, micStep: setMicStep, micBoost: setMicBoost, micNc: setMicNc, micLimSw: setMicLimSw, micDial: setMicDial, noiseOn: setNoiseOn, ettrPost: setEttrPost, dualMode: setDualMode, lensOis: setLensOis, lensMfSw: setLensMfSw, lensLim: setLensLim, channelMode: setChannelMode, sourceId: setSourceId, gain: setGain, autoLevel: setAutoLevel,
     limiter: setLimiter, lowCut: setLowCut, float32: setFloat32, patternId: setPatternId, noiseCancel: setNoiseCancel,
     safetyOn: setSafetyOn, onboard: setOnboard,
   } as unknown as Record<string, (v: unknown) => void>;
@@ -1492,7 +1497,11 @@ export default function App() {
             {dualIso && (
               <>
                 <p className="chip-row"><span className="chip">{fill(t.dualIso, dualIso.slice(0, -1).join(" / "), dualIso[dualIso.length - 1])}</span></p>
-                {onSecondBase ? (
+                <Seg label="Dual Native ISO" value={dualMode} onChange={setDualMode} options={[{ v: "auto", l: "AUTO" }, { v: "low", l: `LOW ${dualIso[0]}` }, { v: "high", l: `HIGH ${dualIso[dualIso.length - 1]}` }]} />
+                <p className="note">{fill(fxIso[dualMode === "auto" ? "dmAuto" : dualMode === "low" ? "dmLow" : "dmHigh"], dualIso[0], dualIso[dualIso.length - 1])}</p>
+                {dualMode === "low" && effIso >= dualIso[dualIso.length - 1] ? (
+                  <p className="warn">{fill(fxIso.dmLowWarn, effIso, dualIso[dualIso.length - 1])}</p>
+                ) : onSecondBase ? (
                   <p className="ok">{fill(t.dualIsoHigh, activeBase)}</p>
                 ) : effIso >= dualIso[1] / 2.5 ? (
                   <p className="note">{fill(t.dualIsoTip, dualIso[0], dualIso[1])}</p>
@@ -2187,7 +2196,7 @@ export default function App() {
           <div className="status-bar">
             <span className="st">{formatShutter(effShutter)}</span>
             <span className="st">f/{aperture}</span>
-            <span className="st">ISO {useAuto ? `A ${auto.display}` : !isVideo && photoIsoAuto ? `A ${pIsoShown}` : effIso}</span>
+            <span className="st">ISO {useAuto ? `A ${auto.display}` : !isVideo && photoIsoAuto ? `A ${pIsoShown}` : effIso}{dualIso && dualMode !== "auto" ? ` · ${dualMode.toUpperCase()}` : ""}</span>
             <span className="st">{Math.round(camWbK / 100) * 100}K</span>
             <span className="st">{afFixed ? "FF" : focusTag(camera, afKind, isVideo)}</span>
             {isVideo && <span className="st">{fps}p</span>}
@@ -2222,7 +2231,7 @@ export default function App() {
               {bd?.photo && <img className="bg-mini" src={`./${bd.photo.replace("bg/", "bg/thumb/").replace(".jpg", ".webp")}`} alt="" />}
               <span className="bg-picker-name">{backdropId.startsWith("p-") ? t.photoBackdrops[backdropId as (typeof PHOTO_BACKDROPS)[number]] : t.backdrops[backdropId as "auto"]}</span>
             </summary>
-            {(Object.keys(BACKDROP_GROUPS) as (keyof typeof BACKDROP_GROUPS)[]).map((g) => (
+            {(["nature", "water", "indoor"] as (keyof typeof BACKDROP_GROUPS)[]).map((g) => (
               <div key={g} className="bg-group">
                 <p className="bg-group-label">{t.bgGroups[g]}</p>
                 <div className="bg-strip">
@@ -2243,6 +2252,19 @@ export default function App() {
                 ))}
               </div>
             </div>
+            {(["wedding"] as (keyof typeof BACKDROP_GROUPS)[]).map((g) => (
+              <div key={g} className="bg-group">
+                <p className="bg-group-label">{t.bgGroups[g]}</p>
+                <div className="bg-strip">
+                  {BACKDROP_GROUPS[g].map((k) => (
+                    <button key={k} type="button" className={`bg-thumb ${backdropId === k ? "is-on" : ""}`} onClick={() => setBackdropId(k)} aria-pressed={backdropId === k}>
+                      <img src={`./${BACKDROPS[k].photo!.replace("bg/", "bg/thumb/").replace(".jpg", ".webp")}`} alt="" loading="lazy" />
+                      <span>{t.photoBackdrops[k]}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
           </details>
           <dl className="stats">
             <div><dt>{t.near}</dt><dd>{formatMeters(dof.near)}</dd></div>
