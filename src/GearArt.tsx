@@ -547,9 +547,27 @@ export function MicArt({ mic }: { mic: MicInfo }) {
   );
 }
 
+const CREDIT_TXT: Record<string, [string, string, string]> = {
+  // [photo, AI illustration – not an original photo, maker refused the originals]
+  de: ["Foto", "KI-Illustration, kein Originalfoto", "Nikon hat die Nutzung der Originalfotos nicht erlaubt"],
+  bs: ["Foto", "AI ilustracija, nije originalna fotografija", "Nikon nije dozvolio korištenje originalnih fotografija"],
+  sr: ["Foto", "AI ilustracija, nije originalna fotografija", "Nikon nije dozvolio korišćenje originalnih fotografija"],
+  sq: ["Foto", "Ilustrim me AI, jo foto origjinale", "Nikon nuk lejoi përdorimin e fotove origjinale"],
+  en: ["Photo", "AI illustration, not an original photo", "Nikon did not allow the use of its original photos"],
+  tr: ["Fotoğraf", "Yapay zekâ illüstrasyonu, orijinal fotoğraf değil", "Nikon orijinal fotoğrafların kullanımına izin vermedi"],
+  es: ["Foto", "Ilustración con IA, no es una foto original", "Nikon no permitió usar sus fotos originales"],
+  fr: ["Photo", "Illustration IA, pas une photo originale", "Nikon n'a pas autorisé l'utilisation de ses photos originales"],
+  ru: ["Фото", "ИИ-иллюстрация, не оригинальное фото", "Nikon не разрешил использовать оригинальные фото"],
+  ja: ["写真", "AIイラスト（実物写真ではありません）", "Nikonは公式写真の使用を許可しませんでした"],
+  zh: ["照片", "AI 插画，非原始照片", "Nikon 未允许使用其原始照片"],
+  ko: ["사진", "AI 일러스트, 실제 사진 아님", "Nikon이 원본 사진 사용을 허락하지 않았습니다"],
+};
+
 /** A real photograph of the gear with the credit its licence asks for. */
-export function GearPhotoView({ photo, label }: { photo: { src: string; author: string; license: string; page: string; w: number; h: number }; label: string }) {
-  const credit = photo.license === "KI" ? `KI-Illustration, kein Originalfoto${photo.author !== "KI" ? ` – ${photo.author}` : ""}` : photo.license === "©" ? `Foto: © ${photo.author}` : `Foto: ${photo.author} · ${photo.license}`;
+export function GearPhotoView({ photo, label, lang = "de" }: { photo: { src: string; author: string; license: string; page: string; w: number; h: number }; label: string; lang?: string }) {
+  const [ph, ai, refused] = CREDIT_TXT[lang] ?? CREDIT_TXT.en;
+  const aiNote = photo.author === "KI" ? "" : ` – ${photo.author.startsWith("Nikon hat") ? refused : photo.author}`;
+  const credit = photo.license === "KI" ? `${ai}${aiNote}` : photo.license === "©" ? `${ph}: © ${photo.author}` : `${ph}: ${photo.author} · ${photo.license}`;
   return (
     <figure className="gear-photo">
       <img src={photo.src} alt={label} title={credit} width={photo.w} height={photo.h} loading="lazy" className={photo.license === "©" || photo.license === "KI" ? "on-white" : undefined} />

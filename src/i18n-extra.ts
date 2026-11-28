@@ -1,3 +1,4 @@
+import { MORE_LOCALES } from "./locales";
 // Texts for the assist, recording, flash and sun-planner tools.
 // Languages without their own entry fall back to English.
 
@@ -663,6 +664,9 @@ const en: Extra = {
   geoFail: "Location not available",
 };
 
-export const EXTRA: Record<string, Extra> = { de, bs, sr, en };
+export const EXTRA: Record<string, Extra> = {
+  de, bs, sr, en,
+  ...Object.fromEntries(Object.entries(MORE_LOCALES).map(([k, v]) => [k, { ...en, ...v.extra } as Extra])),
+};
 export const EXTRA_FALLBACK = en;
 export type { Extra };

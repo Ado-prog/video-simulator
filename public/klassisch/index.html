@@ -21,10 +21,15 @@
     </div>
     <script>
       (function () {
+        var NAMES = { de: ["Modern", "Klassisch"], bs: ["Moderno", "Klasično"], sr: ["Moderno", "Klasično"], sq: ["Modern", "Klasik"], en: ["Modern", "Classic"], tr: ["Modern", "Klasik"], es: ["Moderno", "Clásico"], fr: ["Moderne", "Classique"], ru: ["Современный", "Классический"], ja: ["モダン", "クラシック"], zh: ["现代", "经典"], ko: ["모던", "클래식"] };
+        var label = function (l) {
+          var m = NAMES[l] || ["Modern", "Classic"];
+          document.getElementById("vs-modern").textContent = m[0];
+          document.getElementById("vs-classic").textContent = m[1];
+        };
         var l = "de"; try { l = localStorage.getItem("video-sim-lang") || "de"; } catch (e) {}
-        var m = { de: ["Modern", "Klassisch"], en: ["Modern", "Classic"] }[l] || ["Moderno", "Klasično"];
-        document.getElementById("vs-modern").textContent = m[0];
-        document.getElementById("vs-classic").textContent = m[1];
+        label(l);
+        document.addEventListener("change", function (e) { if (e.target && e.target.id === "lang") label(e.target.value); });
         document.getElementById("vs-modern").onclick = function () {
           try { localStorage.setItem("video-sim-view", "modern"); } catch (e) {}
           location.href = "./?modern";

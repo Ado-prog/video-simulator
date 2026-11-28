@@ -553,7 +553,7 @@ export default function App() {
         lines.push(fill(fxx.nzmSecond, second));
       } else {
         isoSet = nearestIso(need, minIso);
-        lines.push(fill(fxx.nzmRaise, isoLabel(isoSet, minIso)));
+        lines.push(isoSet <= minIso ? fill(fxx.nzmBase, minIso) : fill(fxx.nzmRaise, isoLabel(isoSet, minIso)));
       }
       if (need > Math.max(second, 3200)) lines.push(fill(fxx.nzmLight, Math.log2(need / Math.max(second || minIso, 3200)).toFixed(1)));
     }
@@ -931,7 +931,7 @@ export default function App() {
             <legend>{t.camera}</legend>
             <div className="art-wrap">
               {camera && CAMERA_PHOTOS[camera.id] ? (
-                <GearPhotoView photo={CAMERA_PHOTOS[camera.id]} label={`${camera.brand} ${camera.model}`} />
+                <GearPhotoView photo={CAMERA_PHOTOS[camera.id]} label={`${camera.brand} ${camera.model}`} lang={lang} />
               ) : (
                 <CameraArt kind={cameraKind(camera?.id)} label={camera ? `${camera.brand} ${camera.model}` : t.manual} cam={camera} />
               )}
@@ -998,7 +998,7 @@ export default function App() {
 
             {lens && LENS_PHOTOS[`${lens.maker}:${lens.name}`] && (
               <div className="art-wrap">
-                <GearPhotoView photo={LENS_PHOTOS[`${lens.maker}:${lens.name}`]} label={`${lens.maker} ${lens.name}`} />
+                <GearPhotoView photo={LENS_PHOTOS[`${lens.maker}:${lens.name}`]} label={`${lens.maker} ${lens.name}`} lang={lang} />
               </div>
             )}
             <div className="art-wrap art-wrap-lens">
@@ -1760,7 +1760,7 @@ export default function App() {
             <legend>{t.audio}</legend>
             <div className="audio-col">
             <div className="art-wrap">
-              {MIC_PHOTOS[mic.id] ? <GearPhotoView photo={MIC_PHOTOS[mic.id]} label={`${mic.brand} ${mic.name}`} /> : <MicArt mic={mic} />}
+              {MIC_PHOTOS[mic.id] ? <GearPhotoView photo={MIC_PHOTOS[mic.id]} label={`${mic.brand} ${mic.name}`} lang={lang} /> : <MicArt mic={mic} />}
             </div>
             <label htmlFor="mic">{t.mic}</label>
             <select {...sel("mic")} value={micId} onChange={(e) => setMicId(e.target.value)}>
@@ -2072,6 +2072,14 @@ export default function App() {
     sr: { light: "Svetlo", assist: "Pomoći", rec: "Snimanje" },
     hr: { light: "Svjetlo", assist: "Pomoći", rec: "Snimanje" },
     en: { light: "Light", assist: "Assists", rec: "Recording" },
+    sq: { light: "Drita", assist: "Ndihmës", rec: "Regjistrimi" },
+    tr: { light: "Işık", assist: "Yardımcılar", rec: "Kayıt" },
+    es: { light: "Luz", assist: "Asistentes", rec: "Grabación" },
+    fr: { light: "Lumière", assist: "Assistants", rec: "Enregistrement" },
+    ru: { light: "Свет", assist: "Помощники", rec: "Запись" },
+    ja: { light: "光", assist: "アシスト", rec: "記録" },
+    zh: { light: "灯光", assist: "辅助", rec: "录制" },
+    ko: { light: "조명", assist: "보조", rec: "녹화" },
   };
   const short = SHORT[lang] ?? SHORT.en;
   const tabs: { id: TabId; label: string }[] = [
@@ -2091,7 +2099,7 @@ export default function App() {
         <div className="brand">
           <span className="brand-mark" aria-hidden="true" />
           <div className="brand-text">
-            <span className="brand-name">Mustafi Studio</span>
+            <span className="brand-name" lang="en">Mustafi Studio</span>
             <h1 className="brand-title">{t.appTitle}</h1>
           </div>
         </div>
@@ -2105,8 +2113,8 @@ export default function App() {
               window.location.href = "./klassisch/";
             }}
             options={[
-              { v: "modern", l: lang === "de" ? "Modern" : lang === "en" ? "Modern" : "Moderno" },
-              { v: "classic", l: lang === "de" ? "Klassisch" : lang === "en" ? "Classic" : lang === "sr" ? "Klasično" : "Klasično" },
+              { v: "modern", l: (VIEW_NAMES[lang] ?? VIEW_NAMES.en)[0] },
+              { v: "classic", l: (VIEW_NAMES[lang] ?? VIEW_NAMES.en)[1] },
             ]}
           />
           <label className="sr-only" htmlFor="lang">{t.language}</label>
@@ -2358,6 +2366,12 @@ export default function App() {
 }
 
 /** Segmented switch, like the slide switches on the gear. */
+const VIEW_NAMES: Record<string, [string, string]> = {
+  de: ["Modern", "Klassisch"], bs: ["Moderno", "Klasično"], sr: ["Moderno", "Klasično"], sq: ["Modern", "Klasik"],
+  en: ["Modern", "Classic"], tr: ["Modern", "Klasik"], es: ["Moderno", "Clásico"], fr: ["Moderne", "Classique"],
+  ru: ["Современный", "Классический"], ja: ["モダン", "クラシック"], zh: ["现代", "经典"], ko: ["모던", "클래식"],
+};
+
 function Seg<T extends string | number>({ value, options, onChange, label }: { value: T; options: { v: T; l: string }[]; onChange: (v: T) => void; label: string }) {
   return (
     <div className="seg seg-n" role="radiogroup" aria-label={label} style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}>

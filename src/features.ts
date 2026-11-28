@@ -3,6 +3,7 @@
 
 import type { Lens } from "./gear";
 import type { Mic } from "./audio";
+import { MORE_LOCALES } from "./locales";
 
 export type LensFx = {
   ois: boolean; // optical stabiliser with its own switch
@@ -461,5 +462,8 @@ const sr: Txt = {
   micLimTip: "Limiter u mikrofonu hvata glasne vrhove pre nego odu u kameru (AUTO: samo kad treba).",
 };
 
-const TXT: Record<string, Txt> = { de, bs, sr, en };
+const TXT: Record<string, Txt> = {
+  de, bs, sr, en,
+  ...Object.fromEntries(Object.entries(MORE_LOCALES).map(([k, v]) => [k, { ...en, ...v.fx } as Txt])),
+};
 export const fxText = (lang: string): Txt => TXT[lang] ?? en;
