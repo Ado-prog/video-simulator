@@ -4,15 +4,31 @@
 
 **[ado-prog.github.io/video-simulator](https://ado-prog.github.io/video-simulator/)** – runs in the browser, free, no sign-up, works on phone and desktop.
 
-![Camera monitor preview: wedding couple in a garden with background blur, audio meter and exposure HUD](docs/monitor.jpg)
+![Photo & Video Simulator: camera monitor with Lumix S1 II in V-Log, status bar and settings panel](docs/app.jpg)
 
-| Side view: sharp zone | Group in a wedding hall |
+| "Expose correctly" tells you what to do on the camera | Noise simulation: under-exposed in a mosque |
 |---|---|
-| ![Side view with camera, angle of view and sharp zone](docs/side-view.jpg) | ![Group photo on the monitor in a wedding hall](docs/monitor-hall.jpg) |
+| ![Expose correctly: monitor, status bar and the step-by-step list](docs/expose.jpg) | ![Monitor in the Gazi Husrev-beg Mosque, noise high, under-exposed -1.9 EV](docs/monitor-mosque.jpg) |
+
+| 18 real backgrounds – gardens, sea, halls, church and mosques | Dual native ISO: AUTO / LOW / HIGH |
+|---|---|
+| ![Background picker with garden, sea, indoor and ceremony photos](docs/backgrounds.jpg) | ![Recording tab with the dual native ISO switch on HIGH 5000](docs/dual-iso.jpg) |
+
+![Side view: camera, angle of view and the sharp zone](docs/side-view.jpg)
 
 A depth-of-field, light, exposure and audio simulator for photographers and videographers, made by [Mustafi Studio](https://github.com/Ado-prog) (Zürich & Prizren).
 
 See on a simulated camera monitor how focus distance, focal length, aperture, light, shutter, ISO, filters and Log profiles change the picture, before you are on set.
+
+## New
+
+- **Modern design:** big camera monitor, camera status bar and a tabbed panel (Camera, Light, Video, Audio, Assists, Recording, C1–C4); drag the divider to make the monitor or the panel wider. The classic layout is still one click away (Modern | Classic), and you can switch back at any time
+- **Image noise & ETTR:** noise grows with ISO, low light and under-exposure, and Log shows it more; turn the simulation on or off, preview "expose to the right" pulled down in post, and see in the status bar when the picture is over- or under-exposed or the highlights clip
+- **"Expose correctly" and "Minimise noise":** one click sets shutter, aperture, ND and ISO and lists, step by step, what was done and what you would do on the camera – for every camera, with its own base ISO, Log base ISO and second native ISO
+- **Correct ISO per camera:** base ISO in the standard profile (e.g. Lumix S1 II 100, Sony A7S III / FX3 80, Nikon Z8/Z9 64), extended low ISO (L 50) for bright sun, Log base ISO (V-Log 640, S-Log3 800 …)
+- **Dual native ISO switch AUTO / LOW / HIGH** on cameras that have it (Lumix S1 II and S1R II and Nikon Z8, Z9, Z6III, Z5II, ZR)
+- **18 real 4K backgrounds** with thumbnails: garden by the sea, rose pergola, vineyard on the Danube, Adriatic harbour, ballrooms, library, palm house, a church and three mosques (Gazi Husrev-beg Mosque and others)
+- **Real gear photos** for cameras, lenses and microphones, including images supplied by RØDE, and the Nikon ZR
 
 ## Features
 
@@ -29,8 +45,9 @@ See on a simulated camera monitor how focus distance, focal length, aperture, li
 - **DMW-DMS1E 4-channel mode:** CH1/CH2 main audio, CH3 omni, CH4 omni −20 dB with their levels
 - **Flash & shutter (photo):** TTL and HSS with each camera's sync speed, mechanical / electronic shutter with banding and skew warnings, dynamic range of scene vs. camera, exposure bracketing, 500 and NPF rules for stars, long-exposure and ND time calculator
 - **Sun planner:** golden and blue hour, sunrise and sunset for any date in Zürich, Basel, Bern, Sarajevo, Tuzla, Beograd, Wien and more, or your own location
-- **Photo backgrounds:** real wedding venues (garden by the sea, garden with chairs, lake at sunset, hill with aisle, beach with flower arch, ballroom), blurred by the depth of field; the drawn backgrounds stay available
+- **Photo backgrounds:** 18 real venues in four groups (garden & nature, sea & lake, party & indoor, ceremony with church and mosques), blurred by the depth of field; the drawn backgrounds stay available
 - **Filters:** ND2–ND64000, variable ND, CPL, UV, plus a one-click "expose correctly" that picks the ND you need
+- **Lens & mic switches:** lens OIS, AF/MF and focus limiter; on each microphone its own low cut, pad, gain steps, noise cancelling and limiter
 - **Audio (video mode):** microphones (RØDE Wireless PRO, Panasonic DMW-DMS1E and DMW-MS2, plus RØDE, DJI, Sennheiser, Deity, Hollyland, Saramonic, Zoom, Tascam, Shure, Comica, Sony, Canon, Nikon and the camera's built-in mic), sound sources, gain, auto level, limiter, low cut, and each mic's own switches – 32-bit float on/off, pickup patterns, wind/noise cancelling, safety track, onboard backup recording – live level meter on the monitor, clipping and noise warnings, speech clarity
 - **Group photos in 1, 2 or 3 rows:** each row stands further back, so you can see which rows are still sharp
 - **Light scenes:** summer, spring, autumn, winter, overcast, golden hour, blue hour, night, wedding hall, party/disco
@@ -53,15 +70,8 @@ MIT © 2026 Adis Mustafi (Mustafi Studio)
 
 If this helps you on set, a ⭐ on GitHub helps other photographers and videographers find it.
 
-**Keywords:** depth of field calculator, DOF simulator, bokeh preview, exposure simulator, ND filter calculator, 180 degree shutter rule, V-Log, S-Log3, wedding videography, Schärfentiefe-Rechner, Belichtung
+**Keywords:** depth of field calculator, ISO noise simulator, ETTR, dual native ISO, DOF simulator, bokeh preview, exposure simulator, ND filter calculator, 180 degree shutter rule, V-Log, S-Log3, wedding videography, Schärfentiefe-Rechner, Belichtung
 
 ## Photo credits
 
-Background photos from [Pexels](https://www.pexels.com/license/) (free to use), cropped and resized:
-[Mohan Nannapaneni](https://www.pexels.com/photo/wedding-decoration-in-a-garden-13931905/) (garden by the sea),
-[Alina T](https://www.pexels.com/photo/chairs-and-arch-outdoors-for-wedding-ceremony-11433914/) (garden with chairs),
-[Paul Lichtblau](https://www.pexels.com/photo/sunset-lakeside-wedding-setup-in-brandenburg-40248731/) (lake at sunset),
-[Lukas Blazek](https://www.pexels.com/photo/wedding-reception-574011/) (hill with aisle),
-[Soly Moses](https://www.pexels.com/photo/arch-decorated-with-white-cloth-and-flowers-10962460/) (beach with flower arch),
-[Clément Proust](https://www.pexels.com/photo/luxury-restaurant-hall-19569865/) (ballroom).
-
+Background and gear photos come from Wikimedia Commons, Pexels and RØDE (supplied by the manufacturer); some Nikon lenses are shown as AI illustrations without logo. Authors and licences: [CREDITS-PHOTOS.md](CREDITS-PHOTOS.md).

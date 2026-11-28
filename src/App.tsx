@@ -450,6 +450,7 @@ export default function App() {
 
   const [exposeMsg, setExposeMsgRaw] = useState<{ head: string; lines: string[] } | null>(null);
   const setExposeMsg = (lines: string[] | null, head?: string) => setExposeMsgRaw(lines ? { head: head ?? fxText(lang).exHead, lines } : null);
+  useEffect(() => setExposeMsgRaw(null), [shootMode, cameraId]);
   const exposeCorrectly = () => {
     const fxx = fxText(lang);
     const baseEV = scene.ev + boost - (cplOn ? CPL_LOSS : 0);
